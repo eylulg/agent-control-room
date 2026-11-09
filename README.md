@@ -23,6 +23,9 @@ is the operating surface:
   should be visible so you can trust the rule is doing its job.
 - **Routing.** Different kinds of work deserve different models. The routing
   table is the cost and quality dial, so it has to be visible and editable.
+  The defaults send features to `claude-opus-5-5`, bugs and review fixes to
+  `claude-sonnet-5-5`, chores and releases to `claude-haiku-5-5`, with
+  `claude-fable-5-1` available as the strongest tier.
 - **Holds.** Real work waits on people (a designer, a dependency PR). A hold
   with a reason is better than a silent stall.
 
@@ -84,8 +87,10 @@ event type and command) is in [docs/protocol.md](docs/protocol.md).
 
 ## Stack
 
-Vite 7, React 19, TypeScript strict, Tailwind CSS 4, Untitled UI React (free
-components, copied in and trimmed to the ones used), Zustand, React Router 7.
+Vite 7, React 19, TypeScript strict with `noUncheckedIndexedAccess`, Tailwind
+CSS 4, Untitled UI React (free components, copied in and trimmed to the ones
+used), Zustand, React Router 7 with one lazily loaded chunk per page, and zod
+(mini) to validate every incoming event and the URL parameters.
 Dark mode uses the `dark-mode` class, set by an inline script before first
 paint so there is no flash.
 
@@ -102,27 +107,37 @@ Add `?seed=anything` to the URL to start a different world.
 
 ```bash
 npm run typecheck
-npm run lint
+npm run lint           # zero warnings allowed
+npm run format:check
 npm test
 npm run build      # also writes dist/404.html for SPA deep links on Pages
 ```
 
-Vitest with Testing Library and vitest-axe covers:
+Tests sit in `__tests__/` next to the module they cover, one behaviour per
+test, with shared helpers in `src/test-utils/`. Vitest with Testing Library and
+vitest-axe covers:
 
-- simulator determinism for a seed, and that folding the event stream rebuilds
-  the simulator state exactly
-- an approval blocks a job and answering unblocks it
-- a guard blocks an action, and lets it through when switched off
-- a routing change affects the next job only
-- hold and resume, by the operator and by the agent
-- queue filtering, in the domain and through the UI
-- answering an approval with the keyboard
-- axe on every page in light and dark mode
+- the simulator: determinism for a seed, reset, an approval blocking and
+  unblocking a job, a guard blocking an action and letting it through when off,
+  the dependency guard holding a stacked PR, routing changes reaching the next
+  job only, operator and agent holds, retry after cancel
+- the protocol: folding the event stream rebuilds the simulator state, and
+  malformed or unknown events are rejected at the boundary
+- user flows: queue filtering, answering an approval with the keyboard and with
+  a note, holding a job, saving routing, switching a guard off, the theme toggle
+- focus: where it lands after navigation, after dismissing a toast, after
+  answering an approval and after each job action
+- axe on every page
+
+jsdom computes no colours, so contrast in light and dark mode was checked
+separately in a real browser with axe-core.
+
+`npm run knip` reports unused files, exports and dependencies.
 
 ## Deploy
 
-`.github/workflows/ci.yml` runs typecheck, lint, test and build on every push
-and pull request. `.github/workflows/deploy.yml` builds with
+`.github/workflows/ci.yml` runs typecheck, lint, format check, test, build and
+knip on every push and pull request. `.github/workflows/deploy.yml` builds with
 `base: '/agent-control-room/'` and publishes `dist` to GitHub Pages.
 
 ## License

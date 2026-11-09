@@ -55,7 +55,10 @@ Rules:
 4. **Heartbeat.** The server sends `health.heartbeat` at a steady interval
    (the simulator does it every 5 ticks). The UI marks the agent stale after two
    missed heartbeats.
-5. **Unknown types** must be ignored by clients so the server can add new ones.
+5. **Validation.** The client validates every message against a zod schema
+   (`src/domain/schema.ts`). Malformed JSON, unknown types and payloads of the
+   wrong shape are dropped before they reach the state, so the server can add
+   new event types without breaking older clients.
 
 ### Event envelope
 
@@ -144,9 +147,12 @@ interface AgentEventSource {
     addEventListener(type: "agent-event", listener: (event: { data: string; lastEventId: string }) => void): void;
     removeEventListener(type: "agent-event", listener: (event: { data: string; lastEventId: string }) => void): void;
     close(): void;
-    send(command: OperatorCommand): Promise<void>;
+    send(command: OperatorCommand, signal?: AbortSignal): Promise<void>;
 }
 ```
+
+`send` takes an `AbortSignal`. The UI aborts a command that is still in flight
+when the view that sent it unmounts, and an aborted command never writes state.
 
 `SimulatedAgentSource` wraps the simulator and serialises every event to JSON,
 so the UI goes through exactly the same parse path as with a real stream.
