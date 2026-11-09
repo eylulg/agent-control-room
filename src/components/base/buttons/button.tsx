@@ -1,11 +1,11 @@
-import type { FC, ReactElement, ReactNode } from "react";
+import type { ComponentType, ReactElement, ReactNode, Ref } from "react";
 import { isValidElement } from "react";
 import type { ButtonProps as AriaButtonProps, LinkProps as AriaLinkProps } from "react-aria-components";
 import { Button as AriaButton, Link as AriaLink } from "react-aria-components";
 import { cx, sortCx } from "@/utils/cx";
 import { isReactComponent } from "@/utils/is-react-component";
 
-export const styles = sortCx({
+const styles = sortCx({
     common: {
         root: [
             "group relative inline-flex h-max cursor-pointer items-center justify-center whitespace-nowrap outline-brand transition duration-100 ease-linear before:absolute focus-visible:outline-2 focus-visible:outline-offset-2",
@@ -131,7 +131,7 @@ export const styles = sortCx({
 /**
  * Common props shared between button and anchor variants
  */
-export interface CommonProps {
+interface CommonProps {
     /** Disables the button and shows a disabled state */
     isDisabled?: boolean;
     /** Shows a loading spinner and disables the button */
@@ -141,9 +141,9 @@ export interface CommonProps {
     /** The color variant of the button */
     color?: keyof typeof styles.colors;
     /** Icon component or element to show before the text */
-    iconLeading?: FC<{ className?: string }> | ReactNode;
+    iconLeading?: ComponentType<{ className?: string }> | ReactNode;
     /** Icon component or element to show after the text */
-    iconTrailing?: FC<{ className?: string }> | ReactNode;
+    iconTrailing?: ComponentType<{ className?: string }> | ReactNode;
     /** Removes horizontal padding from the text content */
     noTextPadding?: boolean;
     /** When true, keeps the text visible during loading state */
@@ -156,16 +156,15 @@ export interface CommonProps {
 /**
  * Props for the button variant (non-link)
  */
-export interface ButtonProps extends CommonProps, Omit<AriaButtonProps, "children" | "className"> {}
+export interface ButtonProps extends CommonProps, Omit<AriaButtonProps, "children" | "className"> {
+    ref?: Ref<HTMLButtonElement>;
+}
 /**
  * Props for the link variant (anchor tag)
  */
 interface LinkProps extends CommonProps, Omit<AriaLinkProps, "children" | "className"> {
     href: NonNullable<AriaLinkProps["href"]>;
 }
-
-/** Union type of button and link props */
-export type Props = ButtonProps | LinkProps;
 
 export const Button: {
     (props: LinkProps): ReactElement<LinkProps>;

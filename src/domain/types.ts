@@ -15,22 +15,19 @@ export const JOB_STATUSES = [
 ] as const;
 export type JobStatus = (typeof JOB_STATUSES)[number];
 
-/** Statuses where the agent is still responsible for the job. */
-export const ACTIVE_STATUSES: readonly JobStatus[] = ["queued", "planning", "awaiting-approval", "implementing", "fixing-ci", "answering-review", "on-hold"];
-
-export interface Ticket {
+interface Ticket {
     id: string;
     title: string;
     repo: string;
 }
 
-export interface Commit {
+interface Commit {
     sha: string;
     message: string;
     ts: number;
 }
 
-export interface CiRun {
+interface CiRun {
     id: string;
     status: "passed" | "failed" | "fixed";
     check: string;
@@ -38,7 +35,7 @@ export interface CiRun {
     ts: number;
 }
 
-export interface ReviewFinding {
+interface ReviewFinding {
     id: string;
     author: string;
     file: string;
@@ -47,7 +44,7 @@ export interface ReviewFinding {
     reply?: string;
 }
 
-export interface PullRequest {
+interface PullRequest {
     number: number;
     url: string;
 }
@@ -95,7 +92,7 @@ export interface ApprovalRequest {
 
 export type GuardAction = "merge" | "mark-ready" | "skip-hooks" | "post-as-owner";
 
-export interface GuardBlock {
+interface GuardBlock {
     ts: number;
     jobId: string;
     action: GuardAction;
@@ -112,6 +109,11 @@ export interface Guard {
 }
 
 export type RoutingTable = Record<JobKind, string>;
+
+/** Builds a record with every key of a closed key list. */
+export const recordFromKeys = <K extends string, V>(keys: readonly K[], value: (key: K) => V): Record<K, V> =>
+    // Safe: the entries cover every key in `keys`, which is exactly K.
+    Object.fromEntries(keys.map((key) => [key, value(key)])) as Record<K, V>;
 
 export const EVENT_TYPES = [
     "world.snapshot",
@@ -140,7 +142,7 @@ export const EVENT_TYPES = [
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
-export interface HealthState {
+interface HealthState {
     lastHeartbeat: number | null;
     tick: number;
     activeJobs: number;
@@ -184,7 +186,7 @@ export interface EventPayloads {
     "health.heartbeat": { tick: number; activeJobs: number; queueDepth: number };
 }
 
-export interface AgentEventOf<T extends EventType> {
+interface AgentEventOf<T extends EventType> {
     /** Monotonic sequence number, used as the SSE `id` for resume. */
     seq: number;
     ts: number;

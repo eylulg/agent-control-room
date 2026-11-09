@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 
+interface StatTileProps {
+    label: string;
+    value: number | string;
+    context?: ReactNode;
+    trend?: ReactNode;
+}
+
 /** Stat tile: sentence case label, proportional figure value, optional context and trend. */
-export const StatTile = ({ label, value, context, trend }: { label: string; value: number | string; context?: ReactNode; trend?: ReactNode }) => (
+export const StatTile = ({ label, value, context, trend }: StatTileProps) => (
     <div className="flex min-w-0 flex-col gap-1 rounded-xl bg-primary p-4 shadow-xs ring-1 ring-secondary">
         <dt className="text-sm font-medium text-tertiary">{label}</dt>
         <dd className="text-display-xs font-semibold text-primary">{typeof value === "number" ? value.toLocaleString("en-US") : value}</dd>

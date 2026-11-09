@@ -1,4 +1,4 @@
-import { type ApprovalRequest, type ControlState, JOB_STATUSES, type Job, type JobKind, type JobStatus } from "./types";
+import { type ApprovalRequest, type ControlState, JOB_STATUSES, type Job, type JobKind, type JobStatus, recordFromKeys } from "./types";
 
 export interface QueueFilter {
     kinds: JobKind[];
@@ -8,7 +8,7 @@ export interface QueueFilter {
 
 export const EMPTY_FILTER: QueueFilter = { kinds: [], repo: "all", search: "" };
 
-export const listJobs = (state: ControlState): Job[] => state.jobOrder.map((id) => state.jobs[id]).filter(Boolean);
+export const listJobs = (state: Pick<ControlState, "jobOrder" | "jobs">): Job[] => state.jobOrder.flatMap((id) => state.jobs[id] ?? []);
 
 export const filterJobs = (jobs: readonly Job[], filter: QueueFilter): Job[] => {
     const query = filter.search.trim().toLowerCase();
@@ -21,14 +21,14 @@ export const filterJobs = (jobs: readonly Job[], filter: QueueFilter): Job[] => 
 };
 
 export const groupByStatus = (jobs: readonly Job[]): Record<JobStatus, Job[]> => {
-    const groups = Object.fromEntries(JOB_STATUSES.map((status) => [status, [] as Job[]])) as Record<JobStatus, Job[]>;
+    const groups = recordFromKeys(JOB_STATUSES, (): Job[] => []);
     for (const job of jobs) groups[job.status].push(job);
     return groups;
 };
 
 export const countByStatus = (jobs: readonly Job[]): Record<JobStatus, number> => {
     const groups = groupByStatus(jobs);
-    return Object.fromEntries(JOB_STATUSES.map((status) => [status, groups[status].length])) as Record<JobStatus, number>;
+    return recordFromKeys(JOB_STATUSES, (status) => groups[status].length);
 };
 
 export const listRepos = (jobs: readonly Job[]): string[] => [...new Set(jobs.map((job) => job.ticket.repo))].sort();
@@ -48,7 +48,7 @@ export const throughput = (completions: readonly number[], now: number, bucketMs
     for (const ts of completions) {
         if (ts <= start || ts > now) continue;
         const index = Math.min(buckets - 1, Math.floor((ts - start - 1) / bucketMs));
-        counts[index] += 1;
+        counts[index] = (counts[index] ?? 0) + 1;
     }
     return counts;
 };

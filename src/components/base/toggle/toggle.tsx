@@ -13,7 +13,7 @@ interface ToggleBaseProps {
     isDisabled?: boolean;
 }
 
-export const ToggleBase = ({ className, isHovered, isDisabled, isFocusVisible, isSelected, slim, size = "sm" }: ToggleBaseProps) => {
+const ToggleBase = ({ className, isHovered, isDisabled, isFocusVisible, isSelected, slim, size = "sm" }: ToggleBaseProps) => {
     const styles = {
         default: {
             sm: {

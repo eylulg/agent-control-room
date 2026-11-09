@@ -2,7 +2,11 @@ import { Link } from "react-router";
 import type { Job } from "@/domain/types";
 import { KindBadge } from "./status-badge";
 
-export const JobCard = ({ job }: { job: Job }) => (
+interface JobCardProps {
+    job: Job;
+}
+
+export const JobCard = ({ job }: JobCardProps) => (
     <Link
         to={`/jobs/${job.id}`}
         className="block rounded-lg bg-primary p-3 shadow-xs ring-1 ring-secondary transition hover:ring-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"

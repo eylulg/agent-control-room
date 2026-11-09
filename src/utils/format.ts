@@ -6,9 +6,6 @@ export const formatClock = (ts: number): string => {
     return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 };
 
-export const formatDay = (ts: number): string =>
-    new Date(ts).toLocaleDateString("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }) + ` ${formatClock(ts)}`;
-
 export const STATUS_META: Record<JobStatus, { label: string; color: BadgeColors }> = {
     queued: { label: "Queued", color: "gray" },
     planning: { label: "Planning", color: "blue" },

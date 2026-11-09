@@ -1,17 +1,26 @@
 import { Link } from "react-router";
 import { Card, PageHeader } from "@/components/app/page-header";
+import { inlineLink, surface } from "@/components/app/styles";
 import { Toggle } from "@/components/base/toggle/toggle";
+import type { Guard } from "@/domain/types";
 import { useAppStore } from "@/state/store-context";
+import { useCommand } from "@/state/use-command";
 import { formatClock } from "@/utils/format";
+
+interface GuardRuleProps {
+    guard: Guard;
+}
+
+const LOG_LIMIT = 50;
 
 export const GuardsPage = () => {
     const guards = useAppStore((s) => s.control.guards);
     const jobs = useAppStore((s) => s.control.jobs);
-    const send = useAppStore((s) => s.send);
+
     const log = guards
         .flatMap((guard) => guard.blocked.map((entry) => ({ ...entry, rule: guard.rule })))
         .sort((a, b) => b.ts - a.ts)
-        .slice(0, 50);
+        .slice(0, LOG_LIMIT);
 
     return (
         <div className="flex flex-col gap-6">
@@ -21,19 +30,7 @@ export const GuardsPage = () => {
             />
             <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {guards.map((guard) => (
-                    <li key={guard.id} className="flex flex-col gap-3 rounded-xl bg-primary p-4 shadow-xs ring-1 ring-secondary sm:p-5">
-                        <Toggle
-                            className="w-full min-w-0"
-                            size="md"
-                            label={guard.rule}
-                            hint={guard.description}
-                            isSelected={guard.enabled}
-                            onChange={(enabled) => void send({ type: "guard.toggle", guardId: guard.id, enabled })}
-                        />
-                        <p className="text-sm text-tertiary">
-                            {guard.enabled ? "On" : "Off"}. Blocked {guard.blocked.length} {guard.blocked.length === 1 ? "time" : "times"}.
-                        </p>
-                    </li>
+                    <GuardRule key={guard.id} guard={guard} />
                 ))}
             </ul>
             <Card title="Blocked attempts">
@@ -59,11 +56,11 @@ export const GuardsPage = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-secondary">
-                                {log.map((entry, index) => (
-                                    <tr key={`${entry.ts}-${entry.jobId}-${index}`}>
+                                {log.map((entry) => (
+                                    <tr key={`${entry.ts}-${entry.jobId}-${entry.action}`}>
                                         <td className="py-2 pr-3 text-tertiary tabular-nums">{formatClock(entry.ts)}</td>
                                         <td className="py-2 pr-3">
-                                            <Link to={`/jobs/${entry.jobId}`} className="font-semibold text-brand-secondary underline-offset-2 hover:underline">
+                                            <Link to={`/jobs/${entry.jobId}`} className={inlineLink}>
                                                 {jobs[entry.jobId]?.ticket.id ?? entry.jobId}
                                             </Link>
                                         </td>
@@ -77,5 +74,27 @@ export const GuardsPage = () => {
                 )}
             </Card>
         </div>
+    );
+};
+
+const GuardRule = ({ guard }: GuardRuleProps) => {
+    const { run, error } = useCommand();
+
+    function handleChange(enabled: boolean) {
+        return run({ type: "guard.toggle", guardId: guard.id, enabled });
+    }
+
+    return (
+        <li className={surface}>
+            <Toggle className="w-full min-w-0" size="md" label={guard.rule} hint={guard.description} isSelected={guard.enabled} onChange={handleChange} />
+            <p className="mt-3 text-sm text-tertiary">
+                {guard.enabled ? "On" : "Off"}. Blocked {guard.blocked.length} {guard.blocked.length === 1 ? "time" : "times"}.
+            </p>
+            {error && (
+                <p role="alert" className="mt-2 text-sm font-medium text-error-primary">
+                    {error}
+                </p>
+            )}
+        </li>
     );
 };

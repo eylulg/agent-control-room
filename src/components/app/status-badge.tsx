@@ -2,13 +2,22 @@ import { Badge } from "@/components/base/badges/badges";
 import type { JobKind, JobStatus } from "@/domain/types";
 import { KIND_LABEL, STATUS_META } from "@/utils/format";
 
-export const StatusBadge = ({ status, size = "sm" }: { status: JobStatus; size?: "sm" | "md" }) => (
+interface StatusBadgeProps {
+    status: JobStatus;
+    size?: "sm" | "md";
+}
+
+interface KindBadgeProps {
+    kind: JobKind;
+}
+
+export const StatusBadge = ({ status, size = "sm" }: StatusBadgeProps) => (
     <Badge type="pill-color" size={size} color={STATUS_META[status].color}>
         {STATUS_META[status].label}
     </Badge>
 );
 
-export const KindBadge = ({ kind }: { kind: JobKind }) => (
+export const KindBadge = ({ kind }: KindBadgeProps) => (
     <Badge type="color" size="sm" color="gray">
         {KIND_LABEL[kind]}
     </Badge>

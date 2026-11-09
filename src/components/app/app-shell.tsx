@@ -10,73 +10,51 @@ import { SimControls } from "./sim-controls";
 import { ThemeToggle } from "./theme-toggle";
 import { Toaster } from "./toaster";
 
+interface AppShellProps {
+    children: ReactNode;
+}
+
+interface NavItemsProps {
+    onNavigate?: () => void;
+}
+
 const NAV = [
     { to: "/", label: "Overview", icon: BarChartSquare02, end: true },
-    { to: "/queue", label: "Queue", icon: LayoutGrid01 },
-    { to: "/approvals", label: "Approvals", icon: CheckDone01 },
-    { to: "/routing", label: "Routing", icon: Route },
-    { to: "/guards", label: "Guards", icon: Shield01 },
-    { to: "/settings", label: "Settings", icon: Settings01 },
+    { to: "/queue", label: "Queue", icon: LayoutGrid01, end: false },
+    { to: "/approvals", label: "Approvals", icon: CheckDone01, end: false },
+    { to: "/routing", label: "Routing", icon: Route, end: false },
+    { to: "/guards", label: "Guards", icon: Shield01, end: false },
+    { to: "/settings", label: "Settings", icon: Settings01, end: false },
 ];
 
-const NavItems = ({ onNavigate }: { onNavigate?: () => void }) => {
-    const pending = useAppStore((s) => pendingApprovals(s.control).length);
-    return (
-        <ul className="flex flex-col gap-0.5">
-            {NAV.map(({ to, label, icon: Icon, end }) => (
-                <li key={to}>
-                    <NavLink
-                        to={to}
-                        end={end}
-                        onClick={onNavigate}
-                        className={({ isActive }) =>
-                            cx(
-                                "flex items-center gap-3 rounded-md px-3 py-2 text-md font-semibold transition",
-                                isActive ? "bg-tertiary text-secondary_hover" : "text-secondary hover:bg-primary_hover hover:text-secondary_hover",
-                            )
-                        }
-                    >
-                        <Icon aria-hidden="true" className="size-5 shrink-0 text-fg-quaternary" />
-                        <span className="flex-1">{label}</span>
-                        {to === "/approvals" && pending > 0 && (
-                            <span className="rounded-full bg-brand-solid px-2 py-0.5 text-xs font-semibold text-white">
-                                {pending}
-                                <span className="sr-only"> pending</span>
-                            </span>
-                        )}
-                    </NavLink>
-                </li>
-            ))}
-        </ul>
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    cx(
+        "flex items-center gap-3 rounded-md px-3 py-2 text-md font-semibold transition",
+        isActive ? "bg-tertiary text-secondary_hover" : "text-secondary hover:bg-primary_hover hover:text-secondary_hover",
     );
-};
 
-const Brand = () => (
-    <p className="flex items-center gap-2 text-md font-semibold text-primary">
-        <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-md bg-brand-solid text-xs font-bold text-white">
-            AC
-        </span>
-        <span className="max-[419px]:sr-only">Agent control room</span>
-    </p>
-);
-
-export const AppShell = ({ children }: { children: ReactNode }) => {
+export const AppShell = ({ children }: AppShellProps) => {
     const location = useLocation();
-    // The menu is open for the path it was opened on, so navigating closes it.
+    // The menu belongs to the path it was opened on, so any navigation closes it.
     const [menuOpenAt, setMenuOpenAt] = useState<string | null>(null);
-    const menuOpen = menuOpenAt === location.pathname;
-    const setMenuOpen = (open: boolean) => setMenuOpenAt(open ? location.pathname : null);
     const mainRef = useRef<HTMLElement>(null);
-    const first = useRef(true);
+
+    const menuOpen = menuOpenAt === location.pathname;
 
     useEffect(() => {
-        if (first.current) {
-            first.current = false;
-            return;
-        }
+        // React Router gives the first location the key "default". Only later navigations move focus.
+        if (location.key === "default") return;
         mainRef.current?.focus({ preventScroll: true });
-        window.scrollTo?.(0, 0);
-    }, [location.pathname]);
+        window.scrollTo(0, 0);
+    }, [location.key]);
+
+    function handleMenuToggle() {
+        setMenuOpenAt(menuOpen ? null : location.pathname);
+    }
+
+    function handleNavigate() {
+        setMenuOpenAt(null);
+    }
 
     return (
         <div className="min-h-dvh bg-secondary">
@@ -93,14 +71,14 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                         <nav aria-label="Primary">
                             <NavItems />
                         </nav>
-                        <div className="mt-auto rounded-lg bg-secondary p-3 text-xs text-tertiary">
+                        <p className="mt-auto rounded-lg bg-secondary p-3 text-xs text-tertiary">
                             A simulated agent runs in your browser. Swap in a real backend over server sent events.
-                        </div>
+                        </p>
                     </div>
                 </aside>
 
                 <div className="min-w-0 flex-1">
-                    <header className="sticky top-0 z-30 border-b border-secondary bg-primary/95 backdrop-blur">
+                    <header className="sticky top-0 z-30 border-b border-secondary bg-primary">
                         <div className="flex items-center gap-2 px-4 py-3 sm:px-6">
                             <button
                                 type="button"
@@ -108,7 +86,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                                 aria-expanded={menuOpen}
                                 aria-controls="mobile-nav"
                                 aria-label={menuOpen ? "Close menu" : "Open menu"}
-                                onClick={() => setMenuOpen(!menuOpen)}
+                                onClick={handleMenuToggle}
                             >
                                 {menuOpen ? <X aria-hidden="true" className="size-5" /> : <Menu01 aria-hidden="true" className="size-5" />}
                             </button>
@@ -128,7 +106,7 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
                         </div>
                         {menuOpen && (
                             <nav id="mobile-nav" aria-label="Primary" className="border-t border-secondary px-4 py-3 lg:hidden">
-                                <NavItems onNavigate={() => setMenuOpen(false)} />
+                                <NavItems onNavigate={handleNavigate} />
                             </nav>
                         )}
                     </header>
@@ -142,3 +120,35 @@ export const AppShell = ({ children }: { children: ReactNode }) => {
         </div>
     );
 };
+
+const NavItems = ({ onNavigate }: NavItemsProps) => {
+    const pending = useAppStore((s) => pendingApprovals(s.control).length);
+
+    return (
+        <ul className="flex flex-col gap-0.5">
+            {NAV.map(({ to, label, icon: Icon, end }) => (
+                <li key={to}>
+                    <NavLink to={to} end={end} onClick={onNavigate} className={navLinkClass}>
+                        <Icon aria-hidden="true" className="size-5 shrink-0 text-fg-quaternary" />
+                        <span className="flex-1">{label}</span>
+                        {to === "/approvals" && pending > 0 && (
+                            <span className="rounded-full bg-brand-solid px-2 py-0.5 text-xs font-semibold text-primary_on-brand">
+                                {pending}
+                                <span className="sr-only"> pending</span>
+                            </span>
+                        )}
+                    </NavLink>
+                </li>
+            ))}
+        </ul>
+    );
+};
+
+const Brand = () => (
+    <p className="flex items-center gap-2 text-md font-semibold text-primary">
+        <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-md bg-brand-solid text-xs font-bold text-primary_on-brand">
+            AC
+        </span>
+        <span className="max-[419px]:sr-only">Agent control room</span>
+    </p>
+);

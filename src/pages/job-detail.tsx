@@ -4,87 +4,18 @@ import { Link, useParams } from "react-router";
 import { EventRow } from "@/components/app/event-row";
 import { Card, PageHeader } from "@/components/app/page-header";
 import { KindBadge, StatusBadge } from "@/components/app/status-badge";
+import { inlineLink } from "@/components/app/styles";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import type { Job } from "@/domain/types";
 import { useAppStore } from "@/state/store-context";
+import { useCommand } from "@/state/use-command";
 import { formatClock } from "@/utils/format";
 
-const Timeline = ({ job }: { job: Job }) => {
-    const jobs = useAppStore((s) => s.control.jobs);
-    const [follow, setFollow] = useState(true);
-    const listRef = useRef<HTMLDivElement>(null);
-    const count = job.timeline.length;
-
-    useEffect(() => {
-        const el = listRef.current;
-        if (follow && el) el.scrollTop = el.scrollHeight;
-    }, [count, follow]);
-
-    return (
-        <Card
-            title="Timeline"
-            actions={
-                <Button size="sm" color="secondary" aria-pressed={!follow} onPress={() => setFollow((f) => !f)}>
-                    {follow ? "Pause auto-follow" : "Resume auto-follow"}
-                </Button>
-            }
-        >
-            <div
-                ref={listRef}
-                tabIndex={0}
-                role="region"
-                aria-label={`Timeline for ${job.ticket.id}, ${count} events`}
-                className="max-h-96 overflow-y-auto rounded-md pr-1"
-            >
-                <ol className="divide-y divide-secondary">
-                    {job.timeline.map((event) => (
-                        <EventRow key={event.seq} event={event} jobs={jobs} showJob={false} />
-                    ))}
-                </ol>
-            </div>
-            <p className="mt-2 text-xs text-tertiary">
-                {follow ? "Following new events as they arrive." : "Auto-follow paused. New events still arrive below."}
-            </p>
-        </Card>
-    );
-};
-
-const Actions = ({ job }: { job: Job }) => {
-    const send = useAppStore((s) => s.send);
-    const [reason, setReason] = useState("");
-    const finished = job.status === "done" || job.status === "failed";
-    const held = job.status === "on-hold";
-
-    const hold = (event: FormEvent) => {
-        event.preventDefault();
-        void send({ type: "job.hold", jobId: job.id, reason: reason || "Held by operator" });
-        setReason("");
-    };
-
-    return (
-        <Card title="Actions">
-            <form className="flex flex-col gap-3" onSubmit={hold}>
-                <Input label="Hold reason" placeholder="For example: waiting on a designer" value={reason} onChange={setReason} isDisabled={finished || held} />
-                <div className="flex flex-wrap gap-2">
-                    <Button type="submit" size="sm" color="secondary" isDisabled={finished || held}>
-                        Hold
-                    </Button>
-                    <Button size="sm" color="secondary" isDisabled={!held} onPress={() => void send({ type: "job.resume", jobId: job.id })}>
-                        Resume
-                    </Button>
-                    <Button size="sm" color="primary-destructive" isDisabled={finished} onPress={() => void send({ type: "job.cancel", jobId: job.id })}>
-                        Cancel job
-                    </Button>
-                    <Button size="sm" color="secondary" isDisabled={job.status !== "failed"} onPress={() => void send({ type: "job.retry", jobId: job.id })}>
-                        Retry
-                    </Button>
-                </div>
-            </form>
-        </Card>
-    );
-};
+interface JobProps {
+    job: Job;
+}
 
 export const JobDetailPage = () => {
     const { jobId = "" } = useParams();
@@ -95,7 +26,7 @@ export const JobDetailPage = () => {
         return (
             <div className="flex flex-col gap-4">
                 <PageHeader title="Job not found" description="It may belong to a different seed. Reset the simulation or pick a job from the queue." />
-                <Link to="/queue" className="text-sm font-semibold text-brand-secondary underline">
+                <Link to="/queue" className={inlineLink}>
                     Back to the queue
                 </Link>
             </div>
@@ -127,18 +58,18 @@ export const JobDetailPage = () => {
                     </span>
                 }
                 actions={
-                    job.pr ? (
+                    job.pr && (
                         <Button size="sm" color="secondary" href={job.pr.url} target="_blank" rel="noreferrer" iconTrailing={LinkExternal01}>
-                            PR #{job.pr.number}
+                            Open PR #{job.pr.number}
                         </Button>
-                    ) : undefined
+                    )
                 }
             />
 
             {job.status === "awaiting-approval" && (
                 <p className="rounded-lg bg-primary p-3 text-sm text-primary ring-1 ring-brand">
                     <strong className="font-semibold">Blocked on a decision.</strong> The agent will not write code until someone answers.{" "}
-                    <Link to="/approvals" className="font-semibold text-brand-secondary underline">
+                    <Link to="/approvals" className={inlineLink}>
                         Answer in the approvals inbox
                     </Link>
                 </p>
@@ -156,7 +87,7 @@ export const JobDetailPage = () => {
             {dependency && (
                 <p className="text-sm text-tertiary">
                     Stacked on{" "}
-                    <Link className="font-semibold text-brand-secondary underline" to={`/jobs/${dependency.id}`}>
+                    <Link className={inlineLink} to={`/jobs/${dependency.id}`}>
                         {dependency.ticket.id}
                     </Link>{" "}
                     ({dependency.status === "done" ? "merged" : "not merged yet"}).
@@ -235,7 +166,7 @@ export const JobDetailPage = () => {
                         ) : (
                             <ol className="divide-y divide-secondary">
                                 {guardEvents.map((event) => (
-                                    <EventRow key={event.seq} event={event} showJob={false} />
+                                    <EventRow key={event.seq} event={event} />
                                 ))}
                             </ol>
                         )}
@@ -243,5 +174,119 @@ export const JobDetailPage = () => {
                 </div>
             </div>
         </div>
+    );
+};
+
+const Timeline = ({ job }: JobProps) => {
+    const [follow, setFollow] = useState(true);
+    const listRef = useRef<HTMLDivElement>(null);
+
+    const count = job.timeline.length;
+
+    useEffect(() => {
+        const element = listRef.current;
+        if (follow && element) element.scrollTop = element.scrollHeight;
+    }, [count, follow]);
+
+    function handleFollowToggle() {
+        setFollow((current) => !current);
+    }
+
+    return (
+        <Card
+            title="Timeline"
+            actions={
+                <Button size="sm" color="secondary" aria-pressed={!follow} onPress={handleFollowToggle}>
+                    {follow ? "Pause auto-follow" : "Resume auto-follow"}
+                </Button>
+            }
+        >
+            <div
+                ref={listRef}
+                tabIndex={0}
+                role="region"
+                aria-label={`Timeline for ${job.ticket.id}, ${count} events`}
+                className="max-h-96 overflow-y-auto rounded-md pr-1"
+            >
+                <ol className="divide-y divide-secondary">
+                    {job.timeline.map((event) => (
+                        <EventRow key={event.seq} event={event} />
+                    ))}
+                </ol>
+            </div>
+            <p className="mt-2 text-xs text-tertiary">
+                {follow ? "Following new events as they arrive." : "Auto-follow paused. New events still arrive below."}
+            </p>
+        </Card>
+    );
+};
+
+/**
+ * Each action disables the control that triggered it, so focus moves to the
+ * control that undoes or follows it: Hold to Resume, Resume and Retry to the
+ * hold reason, Cancel to Retry.
+ */
+const Actions = ({ job }: JobProps) => {
+    const { run, error } = useCommand();
+    const [reason, setReason] = useState("");
+    const reasonRef = useRef<HTMLInputElement>(null);
+    const resumeRef = useRef<HTMLButtonElement>(null);
+    const retryRef = useRef<HTMLButtonElement>(null);
+
+    const finished = job.status === "done" || job.status === "failed";
+    const held = job.status === "on-hold";
+
+    async function handleHold(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        if (await run({ type: "job.hold", jobId: job.id, reason })) {
+            setReason("");
+            resumeRef.current?.focus();
+        }
+    }
+
+    async function handleResume() {
+        if (await run({ type: "job.resume", jobId: job.id })) reasonRef.current?.focus();
+    }
+
+    async function handleCancel() {
+        if (await run({ type: "job.cancel", jobId: job.id })) retryRef.current?.focus();
+    }
+
+    async function handleRetry() {
+        if (await run({ type: "job.retry", jobId: job.id })) reasonRef.current?.focus();
+    }
+
+    return (
+        <Card title="Actions">
+            <form className="flex flex-col gap-3" onSubmit={handleHold}>
+                <Input
+                    ref={reasonRef}
+                    label="Hold reason"
+                    placeholder="Waiting on a designer"
+                    value={reason}
+                    onChange={setReason}
+                    isDisabled={finished || held}
+                />
+                <div className="flex flex-wrap gap-2">
+                    <Button type="submit" size="sm" color="secondary" isDisabled={finished || held}>
+                        Hold job
+                    </Button>
+                    <Button ref={resumeRef} size="sm" color="secondary" isDisabled={!held} onPress={handleResume}>
+                        Resume job
+                    </Button>
+                    <Button size="sm" color="primary-destructive" isDisabled={finished} onPress={handleCancel}>
+                        Cancel job
+                    </Button>
+                    <Button ref={retryRef} size="sm" color="secondary" isDisabled={job.status !== "failed"} onPress={handleRetry}>
+                        Retry job
+                    </Button>
+                </div>
+                {error && (
+                    <p role="alert" className="text-sm font-medium text-error-primary">
+                        {error}
+                    </p>
+                )}
+            </form>
+        </Card>
     );
 };

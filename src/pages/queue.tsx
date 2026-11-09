@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type ChangeEvent, useState } from "react";
 import { SearchLg } from "@untitledui/icons";
 import { JobCard } from "@/components/app/job-card";
 import { PageHeader } from "@/components/app/page-header";
@@ -12,18 +12,38 @@ import { useAppStore } from "@/state/store-context";
 import { cx } from "@/utils/cx";
 import { KIND_LABEL } from "@/utils/format";
 
+interface KindFilterButtonProps {
+    kind: JobKind;
+    pressed: boolean;
+    onToggle: (kind: JobKind) => void;
+}
+
 export const QueuePage = () => {
     const control = useAppStore((s) => s.control);
     const [filter, setFilter] = useState<QueueFilter>(EMPTY_FILTER);
 
-    const jobs = useMemo(() => listJobs(control), [control]);
-    const repos = useMemo(() => listRepos(jobs), [jobs]);
-    const visible = useMemo(() => filterJobs(jobs, filter), [jobs, filter]);
-    const groups = useMemo(() => groupByStatus(visible), [visible]);
+    const jobs = listJobs(control);
+    const repos = listRepos(jobs);
+    const visible = filterJobs(jobs, filter);
+    const groups = groupByStatus(visible);
     const filtered = filter.kinds.length > 0 || filter.repo !== "all" || filter.search.trim() !== "";
 
-    const toggleKind = (kind: JobKind) =>
+    function handleSearch(search: string) {
+        setFilter((current) => ({ ...current, search }));
+    }
+
+    function handleRepo(event: ChangeEvent<HTMLSelectElement>) {
+        const repo = event.target.value;
+        setFilter((current) => ({ ...current, repo }));
+    }
+
+    function handleKindToggle(kind: JobKind) {
         setFilter((current) => ({ ...current, kinds: current.kinds.includes(kind) ? current.kinds.filter((k) => k !== kind) : [...current.kinds, kind] }));
+    }
+
+    function handleClear() {
+        setFilter(EMPTY_FILTER);
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -33,54 +53,41 @@ export const QueuePage = () => {
                 <Input
                     className="lg:max-w-xs"
                     label="Search"
-                    placeholder="Ticket, title, repo or model"
+                    placeholder="ACME-104"
+                    hint="Ticket, title, repository or model"
                     icon={SearchLg}
                     value={filter.search}
-                    onChange={(search) => setFilter((current) => ({ ...current, search }))}
+                    onChange={handleSearch}
                 />
                 <NativeSelect
                     className="lg:max-w-56"
                     label="Repository"
                     value={filter.repo}
-                    onChange={(event) => setFilter((current) => ({ ...current, repo: event.target.value }))}
+                    onChange={handleRepo}
                     options={[{ label: "All repositories", value: "all" }, ...repos.map((repo) => ({ label: repo, value: repo }))]}
                 />
                 <fieldset className="min-w-0">
                     <legend className="mb-1.5 text-sm font-medium text-secondary">Kind</legend>
                     <div className="flex flex-wrap gap-2">
-                        {JOB_KINDS.map((kind) => {
-                            const on = filter.kinds.includes(kind);
-                            return (
-                                <button
-                                    key={kind}
-                                    type="button"
-                                    aria-pressed={on}
-                                    onClick={() => toggleKind(kind)}
-                                    className={cx(
-                                        "rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition ring-inset",
-                                        on ? "bg-brand-solid text-white ring-transparent" : "bg-primary text-secondary ring-primary hover:bg-primary_hover",
-                                    )}
-                                >
-                                    {KIND_LABEL[kind]}
-                                </button>
-                            );
-                        })}
+                        {JOB_KINDS.map((kind) => (
+                            <KindFilterButton key={kind} kind={kind} pressed={filter.kinds.includes(kind)} onToggle={handleKindToggle} />
+                        ))}
                     </div>
                 </fieldset>
                 {filtered && (
-                    <Button color="link-gray" size="sm" onPress={() => setFilter(EMPTY_FILTER)}>
+                    <Button color="link-gray" size="sm" onPress={handleClear}>
                         Clear filters
                     </Button>
                 )}
             </div>
 
-            <p className="text-sm text-tertiary" role="status" aria-live="polite">
+            <p className="text-sm text-tertiary" role="status">
                 Showing {visible.length} of {jobs.length} jobs
             </p>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 {JOB_STATUSES.map((status) => (
-                    <section key={status} aria-labelledby={`col-${status}`} className="flex min-w-0 flex-col gap-2 rounded-xl bg-tertiary/60 p-3">
+                    <section key={status} aria-labelledby={`col-${status}`} className="flex min-w-0 flex-col gap-2 rounded-xl bg-tertiary p-3">
                         <h2 id={`col-${status}`} className="flex items-center justify-between gap-2">
                             <StatusBadge status={status} />
                             <span className="text-sm font-medium text-tertiary">
@@ -103,5 +110,25 @@ export const QueuePage = () => {
                 ))}
             </div>
         </div>
+    );
+};
+
+const KindFilterButton = ({ kind, pressed, onToggle }: KindFilterButtonProps) => {
+    function handleClick() {
+        onToggle(kind);
+    }
+
+    return (
+        <button
+            type="button"
+            aria-pressed={pressed}
+            onClick={handleClick}
+            className={cx(
+                "rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition ring-inset",
+                pressed ? "bg-brand-solid text-primary_on-brand ring-transparent" : "bg-primary text-secondary ring-primary hover:bg-primary_hover",
+            )}
+        >
+            {KIND_LABEL[kind]}
+        </button>
     );
 };

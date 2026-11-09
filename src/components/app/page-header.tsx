@@ -1,9 +1,25 @@
 import { type ReactNode, useEffect } from "react";
+import { cx } from "@/utils/cx";
+import { surface } from "./styles";
 
-export const PageHeader = ({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) => {
+interface PageHeaderProps {
+    title: string;
+    description?: ReactNode;
+    actions?: ReactNode;
+}
+
+interface CardProps {
+    title?: string;
+    children: ReactNode;
+    className?: string;
+    actions?: ReactNode;
+}
+
+export const PageHeader = ({ title, description, actions }: PageHeaderProps) => {
     useEffect(() => {
         document.title = `${title} | Agent control room`;
     }, [title]);
+
     return (
         <div className="flex flex-col gap-3 border-b border-secondary pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
@@ -15,29 +31,14 @@ export const PageHeader = ({ title, description, actions }: { title: string; des
     );
 };
 
-export const Card = ({
-    title,
-    children,
-    className = "",
-    headingLevel = 2,
-    actions,
-}: {
-    title?: string;
-    children: ReactNode;
-    className?: string;
-    headingLevel?: 2 | 3;
-    actions?: ReactNode;
-}) => {
-    const Heading = headingLevel === 2 ? "h2" : "h3";
-    return (
-        <section className={`min-w-0 rounded-xl bg-primary p-4 shadow-xs ring-1 ring-secondary sm:p-5 ${className}`} aria-label={title}>
-            {(title || actions) && (
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    {title && <Heading className="text-md font-semibold text-primary">{title}</Heading>}
-                    {actions}
-                </div>
-            )}
-            {children}
-        </section>
-    );
-};
+export const Card = ({ title, children, className, actions }: CardProps) => (
+    <section className={cx("min-w-0", surface, className)} aria-label={title}>
+        {(title || actions) && (
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                {title && <h2 className="text-md font-semibold text-primary">{title}</h2>}
+                {actions}
+            </div>
+        )}
+        {children}
+    </section>
+);

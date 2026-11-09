@@ -1,8 +1,8 @@
 import { DEFAULT_GUARDS } from "./guards";
 import { DEFAULT_ROUTING } from "./routing";
-import { ACTIVE_STATUSES, type AgentEvent, type ControlState, type Job } from "./types";
+import { type AgentEvent, type ControlState, type Job } from "./types";
 
-export const MAX_EVENTS = 400;
+const MAX_EVENTS = 400;
 
 export const createInitialState = (): ControlState => ({
     jobs: {},
@@ -135,12 +135,10 @@ export const applyEvent = (state: ControlState, event: AgentEvent): ControlState
         next = applyToJob(state, event);
     }
 
-    if (event.jobId && next.jobs[event.jobId]) {
-        const job = next.jobs[event.jobId];
-        next = { ...next, jobs: { ...next.jobs, [job.id]: { ...job, timeline: [...job.timeline, event] } } };
+    const owner = event.jobId ? next.jobs[event.jobId] : undefined;
+    if (owner) {
+        next = { ...next, jobs: { ...next.jobs, [owner.id]: { ...owner, timeline: [...owner.timeline, event] } } };
     }
     const events = next.events.length >= MAX_EVENTS ? [...next.events.slice(-(MAX_EVENTS - 1)), event] : [...next.events, event];
     return { ...next, events };
 };
-
-export const isActive = (job: Job): boolean => ACTIVE_STATUSES.includes(job.status);

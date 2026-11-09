@@ -6,8 +6,6 @@ export interface TicketTemplate {
     repo: string;
 }
 
-export const REPOS = ["acme/web", "acme/api", "acme/design-system", "acme/mobile"] as const;
-
 export const TICKET_TEMPLATES: TicketTemplate[] = [
     { kind: "bug", title: "Date picker loses focus after month change", repo: "acme/design-system" },
     { kind: "feature", title: "Bulk archive from the inbox list", repo: "acme/web" },
@@ -105,17 +103,26 @@ export const CI_FAILURES = [
 ];
 
 export const REVIEW_FINDINGS = [
-    { file: "src/features/list/use-selection.ts", body: "This effect re-subscribes on every render. Can the handler be stable?" },
-    { file: "src/api/export.ts", body: "Please add a test for the empty result case." },
-    { file: "src/components/panel.tsx", body: "The close button has no accessible name." },
-    { file: "src/lib/format.ts", body: "This duplicates formatDate from the shared utils." },
-];
-
-export const REVIEW_REPLIES = [
-    "Good catch. Moved the handler into a ref so the subscription is stable. Fixed in the latest commit.",
-    "Added a test that covers the empty case and asserts the header row is still written.",
-    "Added an aria-label and a test that queries the button by its name.",
-    "Replaced it with the shared helper and removed the local copy.",
+    {
+        file: "src/features/list/use-selection.ts",
+        body: "This effect re-subscribes on every render. Can the handler be stable?",
+        reply: "Good catch. Moved the handler into a ref so the subscription is stable. Fixed in the latest commit.",
+    },
+    {
+        file: "src/api/export.ts",
+        body: "Please add a test for the empty result case.",
+        reply: "Added a test that covers the empty case and asserts the header row is still written.",
+    },
+    {
+        file: "src/components/panel.tsx",
+        body: "The close button has no accessible name.",
+        reply: "Added an aria-label and a test that queries the button by its name.",
+    },
+    {
+        file: "src/lib/format.ts",
+        body: "This duplicates formatDate from the shared utils.",
+        reply: "Replaced it with the shared helper and removed the local copy.",
+    },
 ];
 
 export const COMMIT_MESSAGES = {

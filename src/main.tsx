@@ -1,22 +1,36 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
+import { z } from "zod/mini";
 import { App } from "@/app";
 import { SseAgentSource } from "@/domain/source";
 import { createAppStore } from "@/state/store";
 import "@/styles/globals.css";
 
+const WARMUP_TICKS = 130;
+
 // ?stream=https://agent.example/events&commands=https://agent.example/commands connects to a real agent.
-const params = new URLSearchParams(window.location.search);
-const stream = params.get("stream");
-const commands = params.get("commands");
+const params = z
+    .catch(
+        z.object({
+            stream: z.optional(z.url()),
+            commands: z.optional(z.url()),
+            seed: z.optional(z.string().check(z.maxLength(64))),
+        }),
+        {},
+    )
+    .parse(Object.fromEntries(new URLSearchParams(window.location.search)));
+
 const store = createAppStore(
-    stream && commands
-        ? { source: new SseAgentSource({ streamUrl: stream, commandUrl: commands }) }
-        : { seed: params.get("seed") ?? undefined, warmup: 130, autoStart: true },
+    params.stream && params.commands
+        ? { source: new SseAgentSource({ streamUrl: params.stream, commandUrl: params.commands }) }
+        : { seed: params.seed, warmup: WARMUP_TICKS, autoStart: true },
 );
 
-createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root");
+if (!root) throw new Error("The page is missing its #root element");
+
+createRoot(root).render(
     <StrictMode>
         <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <App store={store} />

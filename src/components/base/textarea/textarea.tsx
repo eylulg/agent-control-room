@@ -16,7 +16,7 @@ interface TextAreaBaseProps extends AriaTextAreaProps {
     size?: "sm" | "md";
 }
 
-export const TextAreaBase = ({ className, size = "md", ...props }: TextAreaBaseProps) => {
+const TextAreaBase = ({ className, size = "md", ...props }: TextAreaBaseProps) => {
     return (
         <AriaTextArea
             {...props}

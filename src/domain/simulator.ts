@@ -2,26 +2,16 @@ import { findBlockingGuard, guardFor } from "./guards";
 import { applyEvent, createInitialState } from "./reducer";
 import { type Rng, createRng } from "./rng";
 import { validateRouting } from "./routing";
-import {
-    APPROVAL_TEMPLATES,
-    CI_CHECKS,
-    CI_FAILURES,
-    COMMIT_MESSAGES,
-    PLAN_STEPS,
-    REVIEW_FINDINGS,
-    REVIEW_REPLIES,
-    TICKET_TEMPLATES,
-    type TicketTemplate,
-} from "./scenarios";
+import { APPROVAL_TEMPLATES, CI_CHECKS, CI_FAILURES, COMMIT_MESSAGES, PLAN_STEPS, REVIEW_FINDINGS, TICKET_TEMPLATES, type TicketTemplate } from "./scenarios";
 import type { AgentEvent, ControlState, EventPayloads, EventType, GuardAction, Job, JobStatus, OperatorCommand } from "./types";
 
 export const SIM_EPOCH = Date.UTC(2026, 0, 5, 9, 0, 0);
 export const TICK_MS = 60_000;
-export const MAX_PARALLEL = 4;
+const MAX_PARALLEL = 4;
 /** Jobs the agent keeps in flight, not counting the ones parked on an approval. */
-export const MAX_ACTIVE = 8;
+const MAX_ACTIVE = 8;
 /** Hard cap including parked jobs, so an unattended inbox cannot grow forever. */
-export const MAX_OPEN = 16;
+const MAX_OPEN = 16;
 export const HEARTBEAT_EVERY = 5;
 export const DEFAULT_SEED = "control-room";
 
@@ -47,15 +37,7 @@ interface SimJob {
 
 export type Listener = (event: AgentEvent) => void;
 
-export interface Scheduler {
-    setInterval(callback: () => void, ms: number): unknown;
-    clearInterval(handle: unknown): void;
-}
-
-const defaultScheduler: Scheduler = {
-    setInterval: (callback, ms) => globalThis.setInterval(callback, ms),
-    clearInterval: (handle) => globalThis.clearInterval(handle as ReturnType<typeof setInterval>),
-};
+type IntervalHandle = ReturnType<typeof globalThis.setInterval>;
 
 export interface SimulatorOptions {
     seed?: string;
@@ -63,7 +45,6 @@ export interface SimulatorOptions {
     speed?: number;
     /** Ticks to run immediately after reset so the world is not empty. */
     warmup?: number;
-    scheduler?: Scheduler;
 }
 
 /**
@@ -79,17 +60,15 @@ export class Simulator {
     private ticketCount = 0;
     private prCount = 0;
     private listeners = new Set<Listener>();
-    private handle: unknown = null;
+    private handle: IntervalHandle | null = null;
     private currentSeed: string;
     private ticksPerSecond: number;
     private readonly warmup: number;
-    private readonly scheduler: Scheduler;
 
     constructor(options: SimulatorOptions = {}) {
         this.currentSeed = options.seed ?? DEFAULT_SEED;
         this.ticksPerSecond = options.speed ?? 1;
         this.warmup = options.warmup ?? 0;
-        this.scheduler = options.scheduler ?? defaultScheduler;
         this.rng = createRng(this.currentSeed);
         this.world = createInitialState();
         this.boot();
@@ -139,12 +118,12 @@ export class Simulator {
 
     start(): void {
         if (this.running) return;
-        this.handle = this.scheduler.setInterval(() => this.step(), 1000 / this.ticksPerSecond);
+        this.handle = globalThis.setInterval(() => this.step(), 1000 / this.ticksPerSecond);
     }
 
     pause(): void {
         if (this.handle === null) return;
-        this.scheduler.clearInterval(this.handle);
+        globalThis.clearInterval(this.handle);
         this.handle = null;
     }
 
@@ -181,7 +160,7 @@ export class Simulator {
             case "job.hold": {
                 const job = this.world.jobs[command.jobId];
                 if (!job || job.status === "on-hold" || job.status === "done" || job.status === "failed") return;
-                this.sim[job.id].manualHold = true;
+                this.simOf(job).manualHold = true;
                 this.emit("job.held", job.id, { reason: command.reason.trim() || "Held by operator", by: "operator" });
                 return;
             }
@@ -240,6 +219,7 @@ export class Simulator {
 
     private emit<T extends EventType>(type: T, jobId: string | null, payload: EventPayloads[T]): void {
         this.seq += 1;
+        // TypeScript cannot correlate the generic T with one member of the AgentEvent union.
         const event = { seq: this.seq, ts: this.now, jobId, type, payload } as AgentEvent;
         this.world = applyEvent(this.world, event);
         this.notify(event);
@@ -310,14 +290,20 @@ export class Simulator {
         return out;
     }
 
-    private resume(job: Job, by: "agent" | "operator"): void {
+    private simOf(job: Job): SimJob {
         const s = this.sim[job.id];
+        if (!s) throw new Error(`No simulation state for ${job.id}`);
+        return s;
+    }
+
+    private resume(job: Job, by: "agent" | "operator"): void {
+        const s = this.simOf(job);
         s.manualHold = false;
         s.holdUntil = null;
         this.emit("job.resumed", job.id, { by });
         const after = this.world.jobs[job.id];
         const pending = Object.values(this.world.approvals).some((a) => a.jobId === job.id && a.status === "pending");
-        if (after.status === "awaiting-approval" && !pending) this.setStatus(after, "implementing");
+        if (after?.status === "awaiting-approval" && !pending) this.setStatus(after, "implementing");
     }
 
     private answerApproval(approvalId: string, option: "A" | "B", note?: string): void {
@@ -331,7 +317,7 @@ export class Simulator {
         this.emit("plan.posted", job.id, {
             plan: `${job.plan ?? ""}\n\nDecision: option ${option}, ${chosen.label}.${trimmed ? ` Operator note: ${trimmed}` : ""}`.trim(),
         });
-        const s = this.sim[job.id];
+        const s = this.simOf(job);
         s.phase = "build";
         s.wait = 1;
         if (job.status === "awaiting-approval") this.setStatus(job, "implementing");
@@ -432,9 +418,10 @@ export class Simulator {
                         return;
                     }
                 }
-                if (s.commitsLeft > 0) {
+                const message = messages[index];
+                if (s.commitsLeft > 0 && message) {
                     s.commitsLeft -= 1;
-                    this.emit("commit.pushed", job.id, { sha: this.sha(), message: messages[index] });
+                    this.emit("commit.pushed", job.id, { sha: this.sha(), message });
                     if (s.commitsLeft === 0 && !job.pr) {
                         this.prCount += 1;
                         const number = 400 + this.prCount;
@@ -480,10 +467,10 @@ export class Simulator {
                             return;
                         }
                     }
-                    if (open) {
-                        const index = REVIEW_FINDINGS.findIndex((finding) => finding.body === open.body);
+                    const reply = open && REVIEW_FINDINGS.find((finding) => finding.body === open.body)?.reply;
+                    if (open && reply) {
                         this.emit("commit.pushed", job.id, { sha: this.sha(), message: "fix: address review feedback" });
-                        this.emit("review.replied", job.id, { findingId: open.id, body: REVIEW_REPLIES[Math.max(0, index)] });
+                        this.emit("review.replied", job.id, { findingId: open.id, body: reply });
                     }
                     this.setStatus(job, "implementing");
                     s.wait = 1;

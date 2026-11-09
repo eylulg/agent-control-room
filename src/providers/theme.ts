@@ -1,14 +1,14 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 export type Theme = "light" | "dark";
-export const THEME_KEY = "acr-theme";
+const THEME_KEY = "acr-theme";
 const DARK_CLASS = "dark-mode";
 
 const readTheme = (): Theme => (document.documentElement.classList.contains(DARK_CLASS) ? "dark" : "light");
 
 const listeners = new Set<() => void>();
 
-export const setTheme = (theme: Theme): void => {
+const setTheme = (theme: Theme): void => {
     document.documentElement.classList.toggle(DARK_CLASS, theme === "dark");
     document.documentElement.style.colorScheme = theme;
     try {
@@ -26,6 +26,6 @@ const subscribe = (listener: () => void) => {
 
 export const useTheme = (): [Theme, () => void] => {
     const theme = useSyncExternalStore(subscribe, readTheme, () => "light" as Theme);
-    const toggle = useCallback(() => setTheme(readTheme() === "dark" ? "light" : "dark"), []);
+    const toggle = () => setTheme(readTheme() === "dark" ? "light" : "dark");
     return [theme, toggle];
 };

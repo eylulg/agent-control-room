@@ -7,7 +7,7 @@ import { Label } from "@/components/base/input/label";
 import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { cx, sortCx } from "@/utils/cx";
 
-export interface InputBaseProps extends Omit<AriaInputProps, "size"> {
+interface InputBaseProps extends Omit<AriaInputProps, "size"> {
     /** Tooltip message on hover. */
     tooltip?: string;
     /** Whether the input is invalid. */
@@ -39,7 +39,7 @@ export interface InputBaseProps extends Omit<AriaInputProps, "size"> {
     icon?: ComponentType<HTMLAttributes<HTMLOrSVGElement>>;
 }
 
-export const InputBase = ({
+const InputBase = ({
     ref,
     tooltip,
     shortcut,
@@ -204,9 +204,9 @@ interface TextFieldContextProps extends Partial<Pick<InputBaseProps, "size" | "w
 
 const TextFieldContext = createContext<TextFieldContextProps>({});
 
-export interface TextFieldProps extends AriaTextFieldProps, TextFieldContextProps {}
+interface TextFieldProps extends AriaTextFieldProps, TextFieldContextProps {}
 
-export const TextField = ({ className, size = "md", inputClassName, wrapperClassName, iconClassName, tooltipClassName, ...props }: TextFieldProps) => {
+const TextField = ({ className, size = "md", inputClassName, wrapperClassName, iconClassName, tooltipClassName, ...props }: TextFieldProps) => {
     return (
         <TextFieldContext.Provider value={{ inputClassName, wrapperClassName, iconClassName, tooltipClassName, size }}>
             <AriaTextField

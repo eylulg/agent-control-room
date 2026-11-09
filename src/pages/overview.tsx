@@ -1,10 +1,10 @@
-import { useMemo } from "react";
 import { Link } from "react-router";
 import { EventRow } from "@/components/app/event-row";
 import { Card, PageHeader } from "@/components/app/page-header";
 import { Sparkline } from "@/components/app/sparkline";
 import { StatTile } from "@/components/app/stat-tile";
 import { StatusBadge } from "@/components/app/status-badge";
+import { inlineLink } from "@/components/app/styles";
 import { useHealth } from "@/components/app/use-health";
 import { countByStatus, listJobs, pendingApprovals, throughput } from "@/domain/selectors";
 import { SIM_EPOCH, TICK_MS } from "@/domain/simulator";
@@ -14,14 +14,15 @@ import { formatClock } from "@/utils/format";
 
 const BUCKETS = 12;
 const BUCKET_MS = 10 * TICK_MS;
+const RECENT_EVENTS = 10;
 
 export const OverviewPage = () => {
     const control = useAppStore((s) => s.control);
     const sim = useAppStore((s) => s.sim);
     const health = useHealth();
 
-    const jobs = useMemo(() => listJobs(control), [control]);
-    const counts = useMemo(() => countByStatus(jobs), [jobs]);
+    const jobs = listJobs(control);
+    const counts = countByStatus(jobs);
     const now = sim ? SIM_EPOCH + sim.tick * TICK_MS : (control.health.lastHeartbeat ?? SIM_EPOCH);
     const series = throughput(control.completions, now, BUCKET_MS, BUCKETS);
     const points = series.map((value, i) => ({ value, label: `10 minutes to ${formatClock(now - BUCKET_MS * (BUCKETS - 1 - i))}` }));
@@ -32,7 +33,7 @@ export const OverviewPage = () => {
     const maxCount = Math.max(1, ...JOB_STATUSES.map((status) => counts[status]));
     const recent = control.events
         .filter((event) => event.type !== "health.heartbeat")
-        .slice(-10)
+        .slice(-RECENT_EVENTS)
         .reverse();
 
     return (
@@ -45,7 +46,7 @@ export const OverviewPage = () => {
                     label="Waiting on you"
                     value={approvals}
                     context={
-                        <Link to="/approvals" className="rounded-xs font-medium text-brand-secondary underline-offset-2 hover:underline">
+                        <Link to="/approvals" className={inlineLink}>
                             Open approvals inbox
                         </Link>
                     }

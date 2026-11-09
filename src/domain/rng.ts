@@ -10,7 +10,7 @@ export interface Rng {
     readonly state: number;
 }
 
-export const hashSeed = (seed: string | number): number => {
+const hashSeed = (seed: string | number): number => {
     const text = String(seed);
     let h = 2166136261;
     for (let i = 0; i < text.length; i++) {
@@ -32,7 +32,11 @@ export const createRng = (seed: string | number): Rng => {
     return {
         next,
         int: (min, max) => min + Math.floor(next() * (max - min + 1)),
-        pick: (items) => items[Math.floor(next() * items.length)],
+        pick: (items) => {
+            const item = items[Math.floor(next() * items.length)];
+            if (item === undefined) throw new Error("Cannot pick from an empty list");
+            return item;
+        },
         chance: (p) => next() < p,
         get state() {
             return a;

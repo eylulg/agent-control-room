@@ -1,8 +1,14 @@
+import { parseAgentEventData } from "./schema";
 import type { Simulator } from "./simulator";
 import type { AgentEvent, OperatorCommand } from "./types";
 
 /** The SSE event name every agent event is sent under. */
 export const AGENT_EVENT = "agent-event";
+
+type ReadyState = 0 | 1 | 2;
+
+const OPEN: ReadyState = 1;
+const CLOSED: ReadyState = 2;
 
 export interface AgentMessageEvent {
     /** JSON encoded AgentEvent, exactly like `MessageEvent.data` from a real EventSource. */
@@ -10,46 +16,40 @@ export interface AgentMessageEvent {
     lastEventId: string;
 }
 
-export type AgentSourceListener = (event: AgentMessageEvent) => void;
+type AgentSourceListener = (event: AgentMessageEvent) => void;
 
 /**
  * The shape of the browser `EventSource`, narrowed to what the control room needs,
  * plus a `send` channel for operator commands (a POST in a real backend).
- * Anything that satisfies this can drive the UI: the in browser simulator or a
- * real agent over server sent events.
  */
 export interface AgentEventSource {
     readonly url: string;
-    readonly readyState: 0 | 1 | 2;
+    readonly readyState: ReadyState;
     addEventListener(type: typeof AGENT_EVENT, listener: AgentSourceListener): void;
     removeEventListener(type: typeof AGENT_EVENT, listener: AgentSourceListener): void;
     close(): void;
-    send(command: OperatorCommand): Promise<void>;
+    send(command: OperatorCommand, signal?: AbortSignal): Promise<void>;
 }
 
-export const CONNECTING = 0;
-export const OPEN = 1;
-export const CLOSED = 2;
-
-export const parseAgentEvent = (message: AgentMessageEvent): AgentEvent => JSON.parse(message.data) as AgentEvent;
+/** Returns null for anything that is not a valid agent event, so a bad message never reaches the state. */
+export const parseAgentEvent = (message: AgentMessageEvent): AgentEvent | null => parseAgentEventData(message.data);
 
 const toMessage = (event: AgentEvent): AgentMessageEvent => ({ data: JSON.stringify(event), lastEventId: String(event.seq) });
 
 /** Adapts the simulator to the EventSource shape. Sends a snapshot first, like the real server. */
 export class SimulatedAgentSource implements AgentEventSource {
     readonly url = "sim://local";
-    private state: 0 | 1 | 2 = CONNECTING;
+    readonly simulator: Simulator;
+    private state: ReadyState = OPEN;
     private listeners = new Set<AgentSourceListener>();
     private unsubscribe: (() => void) | null;
-    readonly simulator: Simulator;
 
     constructor(simulator: Simulator) {
         this.simulator = simulator;
         this.unsubscribe = simulator.subscribe((event) => this.dispatch(event));
-        this.state = OPEN;
     }
 
-    get readyState(): 0 | 1 | 2 {
+    get readyState(): ReadyState {
         return this.state;
     }
 
@@ -79,7 +79,7 @@ export class SimulatedAgentSource implements AgentEventSource {
     }
 }
 
-export interface SseSourceOptions {
+interface SseSourceOptions {
     /** GET endpoint that streams `agent-event` messages. */
     streamUrl: string;
     /** POST endpoint that accepts an OperatorCommand as JSON. */
@@ -100,11 +100,13 @@ export class SseAgentSource implements AgentEventSource {
         this.url = options.streamUrl;
         this.commandUrl = options.commandUrl;
         this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
-        this.source = (options.createEventSource ?? ((url) => new EventSource(url)))(options.streamUrl);
+        const create = options.createEventSource ?? ((url: string) => new EventSource(url));
+        this.source = create(options.streamUrl);
     }
 
-    get readyState(): 0 | 1 | 2 {
-        return this.source.readyState as 0 | 1 | 2;
+    get readyState(): ReadyState {
+        const state = this.source.readyState;
+        return state === 0 || state === 1 ? state : CLOSED;
     }
 
     addEventListener(type: typeof AGENT_EVENT, listener: AgentSourceListener): void {
@@ -123,12 +125,13 @@ export class SseAgentSource implements AgentEventSource {
         this.source.close();
     }
 
-    async send(command: OperatorCommand): Promise<void> {
+    async send(command: OperatorCommand, signal?: AbortSignal): Promise<void> {
         const response = await this.fetchImpl(this.commandUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(command),
+            signal,
         });
-        if (!response.ok) throw new Error(`Command ${command.type} failed with ${response.status}`);
+        if (!response.ok) throw new Error("The agent did not accept the request. Try again in a moment.");
     }
 }

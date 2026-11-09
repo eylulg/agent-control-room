@@ -1,36 +1,11 @@
-import type React from "react";
+import type { ComponentType } from "react";
 
-// Below the import on purpose: the shadcn CLI drops comments that come before a file's first
-// statement, which would drop this directive and fail lint in projects installed that way.
-// `any` is required here: with `unknown`, the type guards below stop narrowing to component types.
-/* eslint-disable @typescript-eslint/no-explicit-any */
+const FORWARD_REF = Symbol.for("react.forward_ref");
+const MEMO = Symbol.for("react.memo");
 
-type ReactComponent = React.FC<any> | React.ComponentClass<any, any>;
-
-/**
- * Checks if a given value is a function component.
- */
-export const isFunctionComponent = (component: any): component is React.FC<any> => {
-    return typeof component === "function";
-};
-
-/**
- * Checks if a given value is a class component.
- */
-export const isClassComponent = (component: any): component is React.ComponentClass<any, any> => {
-    return typeof component === "function" && component.prototype && (!!component.prototype.isReactComponent || !!component.prototype.render);
-};
-
-/**
- * Checks if a given value is a forward ref component.
- */
-export const isForwardRefComponent = (component: any): component is React.ForwardRefExoticComponent<any> => {
-    return typeof component === "object" && component !== null && component.$$typeof.toString() === "Symbol(react.forward_ref)";
-};
-
-/**
- * Checks if a given value is a valid React component.
- */
-export const isReactComponent = (component: any): component is ReactComponent => {
-    return isFunctionComponent(component) || isForwardRefComponent(component) || isClassComponent(component);
+/** True for function, class, forwardRef and memo components, false for elements and other values. */
+export const isReactComponent = (value: unknown): value is ComponentType<{ className?: string; "data-icon"?: string }> => {
+    if (typeof value === "function") return true;
+    if (typeof value !== "object" || value === null || !("$$typeof" in value)) return false;
+    return value.$$typeof === FORWARD_REF || value.$$typeof === MEMO;
 };
