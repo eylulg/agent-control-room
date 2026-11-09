@@ -1,13 +1,14 @@
 import { JOB_KINDS, type JobKind, type RoutingTable } from "./types";
 
-export const KNOWN_MODELS = ["claude-opus-4-5", "claude-sonnet-4-5", "claude-haiku-4-5"] as const;
+/** claude-fable-5-1 is the optional strongest tier. No kind routes to it by default. */
+export const KNOWN_MODELS = ["claude-fable-5-1", "claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"] as const;
 
 export const DEFAULT_ROUTING: RoutingTable = {
-    feature: "claude-opus-4-5",
-    bug: "claude-sonnet-4-5",
-    chore: "claude-haiku-4-5",
-    "review-fix": "claude-sonnet-4-5",
-    release: "claude-haiku-4-5",
+    feature: "claude-opus-5-5",
+    bug: "claude-sonnet-5-5",
+    chore: "claude-haiku-5-5",
+    "review-fix": "claude-sonnet-5-5",
+    release: "claude-haiku-5-5",
 };
 
 const MODEL_PATTERN = /^[a-z0-9][a-z0-9.-]*$/;
@@ -25,5 +26,3 @@ export const validateRouting = (routing: Record<string, string>): RoutingErrors 
     }
     return errors;
 };
-
-export const modelFor = (routing: RoutingTable, kind: JobKind): string => routing[kind];
