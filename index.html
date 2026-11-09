@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="Operator dashboard for an autonomous ticket to pull request engineering agent, with approvals, guards and model routing."
+        />
+        <meta name="theme-color" content="#7f56d9" />
+        <title>Agent control room</title>
+        <script>
+            // Runs before first paint so the dark theme never flashes.
+            (function () {
+                var theme = null;
+                try {
+                    theme = localStorage.getItem("acr-theme");
+                } catch (e) {}
+                var dark = theme ? theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+                document.documentElement.classList.toggle("dark-mode", dark);
+                document.documentElement.style.colorScheme = dark ? "dark" : "light";
+            })();
+        </script>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet" />
+    </head>
+    <body class="bg-secondary antialiased">
+        <div id="root"></div>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
+</html>
