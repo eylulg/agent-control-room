@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_ROUTING } from "../routing";
 import { pendingApprovals } from "../selectors";
-import { Simulator } from "../simulator";
+import { Simulator, TEAMMATE_AFTER_TICKS } from "../simulator";
 import type { AgentEvent, EventType } from "../types";
 
 const serialise = (events: AgentEvent[]) => events.map((event) => JSON.stringify(event));
@@ -150,5 +150,31 @@ describe("Simulator", () => {
         sim.send({ type: "job.retry", jobId: job.id });
 
         expect(sim.state.jobs[job.id]).toMatchObject({ status: "queued", attempts: 2, model: "claude-fable-5-1" });
+    });
+
+    it("keeps finishing jobs for 2000 ticks with nobody answering approvals", () => {
+        const sim = new Simulator({ seed: "unattended" });
+
+        sim.step(1500);
+        const doneBefore = Object.values(sim.state.jobs).filter((job) => job.status === "done").length;
+        const lastStretch = sim.step(500);
+
+        expect(doneBefore).toBeGreaterThan(20);
+        expect(lastStretch.some((event) => event.type === "job.done")).toBe(true);
+        expect(lastStretch.some((event) => event.type === "job.created")).toBe(true);
+    });
+
+    it("answers a stale approval with the recommended option and says so", () => {
+        const sim = new Simulator({ seed: "approvals" });
+        sim.step(4);
+        const approval = pendingApprovals(sim.state)[0];
+        if (!approval) throw new Error("expected a pending approval");
+
+        sim.step(TEAMMATE_AFTER_TICKS + 1);
+
+        expect(sim.state.approvals[approval.id]).toMatchObject({
+            status: "answered",
+            answer: { option: approval.recommended, note: "answered by teammate" },
+        });
     });
 });

@@ -13,6 +13,9 @@ const MAX_ACTIVE = 8;
 /** Hard cap including parked jobs, so an unattended inbox cannot grow forever. */
 const MAX_OPEN = 16;
 export const HEARTBEAT_EVERY = 5;
+/** A simulated teammate answers an approval with the recommended option once it has waited this many ticks. */
+export const TEAMMATE_AFTER_TICKS = 30;
+const TEAMMATE_NOTE = "answered by teammate";
 export const DEFAULT_SEED = "control-room";
 
 type Phase = "plan" | "build" | "ci" | "review" | "ready" | "merge";
@@ -315,7 +318,7 @@ export class Simulator {
         this.emit("approval.answered", job.id, { approvalId, option, ...(trimmed ? { note: trimmed } : {}) });
         const chosen = approval.options[option];
         this.emit("plan.posted", job.id, {
-            plan: `${job.plan ?? ""}\n\nDecision: option ${option}, ${chosen.label}.${trimmed ? ` Operator note: ${trimmed}` : ""}`.trim(),
+            plan: `${job.plan ?? ""}\n\nDecision: option ${option}, ${chosen.label}.${trimmed ? ` Note: ${trimmed}` : ""}`.trim(),
         });
         const s = this.simOf(job);
         s.phase = "build";
@@ -323,9 +326,18 @@ export class Simulator {
         if (job.status === "awaiting-approval") this.setStatus(job, "implementing");
     }
 
+    private answerStaleApprovals(): void {
+        for (const approval of Object.values(this.world.approvals)) {
+            if (approval.status !== "pending" || this.now - approval.createdAt <= TEAMMATE_AFTER_TICKS * TICK_MS) continue;
+            this.answerApproval(approval.id, approval.recommended, TEAMMATE_NOTE);
+        }
+    }
+
     private advance(): void {
         this.tickCount += 1;
         const r = this.rng;
+
+        this.answerStaleApprovals();
 
         const open = Object.values(this.world.jobs).filter((job) => job.status !== "done" && job.status !== "failed");
         const parked = open.filter((job) => job.status === "awaiting-approval").length;
