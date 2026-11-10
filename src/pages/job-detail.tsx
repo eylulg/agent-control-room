@@ -24,6 +24,7 @@ export const JobDetailPage = () => {
     const { jobId = "" } = useParams();
     const job = useAppStore((s) => s.control.jobs[jobId]);
     const dependency = useAppStore((s) => (job?.dependsOn ? s.control.jobs[job.dependsOn] : undefined));
+    const simulated = useAppStore((s) => s.sim !== null);
 
     if (!job) {
         return (
@@ -64,11 +65,16 @@ export const JobDetailPage = () => {
                     </span>
                 }
                 actions={
-                    job.pr && (
+                    job.pr &&
+                    (simulated ? (
+                        <Button size="sm" variant="secondary" isDisabled>
+                            PR #{job.pr.number} (simulated)
+                        </Button>
+                    ) : (
                         <Button href={job.pr.url} target="_blank" rel="noreferrer" size="sm" variant="secondary" iconTrailing={ExternalLink}>
                             Open PR #{job.pr.number}
                         </Button>
-                    )
+                    ))
                 }
             />
 
@@ -238,6 +244,9 @@ const Actions = ({ job }: JobProps) => {
     const reasonRef = useRef<HTMLInputElement>(null);
     const resumeRef = useRef<HTMLButtonElement>(null);
     const retryRef = useRef<HTMLButtonElement>(null);
+    const cancelRef = useRef<HTMLButtonElement>(null);
+    const keepRef = useRef<HTMLButtonElement>(null);
+    const [confirmingCancel, setConfirmingCancel] = useState(false);
 
     const finished = job.status === "done" || job.status === "failed";
     const held = job.status === "on-hold";
@@ -254,8 +263,23 @@ const Actions = ({ job }: JobProps) => {
         if (await run({ type: "job.resume", jobId: job.id })) focusRef(reasonRef);
     }
 
-    async function handleCancel() {
-        if (await run({ type: "job.cancel", jobId: job.id })) focusRef(retryRef);
+    useEffect(() => {
+        if (confirmingCancel) keepRef.current?.focus();
+    }, [confirmingCancel]);
+
+    function handleCancel() {
+        setConfirmingCancel(true);
+    }
+
+    function handleKeep() {
+        setConfirmingCancel(false);
+        focusRef(cancelRef);
+    }
+
+    async function handleConfirmCancel() {
+        const accepted = await run({ type: "job.cancel", jobId: job.id });
+        setConfirmingCancel(false);
+        if (accepted) focusRef(retryRef);
     }
 
     async function handleRetry() {
@@ -280,13 +304,26 @@ const Actions = ({ job }: JobProps) => {
                     <Button ref={resumeRef} size="sm" variant="secondary" isDisabled={!held} onPress={handleResume}>
                         Resume job
                     </Button>
-                    <Button size="sm" variant="destructive" isDisabled={finished} onPress={handleCancel}>
+                    <Button ref={cancelRef} size="sm" variant="destructive" isDisabled={finished} onPress={handleCancel}>
                         Cancel job
                     </Button>
                     <Button ref={retryRef} size="sm" variant="secondary" isDisabled={job.status !== "failed"} onPress={handleRetry}>
                         Retry job
                     </Button>
                 </div>
+                {confirmingCancel && (
+                    <div role="group" aria-label="Confirm cancel" className="flex flex-col gap-2 rounded-lg border border-subtle bg-error-subtle p-3 text-sm">
+                        <p className="text-primary">Cancel {job.ticket.id}? It will be marked failed.</p>
+                        <div className="flex flex-wrap gap-2">
+                            <Button size="sm" variant="destructive" onPress={handleConfirmCancel}>
+                                Yes, cancel job
+                            </Button>
+                            <Button ref={keepRef} size="sm" variant="secondary" onPress={handleKeep}>
+                                Keep job running
+                            </Button>
+                        </div>
+                    </div>
+                )}
                 {error && (
                     <p role="alert" className="text-sm font-medium text-error">
                         {error}
