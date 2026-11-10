@@ -13,15 +13,24 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
               with:
-                  node-version: 24
-                  cache: npm
-            - run: npm ci
+                  fetch-depth: 0
+            - uses: ./.github/actions/install
+            - name: Secret scan
+              uses: gitleaks/gitleaks-action@v2
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Commit messages
+              if: github.event_name == 'pull_request'
+              run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
             - name: Typecheck
               run: npm run typecheck
             - name: Lint
               run: npm run lint
+            - name: Format
+              run: npm run format:check
+            - name: Unused code
+              run: npm run knip
             - name: Test
               run: npm test
             - name: Build

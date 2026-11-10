@@ -88,16 +88,20 @@ event type and command) is in [docs/protocol.md](docs/protocol.md).
 ## Stack
 
 Vite 7, React 19, TypeScript strict with `noUncheckedIndexedAccess`, Tailwind
-CSS 4, Untitled UI React (free components, copied in and trimmed to the ones
-used), Zustand, React Router 7 with one lazily loaded chunk per page, and zod
+CSS 4, the shared design system `@eylulg/ui` (theme variant `control-room`,
+React Aria Components underneath, Lucide icons), Zustand, React Router 7 with one lazily loaded chunk per page, and zod
 (mini) to validate every incoming event and the URL parameters.
-Dark mode uses the `dark-mode` class, set by an inline script before first
-paint so there is no flash.
+Dark mode uses the `dark-mode` class, managed by the library's theme toggle and
+set by the library's init script before first paint so there is no flash.
 
 ## Run
 
+The design system is a local dependency (`"@eylulg/ui": "file:../ui"`). Clone
+and build it next to this repo first:
+
 ```bash
-npm ci
+git clone https://github.com/eylulg/ui ../ui && (cd ../ui && npm ci && npm run build)
+npm install
 npm run dev        # http://localhost:5173/agent-control-room/
 ```
 
@@ -109,6 +113,7 @@ Add `?seed=anything` to the URL to start a different world.
 npm run typecheck
 npm run lint           # zero warnings allowed
 npm run format:check
+npm run knip
 npm test
 npm run build      # also writes dist/404.html for SPA deep links on Pages
 ```
@@ -124,7 +129,7 @@ vitest-axe covers:
 - the protocol: folding the event stream rebuilds the simulator state, and
   malformed or unknown events are rejected at the boundary
 - user flows: queue filtering, answering an approval with the keyboard and with
-  a note, holding a job, saving routing, switching a guard off, the theme toggle
+  a note, holding a job, saving routing, switching a guard off
 - focus: where it lands after navigation, after dismissing a toast, after
   answering an approval and after each job action
 - axe on every page
@@ -136,9 +141,19 @@ separately in a real browser with axe-core.
 
 ## Deploy
 
-`.github/workflows/ci.yml` runs typecheck, lint, format check, test, build and
-knip on every push and pull request. `.github/workflows/deploy.yml` builds with
+`.github/workflows/ci.yml` runs a gitleaks secret scan, commitlint on pull
+requests, typecheck, lint, format check, knip, test and build on every push and
+pull request. `.github/workflows/deploy.yml` builds with
 `base: '/agent-control-room/'` and publishes `dist` to GitHub Pages.
+
+Because the dependency is `file:../ui`, the workflows use
+`.github/actions/install`, which checks out `eylulg/ui` into `ui-src`, builds it
+and points the dependency at it for that run only. Once the library is
+published to npm, change the dependency to `^1.0.0`, delete that action and use
+`npm ci` again. Vercel deploys need that publish too.
+
+Commits follow Conventional Commits, enforced by commitlint in a Husky
+`commit-msg` hook. Dependabot opens one grouped update a month.
 
 ## License
 
