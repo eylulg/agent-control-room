@@ -1,7 +1,7 @@
-import { AlertTriangle, CheckCircle, Circle, XCircle } from "@untitledui/icons";
+import { cx } from "@eylulg/ui/cx";
+import { Circle, CircleAlert, CircleCheck, TriangleAlert } from "lucide-react";
 import { Link } from "react-router";
 import type { AgentEvent, ControlState } from "@/domain/types";
-import { cx } from "@/utils/cx";
 import { type Tone, describe, formatClock } from "@/utils/format";
 import { inlineLink } from "./styles";
 
@@ -11,10 +11,10 @@ interface EventRowProps {
 }
 
 const TONE_ICON: Record<Tone, { Icon: typeof Circle; className: string; label: string }> = {
-    neutral: { Icon: Circle, className: "text-fg-quaternary", label: "Info" },
-    good: { Icon: CheckCircle, className: "text-fg-success-primary", label: "Success" },
-    warning: { Icon: AlertTriangle, className: "text-fg-warning-primary", label: "Attention" },
-    critical: { Icon: XCircle, className: "text-fg-error-primary", label: "Problem" },
+    neutral: { Icon: Circle, className: "text-fg-tertiary", label: "Info" },
+    good: { Icon: CircleCheck, className: "text-fg-success", label: "Success" },
+    warning: { Icon: TriangleAlert, className: "text-fg-warning", label: "Attention" },
+    critical: { Icon: CircleAlert, className: "text-fg-error", label: "Problem" },
 };
 
 /** One event in a feed. Pass `jobs` to link the event to its job. */

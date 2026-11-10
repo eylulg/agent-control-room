@@ -1,4 +1,4 @@
-import type { BadgeColors } from "@/components/base/badges/badge-types";
+import type { BadgeColor } from "@eylulg/ui/badge";
 import type { AgentEvent, JobKind, JobStatus } from "@/domain/types";
 
 export const formatClock = (ts: number): string => {
@@ -6,15 +6,15 @@ export const formatClock = (ts: number): string => {
     return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 };
 
-export const STATUS_META: Record<JobStatus, { label: string; color: BadgeColors }> = {
+export const STATUS_META: Record<JobStatus, { label: string; color: BadgeColor }> = {
     queued: { label: "Queued", color: "gray" },
-    planning: { label: "Planning", color: "blue" },
+    planning: { label: "Planning", color: "brand" },
     "awaiting-approval": { label: "Awaiting approval", color: "warning" },
     implementing: { label: "Implementing", color: "brand" },
     "fixing-ci": { label: "Fixing CI", color: "error" },
-    "answering-review": { label: "Answering review", color: "purple" },
-    "on-hold": { label: "On hold", color: "orange" },
-    "ready-for-review": { label: "Ready for review", color: "sky" },
+    "answering-review": { label: "Answering review", color: "brand" },
+    "on-hold": { label: "On hold", color: "warning" },
+    "ready-for-review": { label: "Ready for review", color: "success" },
     done: { label: "Done", color: "success" },
     failed: { label: "Failed", color: "error" },
 };

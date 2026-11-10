@@ -6,7 +6,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-    { ignores: ["dist", "coverage", "node_modules"] },
+    { ignores: ["dist", "coverage", "node_modules", "ui-src"] },
     {
         extends: [js.configs.recommended, ...tseslint.configs.recommended],
         files: ["**/*.{ts,tsx}"],
@@ -19,18 +19,6 @@ export default tseslint.config(
             // Scrollable regions and the sparkline group must be focusable for keyboard users.
             "jsx-a11y/no-noninteractive-tabindex": ["error", { roles: ["region", "group"], tags: [] }],
             "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
-        },
-    },
-    {
-        // Vendored Untitled UI components are kept as published.
-        files: ["src/components/base/**", "src/components/foundations/**", "src/providers/**"],
-        rules: {
-            "react-refresh/only-export-components": "off",
-            "jsx-a11y/no-autofocus": "off",
-            "jsx-a11y/click-events-have-key-events": "off",
-            "jsx-a11y/no-static-element-interactions": "off",
-            "jsx-a11y/img-redundant-alt": "off",
-            "@typescript-eslint/no-empty-object-type": "off",
         },
     },
     {

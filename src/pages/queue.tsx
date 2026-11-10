@@ -1,15 +1,15 @@
-import { type ChangeEvent, useState } from "react";
-import { SearchLg } from "@untitledui/icons";
+import { useState } from "react";
+import { Button } from "@eylulg/ui/button";
+import { Input } from "@eylulg/ui/input";
+import { Select, SelectItem } from "@eylulg/ui/select";
+import { Search } from "lucide-react";
+import type { Key } from "react-aria-components";
 import { JobCard } from "@/components/app/job-card";
 import { PageHeader } from "@/components/app/page-header";
 import { StatusBadge } from "@/components/app/status-badge";
-import { Button } from "@/components/base/buttons/button";
-import { Input } from "@/components/base/input/input";
-import { NativeSelect } from "@/components/base/select/select-native";
 import { EMPTY_FILTER, type QueueFilter, filterJobs, groupByStatus, listJobs, listRepos } from "@/domain/selectors";
 import { JOB_KINDS, JOB_STATUSES, type JobKind } from "@/domain/types";
 import { useAppStore } from "@/state/store-context";
-import { cx } from "@/utils/cx";
 import { KIND_LABEL } from "@/utils/format";
 
 interface KindFilterButtonProps {
@@ -32,8 +32,9 @@ export const QueuePage = () => {
         setFilter((current) => ({ ...current, search }));
     }
 
-    function handleRepo(event: ChangeEvent<HTMLSelectElement>) {
-        const repo = event.target.value;
+    function handleRepo(key: Key | null) {
+        if (key === null) return;
+        const repo = String(key);
         setFilter((current) => ({ ...current, repo }));
     }
 
@@ -55,17 +56,18 @@ export const QueuePage = () => {
                     label="Search"
                     placeholder="ACME-104"
                     hint="Ticket, title, repository or model"
-                    icon={SearchLg}
+                    iconLeading={Search}
                     value={filter.search}
                     onChange={handleSearch}
                 />
-                <NativeSelect
-                    className="lg:max-w-56"
-                    label="Repository"
-                    value={filter.repo}
-                    onChange={handleRepo}
-                    options={[{ label: "All repositories", value: "all" }, ...repos.map((repo) => ({ label: repo, value: repo }))]}
-                />
+                <Select className="lg:w-56" label="Repository" selectedKey={filter.repo} onSelectionChange={handleRepo}>
+                    <SelectItem id="all">All repositories</SelectItem>
+                    {repos.map((repo) => (
+                        <SelectItem key={repo} id={repo}>
+                            {repo}
+                        </SelectItem>
+                    ))}
+                </Select>
                 <fieldset className="min-w-0">
                     <legend className="mb-1.5 text-sm font-medium text-secondary">Kind</legend>
                     <div className="flex flex-wrap gap-2">
@@ -75,7 +77,7 @@ export const QueuePage = () => {
                     </div>
                 </fieldset>
                 {filtered && (
-                    <Button color="link-gray" size="sm" onPress={handleClear}>
+                    <Button variant="tertiary" size="sm" onPress={handleClear}>
                         Clear filters
                     </Button>
                 )}
@@ -87,7 +89,7 @@ export const QueuePage = () => {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 {JOB_STATUSES.map((status) => (
-                    <section key={status} aria-labelledby={`col-${status}`} className="flex min-w-0 flex-col gap-2 rounded-xl bg-tertiary p-3">
+                    <section key={status} aria-labelledby={`col-${status}`} className="flex min-w-0 flex-col gap-2 rounded-xl bg-secondary p-3">
                         <h2 id={`col-${status}`} className="flex items-center justify-between gap-2">
                             <StatusBadge status={status} />
                             <span className="text-sm font-medium text-tertiary">
@@ -119,16 +121,8 @@ const KindFilterButton = ({ kind, pressed, onToggle }: KindFilterButtonProps) =>
     }
 
     return (
-        <button
-            type="button"
-            aria-pressed={pressed}
-            onClick={handleClick}
-            className={cx(
-                "rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition ring-inset",
-                pressed ? "bg-brand-solid text-primary_on-brand ring-transparent" : "bg-primary text-secondary ring-primary hover:bg-primary_hover",
-            )}
-        >
+        <Button size="sm" variant={pressed ? "primary" : "secondary"} aria-pressed={pressed} onPress={handleClick}>
             {KIND_LABEL[kind]}
-        </button>
+        </Button>
     );
 };

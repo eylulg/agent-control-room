@@ -1,8 +1,10 @@
-import { type ChangeEvent, type FormEvent, useState } from "react";
-import { Card, PageHeader } from "@/components/app/page-header";
-import { Button } from "@/components/base/buttons/button";
-import { Input } from "@/components/base/input/input";
-import { NativeSelect } from "@/components/base/select/select-native";
+import { type FormEvent, useState } from "react";
+import { Button } from "@eylulg/ui/button";
+import { Input } from "@eylulg/ui/input";
+import { Select, SelectItem } from "@eylulg/ui/select";
+import type { Key } from "react-aria-components";
+import { PageHeader } from "@/components/app/page-header";
+import { Panel } from "@/components/app/panel";
 import { DEFAULT_SEED } from "@/domain/simulator";
 import { useAppStore } from "@/state/store-context";
 
@@ -22,8 +24,8 @@ export const SettingsPage = () => {
     const step = useAppStore((s) => s.step);
     const [status, setStatus] = useState("");
 
-    function handleSpeed(event: ChangeEvent<HTMLSelectElement>) {
-        setSpeed(Number(event.target.value));
+    function handleSpeed(key: Key | null) {
+        if (key !== null) setSpeed(Number(key));
     }
 
     function handleReset(seed: string) {
@@ -39,15 +41,13 @@ export const SettingsPage = () => {
         <div className="flex flex-col gap-6">
             <PageHeader title="Settings" description="The agent here is a seeded simulator. The same seed and the same answers always replay the same day." />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <Card title="Simulation">
+                <Panel title="Simulation">
                     <div className="flex flex-col gap-4">
-                        <NativeSelect
-                            label="Speed"
-                            hint="Simulated minutes per real second."
-                            value={String(sim.speed)}
-                            onChange={handleSpeed}
-                            options={SPEEDS.map((speed) => ({ label: `${speed} ticks per second`, value: String(speed) }))}
-                        />
+                        <Select label="Speed" hint="Simulated minutes per real second." selectedKey={String(sim.speed)} onSelectionChange={handleSpeed}>
+                            {SPEEDS.map((speed) => (
+                                <SelectItem key={speed} id={String(speed)}>{`${speed} ticks per second`}</SelectItem>
+                            ))}
+                        </Select>
                         <p className="text-sm text-secondary">
                             {sim.running ? "Running" : "Paused"} at tick {sim.tick}.
                         </p>
@@ -55,18 +55,18 @@ export const SettingsPage = () => {
                             <Button size="sm" onPress={sim.running ? pause : play}>
                                 {sim.running ? "Pause simulation" : "Run simulation"}
                             </Button>
-                            <Button size="sm" color="secondary" onPress={step} isDisabled={sim.running}>
+                            <Button size="sm" variant="secondary" onPress={step} isDisabled={sim.running}>
                                 Step the simulation one tick
                             </Button>
                         </div>
                     </div>
-                </Card>
-                <Card title="Seed">
+                </Panel>
+                <Panel title="Seed">
                     <SeedForm key={sim.seed} seed={sim.seed} onReset={handleReset} />
                     <p role="status" className="mt-3 text-sm font-medium text-secondary empty:hidden">
                         {status}
                     </p>
-                </Card>
+                </Panel>
             </div>
         </div>
     );
@@ -84,7 +84,7 @@ const SeedForm = ({ seed: initialSeed, onReset }: SeedFormProps) => {
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <Input label="Seed" value={seed} onChange={setSeed} hint="Any text. Leave empty for the default seed." />
             <div>
-                <Button type="submit" size="sm" color="secondary-destructive">
+                <Button type="submit" size="sm" variant="destructive">
                     Reset world
                 </Button>
             </div>

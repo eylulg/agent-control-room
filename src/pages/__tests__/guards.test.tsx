@@ -7,7 +7,7 @@ describe("GuardsPage", () => {
     it("lists blocked attempts", async () => {
         await renderApp("/guards");
 
-        expect(screen.getByRole("region", { name: "Blocked attempts table" })).toHaveTextContent("--no-verify");
+        expect(screen.getByRole("grid", { name: "Blocked attempts" })).toHaveTextContent("--no-verify");
     });
 
     it("switches a guard off", async () => {

@@ -1,20 +1,21 @@
 import { useEffect, useRef, useState } from "react";
+import { Badge } from "@eylulg/ui/badge";
+import { Card, CardBody, CardHeader } from "@eylulg/ui/card";
+import { Kbd } from "@eylulg/ui/kbd";
+import { Textarea } from "@eylulg/ui/textarea";
 import { Link } from "react-router";
-import { Card, PageHeader } from "@/components/app/page-header";
-import { inlineLink, surface } from "@/components/app/styles";
-import { Badge } from "@/components/base/badges/badges";
-import { TextArea } from "@/components/base/textarea/textarea";
+import { PageHeader } from "@/components/app/page-header";
+import { Panel } from "@/components/app/panel";
+import { inlineLink } from "@/components/app/styles";
 import { pendingApprovals } from "@/domain/selectors";
 import type { ApprovalOptionKey, ApprovalRequest } from "@/domain/types";
 import { useAppStore } from "@/state/store-context";
 import { useCommand } from "@/state/use-command";
-import { cx } from "@/utils/cx";
 import { formatClock } from "@/utils/format";
 
 interface ApprovalCardProps {
     approval: ApprovalRequest;
     note: string;
-    shortcuts: boolean;
     onNote: (approvalId: string, note: string) => void;
     onAnswer: (approval: ApprovalRequest, option: ApprovalOptionKey) => Promise<void>;
 }
@@ -22,7 +23,6 @@ interface ApprovalCardProps {
 interface OptionButtonProps {
     approval: ApprovalRequest;
     optionKey: ApprovalOptionKey;
-    shortcut?: string;
     onAnswer: (approval: ApprovalRequest, option: ApprovalOptionKey) => Promise<void>;
 }
 
@@ -79,8 +79,7 @@ export const ApprovalsPage = () => {
                 title="Approvals"
                 description={
                     <>
-                        Jobs that wait for a decision. Press <kbd className="font-semibold">1</kbd> or <kbd className="font-semibold">2</kbd> to answer the
-                        first request, or the one you are focused in.
+                        Jobs that wait for a decision. Press <Kbd>1</Kbd> or <Kbd>2</Kbd> to answer the first request, or the one you are focused in.
                     </>
                 }
             />
@@ -88,31 +87,24 @@ export const ApprovalsPage = () => {
                 {confirmation}
             </p>
             {error && (
-                <p role="alert" className="text-sm font-medium text-error-primary">
+                <p role="alert" className="text-sm font-medium text-error">
                     {error}
                 </p>
             )}
             {pending.length === 0 ? (
-                <Card>
-                    <p className="text-sm text-tertiary">Nothing waiting on you. New requests show up here and as a notification.</p>
-                </Card>
+                <Panel>
+                    <p className="text-tertiary">Nothing waiting on you. New requests show up here and as a notification.</p>
+                </Panel>
             ) : (
                 <div className="flex flex-col gap-4">
-                    {pending.map((approval, index) => (
-                        <ApprovalCard
-                            key={approval.id}
-                            approval={approval}
-                            shortcuts={index === 0}
-                            note={notes[approval.id] ?? ""}
-                            onNote={handleNote}
-                            onAnswer={handleAnswer}
-                        />
+                    {pending.map((approval) => (
+                        <ApprovalCard key={approval.id} approval={approval} note={notes[approval.id] ?? ""} onNote={handleNote} onAnswer={handleAnswer} />
                     ))}
                 </div>
             )}
             {answered.length > 0 && (
-                <Card title="Answered">
-                    <ul className="divide-y divide-secondary text-sm">
+                <Panel title="Answered">
+                    <ul className="divide-y divide-subtle text-sm">
                         {answered.map((approval) => (
                             <li key={approval.id} className="py-2 text-secondary">
                                 <span className="font-semibold">{jobs[approval.jobId]?.ticket.id}</span>
@@ -122,13 +114,13 @@ export const ApprovalsPage = () => {
                             </li>
                         ))}
                     </ul>
-                </Card>
+                </Panel>
             )}
         </div>
     );
 };
 
-const ApprovalCard = ({ approval, note, shortcuts, onNote, onAnswer }: ApprovalCardProps) => {
+const ApprovalCard = ({ approval, note, onNote, onAnswer }: ApprovalCardProps) => {
     const job = useAppStore((s) => s.control.jobs[approval.jobId]);
 
     const headingId = `approval-${approval.id}`;
@@ -138,7 +130,7 @@ const ApprovalCard = ({ approval, note, shortcuts, onNote, onAnswer }: ApprovalC
     }
 
     return (
-        <article aria-labelledby={headingId} data-approval-id={approval.id} className={surface}>
+        <Card role="article" aria-labelledby={headingId} data-approval-id={approval.id}>
             <div className="flex flex-wrap items-center gap-2 text-sm text-tertiary">
                 {job && (
                     <Link to={`/jobs/${job.id}`} className={inlineLink}>
@@ -148,20 +140,20 @@ const ApprovalCard = ({ approval, note, shortcuts, onNote, onAnswer }: ApprovalC
                 <span>{job?.ticket.title}</span>
                 <span className="ml-auto text-xs">Asked at {formatClock(approval.createdAt)}</span>
             </div>
-            <h2 id={headingId} className="mt-2 text-lg font-semibold text-primary">
+            <h2 id={headingId} className="font-display text-lg font-semibold text-primary">
                 {approval.question}
             </h2>
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                {OPTION_KEYS.map((key, index) => (
-                    <OptionButton key={key} approval={approval} optionKey={key} shortcut={shortcuts ? String(index + 1) : undefined} onAnswer={onAnswer} />
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {OPTION_KEYS.map((key) => (
+                    <OptionButton key={key} approval={approval} optionKey={key} onAnswer={onAnswer} />
                 ))}
             </div>
-            <TextArea className="mt-4" label="Note for the agent (optional)" rows={2} value={note} onChange={handleNote} placeholder="Keep the diff small" />
-        </article>
+            <Textarea label="Note for the agent (optional)" rows={2} value={note} onChange={handleNote} placeholder="Keep the diff small" />
+        </Card>
     );
 };
 
-const OptionButton = ({ approval, optionKey, shortcut, onAnswer }: OptionButtonProps) => {
+const OptionButton = ({ approval, optionKey, onAnswer }: OptionButtonProps) => {
     const option = approval.options[optionKey];
     const recommended = approval.recommended === optionKey;
 
@@ -170,28 +162,21 @@ const OptionButton = ({ approval, optionKey, shortcut, onAnswer }: OptionButtonP
     }
 
     return (
-        <button
-            type="button"
-            onClick={handleClick}
-            aria-keyshortcuts={shortcut}
-            className={cx(
-                "flex flex-col gap-2 rounded-lg bg-primary p-4 text-left transition hover:bg-primary_hover",
-                recommended ? "ring-2 ring-brand" : "ring-1 ring-primary",
-            )}
-        >
-            <span className="flex flex-wrap items-center gap-2">
-                <kbd className="rounded-md bg-tertiary px-1.5 py-0.5 font-mono text-xs font-semibold text-secondary">{optionKey === "A" ? 1 : 2}</kbd>
-                <span className="text-md font-semibold text-primary">
-                    Option {optionKey}: {option.label}
-                </span>
-                {recommended && (
-                    <Badge type="pill-color" color="brand" size="sm">
+        <Card onPress={handleClick} className="gap-2">
+            <CardHeader
+                title={`Option ${optionKey}: ${option.label}`}
+                headingLevel={3}
+                actions={<Kbd>{optionKey === "A" ? 1 : 2}</Kbd>}
+                description={option.description}
+            />
+            {recommended && (
+                <CardBody className="flex flex-col items-start gap-2">
+                    <Badge color="brand" size="sm">
                         Recommended
                     </Badge>
-                )}
-            </span>
-            <span className="text-sm text-secondary">{option.description}</span>
-            {recommended && <span className="text-sm font-medium text-primary">Why: {approval.reason}</span>}
-        </button>
+                    <span className="font-medium text-primary">Why: {approval.reason}</span>
+                </CardBody>
+            )}
+        </Card>
     );
 };

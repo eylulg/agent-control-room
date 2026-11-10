@@ -1,13 +1,15 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { ArrowLeft, LinkExternal01 } from "@untitledui/icons";
+import { Badge } from "@eylulg/ui/badge";
+import { Button } from "@eylulg/ui/button";
+import { cx } from "@eylulg/ui/cx";
+import { Input } from "@eylulg/ui/input";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { EventRow } from "@/components/app/event-row";
-import { Card, PageHeader } from "@/components/app/page-header";
+import { PageHeader } from "@/components/app/page-header";
+import { Panel } from "@/components/app/panel";
 import { KindBadge, StatusBadge } from "@/components/app/status-badge";
 import { inlineLink } from "@/components/app/styles";
-import { Badge } from "@/components/base/badges/badges";
-import { Button } from "@/components/base/buttons/button";
-import { Input } from "@/components/base/input/input";
 import type { Job } from "@/domain/types";
 import { useAppStore } from "@/state/store-context";
 import { useCommand } from "@/state/use-command";
@@ -16,6 +18,12 @@ import { formatClock } from "@/utils/format";
 interface JobProps {
     job: Job;
 }
+
+const REASON_ID = "hold-reason";
+const RESUME_ID = "resume-job";
+const RETRY_ID = "retry-job";
+
+const focusById = (id: string) => document.getElementById(id)?.focus();
 
 export const JobDetailPage = () => {
     const { jobId = "" } = useParams();
@@ -37,7 +45,10 @@ export const JobDetailPage = () => {
 
     return (
         <div className="flex flex-col gap-6">
-            <Link to="/queue" className="flex w-max items-center gap-1 rounded-xs text-sm font-semibold text-tertiary hover:text-secondary">
+            <Link
+                to="/queue"
+                className="flex w-max items-center gap-1 rounded-xs text-sm font-semibold text-tertiary hover:text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            >
                 <ArrowLeft aria-hidden="true" className="size-4" /> Queue
             </Link>
             <PageHeader
@@ -46,28 +57,29 @@ export const JobDetailPage = () => {
                     <span className="flex flex-wrap items-center gap-2">
                         <StatusBadge status={job.status} size="md" />
                         <KindBadge kind={job.kind} />
-                        <Badge type="color" size="sm" color="gray">
+                        <Badge size="sm" color="gray">
                             {job.ticket.repo}
                         </Badge>
-                        <Badge type="color" size="sm" color="gray">
+                        <Badge size="sm" color="gray">
                             Model {job.model}
                         </Badge>
-                        <Badge type="color" size="sm" color="gray">
+                        <Badge size="sm" color="gray">
                             Attempt {job.attempts}
                         </Badge>
                     </span>
                 }
                 actions={
                     job.pr && (
-                        <Button size="sm" color="secondary" href={job.pr.url} target="_blank" rel="noreferrer" iconTrailing={LinkExternal01}>
+                        <a href={job.pr.url} target="_blank" rel="noreferrer" className={cx("inline-flex items-center gap-1 text-sm", inlineLink)}>
                             Open PR #{job.pr.number}
-                        </Button>
+                            <ExternalLink aria-hidden="true" className="size-4" />
+                        </a>
                     )
                 }
             />
 
             {job.status === "awaiting-approval" && (
-                <p className="rounded-lg bg-primary p-3 text-sm text-primary ring-1 ring-brand">
+                <p className="rounded-lg border border-brand bg-primary p-3 text-sm text-primary">
                     <strong className="font-semibold">Blocked on a decision.</strong> The agent will not write code until someone answers.{" "}
                     <Link to="/approvals" className={inlineLink}>
                         Answer in the approvals inbox
@@ -75,12 +87,12 @@ export const JobDetailPage = () => {
                 </p>
             )}
             {job.holdReason && (
-                <p className="rounded-lg bg-warning-primary p-3 text-sm text-primary ring-1 ring-secondary">
+                <p className="rounded-lg border border-subtle bg-warning-subtle p-3 text-sm text-primary">
                     <strong className="font-semibold">On hold.</strong> {job.holdReason}
                 </p>
             )}
             {job.failureReason && (
-                <p className="rounded-lg bg-error-primary p-3 text-sm text-primary ring-1 ring-secondary">
+                <p className="rounded-lg border border-subtle bg-error-subtle p-3 text-sm text-primary">
                     <strong className="font-semibold">Failed.</strong> {job.failureReason}
                 </p>
             )}
@@ -96,18 +108,18 @@ export const JobDetailPage = () => {
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
                 <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
-                    <Card title="Plan">
+                    <Panel title="Plan">
                         {job.plan ? (
                             <p className="text-sm whitespace-pre-wrap text-secondary">{job.plan}</p>
                         ) : (
                             <p className="text-sm text-tertiary">No plan posted yet.</p>
                         )}
-                    </Card>
+                    </Panel>
                     <Timeline job={job} />
                 </div>
                 <div className="flex min-w-0 flex-col gap-6">
                     <Actions job={job} />
-                    <Card title="Commits">
+                    <Panel title="Commits">
                         {job.commits.length === 0 ? (
                             <p className="text-sm text-tertiary">No commits yet.</p>
                         ) : (
@@ -120,8 +132,8 @@ export const JobDetailPage = () => {
                                 ))}
                             </ul>
                         )}
-                    </Card>
-                    <Card title="CI runs">
+                    </Panel>
+                    <Panel title="CI runs">
                         {job.ciRuns.length === 0 ? (
                             <p className="text-sm text-tertiary">No CI runs yet.</p>
                         ) : (
@@ -129,7 +141,7 @@ export const JobDetailPage = () => {
                                 {job.ciRuns.map((run) => (
                                     <li key={run.id} className="flex flex-col gap-1">
                                         <span className="flex items-center gap-2">
-                                            <Badge type="pill-color" size="sm" color={run.status === "failed" ? "error" : "success"}>
+                                            <Badge size="sm" color={run.status === "failed" ? "error" : "success"}>
                                                 {run.status === "failed" ? "Failed" : run.status === "fixed" ? "Fixed" : "Passed"}
                                             </Badge>
                                             <span className="text-secondary">{run.check}</span>
@@ -140,8 +152,8 @@ export const JobDetailPage = () => {
                                 ))}
                             </ul>
                         )}
-                    </Card>
-                    <Card title="Review findings">
+                    </Panel>
+                    <Panel title="Review findings">
                         {job.findings.length === 0 ? (
                             <p className="text-sm text-tertiary">No review findings.</p>
                         ) : (
@@ -152,25 +164,25 @@ export const JobDetailPage = () => {
                                             {finding.author} on <code>{finding.file}</code>
                                         </span>
                                         <span className="text-secondary">{finding.body}</span>
-                                        <span className="border-l-2 border-secondary pl-2 text-tertiary">
+                                        <span className="border-l-2 border-default pl-2 text-tertiary">
                                             {finding.reply ? `Agent: ${finding.reply}` : "Reply pending"}
                                         </span>
                                     </li>
                                 ))}
                             </ul>
                         )}
-                    </Card>
-                    <Card title="Guard events">
+                    </Panel>
+                    <Panel title="Guard events">
                         {guardEvents.length === 0 ? (
                             <p className="text-sm text-tertiary">No guard events for this job.</p>
                         ) : (
-                            <ol className="divide-y divide-secondary">
+                            <ol className="divide-y divide-subtle">
                                 {guardEvents.map((event) => (
                                     <EventRow key={event.seq} event={event} />
                                 ))}
                             </ol>
                         )}
-                    </Card>
+                    </Panel>
                 </div>
             </div>
         </div>
@@ -193,10 +205,10 @@ const Timeline = ({ job }: JobProps) => {
     }
 
     return (
-        <Card
+        <Panel
             title="Timeline"
             actions={
-                <Button size="sm" color="secondary" aria-pressed={!follow} onPress={handleFollowToggle}>
+                <Button size="sm" variant="secondary" aria-pressed={!follow} onPress={handleFollowToggle}>
                     {follow ? "Pause auto-follow" : "Resume auto-follow"}
                 </Button>
             }
@@ -208,7 +220,7 @@ const Timeline = ({ job }: JobProps) => {
                 aria-label={`Timeline for ${job.ticket.id}, ${count} events`}
                 className="max-h-96 overflow-y-auto rounded-md pr-1"
             >
-                <ol className="divide-y divide-secondary">
+                <ol className="divide-y divide-subtle">
                     {job.timeline.map((event) => (
                         <EventRow key={event.seq} event={event} />
                     ))}
@@ -217,7 +229,7 @@ const Timeline = ({ job }: JobProps) => {
             <p className="mt-2 text-xs text-tertiary">
                 {follow ? "Following new events as they arrive." : "Auto-follow paused. New events still arrive below."}
             </p>
-        </Card>
+        </Panel>
     );
 };
 
@@ -229,9 +241,6 @@ const Timeline = ({ job }: JobProps) => {
 const Actions = ({ job }: JobProps) => {
     const { run, error } = useCommand();
     const [reason, setReason] = useState("");
-    const reasonRef = useRef<HTMLInputElement>(null);
-    const resumeRef = useRef<HTMLButtonElement>(null);
-    const retryRef = useRef<HTMLButtonElement>(null);
 
     const finished = job.status === "done" || job.status === "failed";
     const held = job.status === "on-hold";
@@ -240,27 +249,27 @@ const Actions = ({ job }: JobProps) => {
         event.preventDefault();
         if (await run({ type: "job.hold", jobId: job.id, reason })) {
             setReason("");
-            resumeRef.current?.focus();
+            focusById(RESUME_ID);
         }
     }
 
     async function handleResume() {
-        if (await run({ type: "job.resume", jobId: job.id })) reasonRef.current?.focus();
+        if (await run({ type: "job.resume", jobId: job.id })) focusById(REASON_ID);
     }
 
     async function handleCancel() {
-        if (await run({ type: "job.cancel", jobId: job.id })) retryRef.current?.focus();
+        if (await run({ type: "job.cancel", jobId: job.id })) focusById(RETRY_ID);
     }
 
     async function handleRetry() {
-        if (await run({ type: "job.retry", jobId: job.id })) reasonRef.current?.focus();
+        if (await run({ type: "job.retry", jobId: job.id })) focusById(REASON_ID);
     }
 
     return (
-        <Card title="Actions">
+        <Panel title="Actions">
             <form className="flex flex-col gap-3" onSubmit={handleHold}>
                 <Input
-                    ref={reasonRef}
+                    id={REASON_ID}
                     label="Hold reason"
                     placeholder="Waiting on a designer"
                     value={reason}
@@ -268,25 +277,25 @@ const Actions = ({ job }: JobProps) => {
                     isDisabled={finished || held}
                 />
                 <div className="flex flex-wrap gap-2">
-                    <Button type="submit" size="sm" color="secondary" isDisabled={finished || held}>
+                    <Button type="submit" size="sm" variant="secondary" isDisabled={finished || held}>
                         Hold job
                     </Button>
-                    <Button ref={resumeRef} size="sm" color="secondary" isDisabled={!held} onPress={handleResume}>
+                    <Button id={RESUME_ID} size="sm" variant="secondary" isDisabled={!held} onPress={handleResume}>
                         Resume job
                     </Button>
-                    <Button size="sm" color="primary-destructive" isDisabled={finished} onPress={handleCancel}>
+                    <Button size="sm" variant="destructive" isDisabled={finished} onPress={handleCancel}>
                         Cancel job
                     </Button>
-                    <Button ref={retryRef} size="sm" color="secondary" isDisabled={job.status !== "failed"} onPress={handleRetry}>
+                    <Button id={RETRY_ID} size="sm" variant="secondary" isDisabled={job.status !== "failed"} onPress={handleRetry}>
                         Retry job
                     </Button>
                 </div>
                 {error && (
-                    <p role="alert" className="text-sm font-medium text-error-primary">
+                    <p role="alert" className="text-sm font-medium text-error">
                         {error}
                     </p>
                 )}
             </form>
-        </Card>
+        </Panel>
     );
 };

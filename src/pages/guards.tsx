@@ -1,7 +1,10 @@
+import { Card } from "@eylulg/ui/card";
+import { Switch } from "@eylulg/ui/switch";
+import { Cell, Column, Row, Table, TableBody, TableHeader } from "@eylulg/ui/table";
 import { Link } from "react-router";
-import { Card, PageHeader } from "@/components/app/page-header";
-import { inlineLink, surface } from "@/components/app/styles";
-import { Toggle } from "@/components/base/toggle/toggle";
+import { PageHeader } from "@/components/app/page-header";
+import { Panel } from "@/components/app/panel";
+import { inlineLink } from "@/components/app/styles";
 import type { Guard } from "@/domain/types";
 import { useAppStore } from "@/state/store-context";
 import { useCommand } from "@/state/use-command";
@@ -33,46 +36,34 @@ export const GuardsPage = () => {
                     <GuardRule key={guard.id} guard={guard} />
                 ))}
             </ul>
-            <Card title="Blocked attempts">
+            <Panel title="Blocked attempts">
                 {log.length === 0 ? (
                     <p className="text-sm text-tertiary">No blocked attempts yet.</p>
                 ) : (
-                    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Blocked attempts table">
-                        <table className="w-full min-w-[36rem] text-left text-sm">
-                            <thead className="text-xs text-tertiary">
-                                <tr>
-                                    <th scope="col" className="py-2 pr-3 font-medium">
-                                        Time
-                                    </th>
-                                    <th scope="col" className="py-2 pr-3 font-medium">
-                                        Job
-                                    </th>
-                                    <th scope="col" className="py-2 pr-3 font-medium">
-                                        Rule
-                                    </th>
-                                    <th scope="col" className="py-2 font-medium">
-                                        Attempt
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-secondary">
-                                {log.map((entry) => (
-                                    <tr key={`${entry.ts}-${entry.jobId}-${entry.action}`}>
-                                        <td className="py-2 pr-3 text-tertiary tabular-nums">{formatClock(entry.ts)}</td>
-                                        <td className="py-2 pr-3">
-                                            <Link to={`/jobs/${entry.jobId}`} className={inlineLink}>
-                                                {jobs[entry.jobId]?.ticket.id ?? entry.jobId}
-                                            </Link>
-                                        </td>
-                                        <td className="py-2 pr-3 text-secondary">{entry.rule}</td>
-                                        <td className="py-2 text-secondary">{entry.detail}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table aria-label="Blocked attempts" maxHeight="28rem">
+                        <TableHeader>
+                            <Column isRowHeader>Time</Column>
+                            <Column>Job</Column>
+                            <Column>Rule</Column>
+                            <Column>Attempt</Column>
+                        </TableHeader>
+                        <TableBody items={log}>
+                            {(entry) => (
+                                <Row id={`${entry.ts}-${entry.jobId}-${entry.action}`}>
+                                    <Cell>{formatClock(entry.ts)}</Cell>
+                                    <Cell>
+                                        <Link to={`/jobs/${entry.jobId}`} className={inlineLink}>
+                                            {jobs[entry.jobId]?.ticket.id ?? entry.jobId}
+                                        </Link>
+                                    </Cell>
+                                    <Cell>{entry.rule}</Cell>
+                                    <Cell>{entry.detail}</Cell>
+                                </Row>
+                            )}
+                        </TableBody>
+                    </Table>
                 )}
-            </Card>
+            </Panel>
         </div>
     );
 };
@@ -85,16 +76,20 @@ const GuardRule = ({ guard }: GuardRuleProps) => {
     }
 
     return (
-        <li className={surface}>
-            <Toggle className="w-full min-w-0" size="md" label={guard.rule} hint={guard.description} isSelected={guard.enabled} onChange={handleChange} />
-            <p className="mt-3 text-sm text-tertiary">
-                {guard.enabled ? "On" : "Off"}. Blocked {guard.blocked.length} {guard.blocked.length === 1 ? "time" : "times"}.
-            </p>
-            {error && (
-                <p role="alert" className="mt-2 text-sm font-medium text-error-primary">
-                    {error}
+        <li>
+            <Card className="h-full">
+                <Switch className="w-full min-w-0" hint={guard.description} isSelected={guard.enabled} onChange={handleChange}>
+                    {guard.rule}
+                </Switch>
+                <p className="text-sm text-tertiary">
+                    {guard.enabled ? "On" : "Off"}. Blocked {guard.blocked.length} {guard.blocked.length === 1 ? "time" : "times"}.
                 </p>
-            )}
+                {error && (
+                    <p role="alert" className="text-sm font-medium text-error">
+                        {error}
+                    </p>
+                )}
+            </Card>
         </li>
     );
 };

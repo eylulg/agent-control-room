@@ -13,7 +13,10 @@ describe("QueuePage", () => {
         ["kind", (user) => user.click(screen.getByRole("button", { name: "Bug", pressed: false })), (job) => job.kind === "bug"],
         [
             "repository",
-            (user) => user.selectOptions(screen.getByRole("combobox", { name: "Repository" }), "acme/mobile"),
+            async (user) => {
+                await user.click(screen.getByRole("button", { name: /Repository/ }));
+                await user.click(await screen.findByRole("option", { name: "acme/mobile" }));
+            },
             (job) => job.ticket.repo === "acme/mobile",
         ],
     ])("filters the board by %s", async (_name, act, matches) => {

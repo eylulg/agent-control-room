@@ -2,6 +2,6 @@
     "$schema": "https://unpkg.com/knip@5/schema.json",
     "entry": ["scripts/*.mjs"],
     "project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs"],
-    "ignoreDependencies": ["tailwindcss", "tailwindcss-animate", "tailwindcss-react-aria-components"],
+    "ignoreDependencies": ["tailwindcss"],
     "vitest": { "config": ["vite.config.ts"], "entry": ["src/**/__tests__/*.test.{ts,tsx}", "src/test-utils/setup.ts"] }
 }

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, X } from "@untitledui/icons";
+import { cx } from "@eylulg/ui/cx";
+import { IconButton } from "@eylulg/ui/icon-button";
+import { TriangleAlert, X } from "lucide-react";
 import { Link } from "react-router";
 import type { AppState } from "@/state/store";
 import { useAppStore } from "@/state/store-context";
-import { cx } from "@/utils/cx";
 import { inlineLink } from "./styles";
 
 interface ToastItemProps {
@@ -63,13 +64,13 @@ const ToastItem = ({ toast }: ToastItemProps) => {
 
     return (
         <li
-            className="pointer-events-auto flex w-full gap-3 rounded-xl bg-primary p-4 shadow-lg ring-1 ring-secondary"
+            className="pointer-events-auto flex w-full gap-3 rounded-xl border border-subtle bg-elevated p-4 shadow-lg"
             onPointerEnter={handlePause}
             onPointerLeave={handleResume}
             onFocus={handlePause}
             onBlur={handleResume}
         >
-            <AlertTriangle aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-fg-warning-primary" />
+            <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-fg-warning" />
             <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-primary">{toast.title}</p>
                 <p className="mt-0.5 line-clamp-2 text-sm text-tertiary">{toast.body}</p>
@@ -77,14 +78,7 @@ const ToastItem = ({ toast }: ToastItemProps) => {
                     Open approvals
                 </Link>
             </div>
-            <button
-                type="button"
-                onClick={handleDismiss}
-                className="flex size-8 shrink-0 items-center justify-center rounded-md text-fg-quaternary hover:bg-primary_hover hover:text-fg-quaternary_hover"
-                aria-label={`Dismiss: ${toast.title}`}
-            >
-                <X aria-hidden="true" className="size-4" />
-            </button>
+            <IconButton icon={X} variant="tertiary" size="sm" onPress={handleDismiss} aria-label={`Dismiss: ${toast.title}`} />
         </li>
     );
 };

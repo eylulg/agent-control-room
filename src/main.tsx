@@ -4,8 +4,8 @@ import { BrowserRouter } from "react-router";
 import { z } from "zod/mini";
 import { App } from "@/app";
 import { SseAgentSource } from "@/domain/source";
+import "@/index.css";
 import { createAppStore } from "@/state/store";
-import "@/styles/globals.css";
 
 const WARMUP_TICKS = 130;
 

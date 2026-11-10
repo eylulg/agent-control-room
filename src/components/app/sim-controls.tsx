@@ -1,5 +1,6 @@
-import { PauseCircle, PlayCircle, SkipForward } from "@untitledui/icons";
-import { Button } from "@/components/base/buttons/button";
+import { Button } from "@eylulg/ui/button";
+import { IconButton } from "@eylulg/ui/icon-button";
+import { Pause, Play, SkipForward } from "lucide-react";
 import { useAppStore } from "@/state/store-context";
 
 /** One button that swaps its label, so focus stays on it when the state flips. */
@@ -13,10 +14,10 @@ export const SimControls = () => {
 
     return (
         <div className="flex items-center gap-1" role="group" aria-label="Simulation">
-            <Button size="sm" color="secondary" iconLeading={sim.running ? PauseCircle : PlayCircle} onPress={sim.running ? pause : play}>
-                <span className="sr-only sm:not-sr-only">{sim.running ? "Pause" : "Run"}</span>
+            <Button size="sm" variant="secondary" iconLeading={sim.running ? Pause : Play} onPress={sim.running ? pause : play}>
+                {sim.running ? "Pause" : "Run"}
             </Button>
-            <Button size="sm" color="tertiary" iconLeading={SkipForward} aria-label="Step one tick" onPress={step} isDisabled={sim.running} />
+            <IconButton size="sm" variant="tertiary" icon={SkipForward} aria-label="Step one tick" onPress={step} isDisabled={sim.running} />
         </div>
     );
 };
