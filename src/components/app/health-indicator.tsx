@@ -3,6 +3,8 @@ import { type Health, useHealth } from "./use-health";
 
 const DOT: Record<Health["state"], string> = {
     healthy: "bg-fg-success",
+    idle: "bg-fg-warning",
+    error: "bg-fg-error",
     stale: "bg-fg-error",
     paused: "bg-fg-warning",
     connecting: "bg-fg-tertiary",

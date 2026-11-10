@@ -30,6 +30,22 @@ describe("parseAgentEvent", () => {
 });
 
 describe("SseAgentSource", () => {
+    it("reports the stream failing and recovering", () => {
+        const stream = new EventTarget();
+        const source = new SseAgentSource({
+            streamUrl: "https://agent.test/events",
+            commandUrl: "https://agent.test/commands",
+            createEventSource: () => stream as EventSource,
+        });
+        const seen: string[] = [];
+        source.subscribeStatus((status) => seen.push(status));
+
+        stream.dispatchEvent(new Event("error"));
+        stream.dispatchEvent(new Event("open"));
+
+        expect(seen).toEqual(["connecting", "error", "open"]);
+    });
+
     it("rejects a command the backend does not accept", async () => {
         const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 500 }));
         const source = new SseAgentSource({

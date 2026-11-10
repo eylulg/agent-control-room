@@ -53,8 +53,11 @@ Rules:
 3. **Order.** `seq` is strictly increasing per stream. Clients may drop any
    event with a `seq` at or below the last applied one.
 4. **Heartbeat.** The server sends `health.heartbeat` at a steady interval
-   (the simulator does it every 5 ticks). The UI marks the agent stale after two
-   missed heartbeats.
+   (the simulator does it every 5 ticks). The client times the gap between two
+   heartbeats on its own clock (15 seconds until it has seen two) and marks the
+   agent stale after two missed heartbeats. A stream that errors shows as
+   "Reconnecting" once it has delivered data, and as "Cannot reach the agent"
+   when it never did.
 5. **Validation.** The client validates every message against a zod schema
    (`src/domain/schema.ts`). Malformed JSON, unknown types and payloads of the
    wrong shape are dropped before they reach the state, so the server can add

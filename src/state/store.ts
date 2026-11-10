@@ -1,7 +1,7 @@
 import { type StoreApi, createStore } from "zustand/vanilla";
 import { applyEvent, createInitialState } from "@/domain/reducer";
 import { DEFAULT_SEED, Simulator } from "@/domain/simulator";
-import { AGENT_EVENT, type AgentEventSource, type AgentMessageEvent, SimulatedAgentSource, parseAgentEvent } from "@/domain/source";
+import { AGENT_EVENT, type AgentEventSource, type AgentMessageEvent, type ConnectionStatus, SimulatedAgentSource, parseAgentEvent } from "@/domain/source";
 import type { AgentEvent, ControlState, OperatorCommand } from "@/domain/types";
 
 interface Toast {
@@ -19,7 +19,13 @@ interface SimStatus {
 
 export interface AppState {
     control: ControlState;
+    /** True once the first event has arrived. */
     connected: boolean;
+    connection: ConnectionStatus;
+    /** Wall clock time of the last event from a real source. */
+    lastEventAt: number | null;
+    /** Wall clock time of the last heartbeat and the gap before it, which is how long one heartbeat interval is. */
+    heartbeat: { at: number | null; gapMs: number };
     sim: SimStatus | null;
     toasts: Toast[];
     announcement: string;
@@ -43,6 +49,8 @@ interface CreateAppStoreOptions {
 }
 
 const MAX_TOASTS = 3;
+/** Heartbeat spacing assumed until two heartbeats have shown the real one. */
+const DEFAULT_HEARTBEAT_GAP_MS = 15_000;
 
 const describeEvent = (event: AgentEvent, state: ControlState): string | null => {
     const ticket = event.jobId ? (state.jobs[event.jobId]?.ticket.id ?? event.jobId) : "";
@@ -72,6 +80,9 @@ export const createAppStore = (options: CreateAppStoreOptions = {}): AppStore =>
     const store = createStore<AppState>()((set, get) => ({
         control: createInitialState(),
         connected: false,
+        connection: "connecting",
+        lastEventAt: null,
+        heartbeat: { at: null, gapMs: DEFAULT_HEARTBEAT_GAP_MS },
         sim: simStatus(),
         toasts: [],
         announcement: "",
@@ -104,7 +115,12 @@ export const createAppStore = (options: CreateAppStoreOptions = {}): AppStore =>
         if (!event) return;
         const current = store.getState();
         const control = applyEvent(current.control, event);
-        const patch: Partial<AppState> = { control, connected: true, sim: simStatus() };
+        const now = Date.now();
+        const patch: Partial<AppState> = { control, connected: true, lastEventAt: now, sim: simStatus() };
+        if (event.type === "health.heartbeat") {
+            const { at, gapMs } = current.heartbeat;
+            patch.heartbeat = { at: now, gapMs: at === null ? gapMs : now - at };
+        }
         const text = describeEvent(event, control);
         if (text) patch.announcement = text;
         if (event.type === "approval.requested") {
@@ -115,6 +131,7 @@ export const createAppStore = (options: CreateAppStoreOptions = {}): AppStore =>
         store.setState(patch);
     };
 
+    source.subscribeStatus((connection) => store.setState({ connection }));
     source.addEventListener(AGENT_EVENT, onMessage);
     if (options.autoStart) store.getState().play();
     return store;

@@ -18,6 +18,9 @@ export interface AgentMessageEvent {
 
 type AgentSourceListener = (event: AgentMessageEvent) => void;
 
+export type ConnectionStatus = "connecting" | "open" | "error";
+type StatusListener = (status: ConnectionStatus) => void;
+
 /**
  * The shape of the browser `EventSource`, narrowed to what the control room needs,
  * plus a `send` channel for operator commands (a POST in a real backend).
@@ -27,6 +30,8 @@ export interface AgentEventSource {
     readonly readyState: ReadyState;
     addEventListener(type: typeof AGENT_EVENT, listener: AgentSourceListener): void;
     removeEventListener(type: typeof AGENT_EVENT, listener: AgentSourceListener): void;
+    /** Reports the link state now and on every change. Returns a function that stops listening. */
+    subscribeStatus(listener: StatusListener): () => void;
     close(): void;
     send(command: OperatorCommand, signal?: AbortSignal): Promise<void>;
 }
@@ -62,6 +67,11 @@ export class SimulatedAgentSource implements AgentEventSource {
         this.listeners.delete(listener);
     }
 
+    subscribeStatus(listener: StatusListener): () => void {
+        listener("open");
+        return () => {};
+    }
+
     close(): void {
         this.unsubscribe?.();
         this.unsubscribe = null;
@@ -95,6 +105,8 @@ export class SseAgentSource implements AgentEventSource {
     private readonly commandUrl: string;
     private readonly fetchImpl: typeof fetch;
     private readonly wrapped = new Map<AgentSourceListener, (event: MessageEvent<string>) => void>();
+    private readonly statusListeners = new Set<StatusListener>();
+    private status: ConnectionStatus = "connecting";
 
     constructor(options: SseSourceOptions) {
         this.url = options.streamUrl;
@@ -102,6 +114,8 @@ export class SseAgentSource implements AgentEventSource {
         this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
         const create = options.createEventSource ?? ((url: string) => new EventSource(url));
         this.source = create(options.streamUrl);
+        this.source.addEventListener("open", () => this.setStatus("open"));
+        this.source.addEventListener("error", () => this.setStatus("error"));
     }
 
     get readyState(): ReadyState {
@@ -121,6 +135,12 @@ export class SseAgentSource implements AgentEventSource {
         this.wrapped.delete(listener);
     }
 
+    subscribeStatus(listener: StatusListener): () => void {
+        this.statusListeners.add(listener);
+        listener(this.status);
+        return () => this.statusListeners.delete(listener);
+    }
+
     close(): void {
         this.source.close();
     }
@@ -133,5 +153,10 @@ export class SseAgentSource implements AgentEventSource {
             signal,
         });
         if (!response.ok) throw new Error("The agent did not accept the request. Try again in a moment.");
+    }
+
+    private setStatus(status: ConnectionStatus): void {
+        this.status = status;
+        for (const listener of [...this.statusListeners]) listener(status);
     }
 }

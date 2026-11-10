@@ -20,6 +20,8 @@ const RECENT_EVENTS = 10;
 export const OverviewPage = () => {
     const control = useAppStore((s) => s.control);
     const sim = useAppStore((s) => s.sim);
+    const connected = useAppStore((s) => s.connected);
+    const connection = useAppStore((s) => s.connection);
     const health = useHealth();
 
     const jobs = listJobs(control);
@@ -38,6 +40,19 @@ export const OverviewPage = () => {
         .filter((event) => event.type !== "health.heartbeat")
         .slice(-RECENT_EVENTS)
         .reverse();
+
+    if (!connected && connection === "error") {
+        return (
+            <div className="flex flex-col gap-6">
+                <PageHeader title="Overview" description="What the agent is doing right now, and where it needs a human." />
+                <Panel>
+                    <p role="alert" className="text-primary">
+                        The agent could not be reached. Check that the backend is running and that the stream address is right. This page keeps retrying.
+                    </p>
+                </Panel>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-6">

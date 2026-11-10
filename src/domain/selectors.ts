@@ -41,6 +41,12 @@ export const pendingApprovals = (state: Pick<ControlState, "approvals" | "jobs">
         })
         .sort((a, b) => a.createdAt - b.createdAt);
 
+/** True when the agent has open jobs and every one of them is parked on an approval only the operator can answer. */
+export const isIdleWaitingOnOperator = (state: Pick<ControlState, "jobs">): boolean => {
+    const open = Object.values(state.jobs).filter((job) => job.status !== "done" && job.status !== "failed");
+    return open.length > 0 && open.every((job) => job.status === "awaiting-approval");
+};
+
 /** Completed jobs per time bucket, oldest first. */
 export const throughput = (completions: readonly number[], now: number, bucketMs: number, buckets: number): number[] => {
     const counts = new Array<number>(buckets).fill(0);
