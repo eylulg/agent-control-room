@@ -2,7 +2,12 @@ import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { axe } from "vitest-axe";
+import type { AppStore } from "@/state/store";
 import { renderApp } from "@/test-utils/render-app";
+
+const stepUntilApproval = (store: AppStore) => {
+    for (let i = 0; i < 10 && Object.keys(store.getState().control.approvals).length === 0; i++) store.getState().step();
+};
 
 describe("App", () => {
     // jsdom computes no colours, so a dark mode run would repeat this one. Contrast in both themes is checked in a real browser.
@@ -15,11 +20,9 @@ describe("App", () => {
     it("raises a toast and announces it when the agent asks for approval", async () => {
         const { store } = await renderApp("/", { warmup: 0 });
 
-        act(() => {
-            for (let i = 0; i < 10 && store.getState().toasts.length === 0; i++) store.getState().step();
-        });
+        act(() => stepUntilApproval(store));
 
-        expect(within(screen.getByRole("region", { name: "Notifications" })).getByText("Approval needed on ACME-101")).toBeInTheDocument();
+        expect(await within(screen.getByRole("region", { name: "Notifications" })).findByText("Approval needed on ACME-101")).toBeInTheDocument();
         expect(screen.getByTestId("live-region")).toHaveTextContent("Approval requested on ACME-101");
     });
 
@@ -33,16 +36,13 @@ describe("App", () => {
         expect(screen.getByRole("main")).toHaveFocus();
     });
 
-    it("moves focus to the content when a toast is dismissed", async () => {
+    it("opens the approvals page from the toast", async () => {
         const user = userEvent.setup();
         const { store } = await renderApp("/", { warmup: 0 });
-        act(() => {
-            for (let i = 0; i < 10 && store.getState().toasts.length === 0; i++) store.getState().step();
-        });
+        act(() => stepUntilApproval(store));
 
-        await user.click(screen.getByRole("button", { name: /^Dismiss: Approval needed on ACME-101/ }));
+        await user.click(await screen.findByRole("button", { name: "Open approvals" }));
 
-        expect(screen.queryByText("Approval needed on ACME-101")).not.toBeInTheDocument();
-        expect(screen.getByRole("main")).toHaveFocus();
+        expect(await screen.findByRole("heading", { level: 1, name: "Approvals" })).toBeInTheDocument();
     });
 });

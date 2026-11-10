@@ -16,7 +16,6 @@ export default defineConfig({
         },
     ],
     resolve: {
-        dedupe: ["react", "react-dom", "react-aria-components", "lucide-react"],
         alias: {
             "@": path.resolve(import.meta.dirname, "./src"),
         },

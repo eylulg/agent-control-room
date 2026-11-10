@@ -8,13 +8,13 @@ export const formatClock = (ts: number): string => {
 
 export const STATUS_META: Record<JobStatus, { label: string; color: BadgeColor }> = {
     queued: { label: "Queued", color: "gray" },
-    planning: { label: "Planning", color: "brand" },
+    planning: { label: "Planning", color: "blue" },
     "awaiting-approval": { label: "Awaiting approval", color: "warning" },
     implementing: { label: "Implementing", color: "brand" },
-    "fixing-ci": { label: "Fixing CI", color: "error" },
-    "answering-review": { label: "Answering review", color: "brand" },
-    "on-hold": { label: "On hold", color: "warning" },
-    "ready-for-review": { label: "Ready for review", color: "success" },
+    "fixing-ci": { label: "Fixing CI", color: "orange" },
+    "answering-review": { label: "Answering review", color: "purple" },
+    "on-hold": { label: "On hold", color: "pink" },
+    "ready-for-review": { label: "Ready for review", color: "indigo" },
     done: { label: "Done", color: "success" },
     failed: { label: "Failed", color: "error" },
 };

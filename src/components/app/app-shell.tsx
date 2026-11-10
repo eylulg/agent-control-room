@@ -1,20 +1,22 @@
 import { type ReactNode, useEffect } from "react";
 import { BrandMark, ProjectSwitcher, AppShell as Shell, SidebarNav, SiteFooter, ThemeToggle, TopNav } from "@eylulg/ui/chrome";
+import { ToastProvider } from "@eylulg/ui/toast";
 import { BarChart3, CheckCheck, FileText, LayoutGrid, Route, Settings, ShieldCheck } from "lucide-react";
 import { useLocation } from "react-router";
 import { listJobs, pendingApprovals } from "@/domain/selectors";
 import { useAppStore } from "@/state/store-context";
+import { ApprovalToasts } from "./approval-toasts";
 import { HealthIndicator } from "./health-indicator";
 import { LiveRegion } from "./live-region";
 import { RouterLink } from "./router-link";
 import { SimControls } from "./sim-controls";
-import { Toaster } from "./toaster";
 
 interface AppShellProps {
     children: ReactNode;
 }
 
 const PROJECT_ID = "agent-control-room";
+const TOAST_MS = 9000;
 
 export const AppShell = ({ children }: AppShellProps) => {
     const location = useLocation();
@@ -27,13 +29,13 @@ export const AppShell = ({ children }: AppShellProps) => {
     }, [location.key]);
 
     return (
-        <>
+        <ToastProvider duration={TOAST_MS} placement="bottom-right">
             <Shell header={<Header />} sidebar={<SideNav />} footer={<SiteFooter currentId={PROJECT_ID} />}>
                 {children}
             </Shell>
             <LiveRegion />
-            <Toaster />
-        </>
+            <ApprovalToasts />
+        </ToastProvider>
     );
 };
 
@@ -43,14 +45,15 @@ const Header = () => (
         logo={<BrandMark />}
         LinkComponent={RouterLink}
         mobileMenu={<SideNav />}
+        center={<SimControls />}
         actions={
             <>
-                <SimControls />
                 <HealthIndicator />
                 <ProjectSwitcher currentId={PROJECT_ID} />
                 <ThemeToggle />
             </>
         }
+        compactActions={<ThemeToggle compact />}
     />
 );
 

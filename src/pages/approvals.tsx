@@ -162,7 +162,7 @@ const OptionButton = ({ approval, optionKey, onAnswer }: OptionButtonProps) => {
     }
 
     return (
-        <Card onPress={handleClick} className="gap-2">
+        <Card onPress={handleClick} aria-keyshortcuts={optionKey === "A" ? "1" : "2"} className="gap-2">
             <CardHeader
                 title={`Option ${optionKey}: ${option.label}`}
                 headingLevel={3}

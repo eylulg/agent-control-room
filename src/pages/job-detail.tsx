@@ -1,7 +1,6 @@
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, type RefObject, useEffect, useRef, useState } from "react";
 import { Badge } from "@eylulg/ui/badge";
 import { Button } from "@eylulg/ui/button";
-import { cx } from "@eylulg/ui/cx";
 import { Input } from "@eylulg/ui/input";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Link, useParams } from "react-router";
@@ -19,11 +18,7 @@ interface JobProps {
     job: Job;
 }
 
-const REASON_ID = "hold-reason";
-const RESUME_ID = "resume-job";
-const RETRY_ID = "retry-job";
-
-const focusById = (id: string) => document.getElementById(id)?.focus();
+const focusRef = (ref: RefObject<HTMLElement | null>) => ref.current?.focus();
 
 export const JobDetailPage = () => {
     const { jobId = "" } = useParams();
@@ -70,10 +65,9 @@ export const JobDetailPage = () => {
                 }
                 actions={
                     job.pr && (
-                        <a href={job.pr.url} target="_blank" rel="noreferrer" className={cx("inline-flex items-center gap-1 text-sm", inlineLink)}>
+                        <Button href={job.pr.url} target="_blank" rel="noreferrer" size="sm" variant="secondary" iconTrailing={ExternalLink}>
                             Open PR #{job.pr.number}
-                            <ExternalLink aria-hidden="true" className="size-4" />
-                        </a>
+                        </Button>
                     )
                 }
             />
@@ -241,6 +235,9 @@ const Timeline = ({ job }: JobProps) => {
 const Actions = ({ job }: JobProps) => {
     const { run, error } = useCommand();
     const [reason, setReason] = useState("");
+    const reasonRef = useRef<HTMLInputElement>(null);
+    const resumeRef = useRef<HTMLButtonElement>(null);
+    const retryRef = useRef<HTMLButtonElement>(null);
 
     const finished = job.status === "done" || job.status === "failed";
     const held = job.status === "on-hold";
@@ -249,27 +246,27 @@ const Actions = ({ job }: JobProps) => {
         event.preventDefault();
         if (await run({ type: "job.hold", jobId: job.id, reason })) {
             setReason("");
-            focusById(RESUME_ID);
+            focusRef(resumeRef);
         }
     }
 
     async function handleResume() {
-        if (await run({ type: "job.resume", jobId: job.id })) focusById(REASON_ID);
+        if (await run({ type: "job.resume", jobId: job.id })) focusRef(reasonRef);
     }
 
     async function handleCancel() {
-        if (await run({ type: "job.cancel", jobId: job.id })) focusById(RETRY_ID);
+        if (await run({ type: "job.cancel", jobId: job.id })) focusRef(retryRef);
     }
 
     async function handleRetry() {
-        if (await run({ type: "job.retry", jobId: job.id })) focusById(REASON_ID);
+        if (await run({ type: "job.retry", jobId: job.id })) focusRef(reasonRef);
     }
 
     return (
         <Panel title="Actions">
             <form className="flex flex-col gap-3" onSubmit={handleHold}>
                 <Input
-                    id={REASON_ID}
+                    ref={reasonRef}
                     label="Hold reason"
                     placeholder="Waiting on a designer"
                     value={reason}
@@ -280,13 +277,13 @@ const Actions = ({ job }: JobProps) => {
                     <Button type="submit" size="sm" variant="secondary" isDisabled={finished || held}>
                         Hold job
                     </Button>
-                    <Button id={RESUME_ID} size="sm" variant="secondary" isDisabled={!held} onPress={handleResume}>
+                    <Button ref={resumeRef} size="sm" variant="secondary" isDisabled={!held} onPress={handleResume}>
                         Resume job
                     </Button>
                     <Button size="sm" variant="destructive" isDisabled={finished} onPress={handleCancel}>
                         Cancel job
                     </Button>
-                    <Button id={RETRY_ID} size="sm" variant="secondary" isDisabled={job.status !== "failed"} onPress={handleRetry}>
+                    <Button ref={retryRef} size="sm" variant="secondary" isDisabled={job.status !== "failed"} onPress={handleRetry}>
                         Retry job
                     </Button>
                 </div>

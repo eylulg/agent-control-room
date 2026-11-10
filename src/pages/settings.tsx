@@ -84,7 +84,7 @@ const SeedForm = ({ seed: initialSeed, onReset }: SeedFormProps) => {
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <Input label="Seed" value={seed} onChange={setSeed} hint="Any text. Leave empty for the default seed." />
             <div>
-                <Button type="submit" size="sm" variant="destructive">
+                <Button type="submit" size="sm" variant="destructive-outline">
                     Reset world
                 </Button>
             </div>
