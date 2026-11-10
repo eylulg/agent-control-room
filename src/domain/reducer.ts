@@ -21,6 +21,15 @@ const patchJob = (state: ControlState, event: AgentEvent, patch: (job: Job) => P
     return { ...state, jobs: { ...state.jobs, [job.id]: { ...job, ...patch(job) } } };
 };
 
+/** A request on a job that failed or restarted can no longer be answered, so it is closed instead of left pending. */
+const supersedeApprovals = (state: ControlState, jobId: string | null): ControlState => {
+    const stale = Object.values(state.approvals).filter((approval) => approval.jobId === jobId && approval.status === "pending");
+    if (stale.length === 0) return state;
+    const approvals = { ...state.approvals };
+    for (const approval of stale) approvals[approval.id] = { ...approval, status: "superseded" };
+    return { ...state, approvals };
+};
+
 const applyToJob = (state: ControlState, event: AgentEvent): ControlState => {
     switch (event.type) {
         case "job.status":
@@ -101,10 +110,11 @@ const applyToJob = (state: ControlState, event: AgentEvent): ControlState => {
         case "job.resumed":
             return patchJob(state, event, (job) => ({ status: job.statusBeforeHold ?? "implementing", holdReason: undefined, statusBeforeHold: undefined }));
         case "job.retried":
-            return patchJob(state, event, () => ({
+            return patchJob(supersedeApprovals(state, event.jobId), event, () => ({
                 status: "queued",
                 attempts: event.payload.attempt,
                 model: event.payload.model,
+                plan: undefined,
                 failureReason: undefined,
                 holdReason: undefined,
                 statusBeforeHold: undefined,
@@ -112,7 +122,11 @@ const applyToJob = (state: ControlState, event: AgentEvent): ControlState => {
         case "job.done":
             return { ...patchJob(state, event, () => ({ status: "done" })), completions: [...state.completions, event.ts] };
         case "job.failed":
-            return patchJob(state, event, () => ({ status: "failed", failureReason: event.payload.reason, holdReason: undefined }));
+            return patchJob(supersedeApprovals(state, event.jobId), event, () => ({
+                status: "failed",
+                failureReason: event.payload.reason,
+                holdReason: undefined,
+            }));
         case "health.heartbeat":
             return { ...state, health: { lastHeartbeat: event.ts, tick: event.payload.tick, activeJobs: event.payload.activeJobs } };
         default:

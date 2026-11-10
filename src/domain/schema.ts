@@ -16,7 +16,7 @@ const approval = z.object({
     options: z.object({ A: approvalOption, B: approvalOption }),
     recommended: optionKey,
     reason: z.string(),
-    status: z.enum(["pending", "answered"]),
+    status: z.enum(["pending", "answered", "superseded"]),
     answer: z.optional(z.object({ option: optionKey, note: z.optional(z.string()), ts: z.number() })),
     createdAt: z.number(),
 });

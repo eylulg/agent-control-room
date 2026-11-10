@@ -85,7 +85,7 @@ export interface ApprovalRequest {
     options: Record<ApprovalOptionKey, ApprovalOption>;
     recommended: ApprovalOptionKey;
     reason: string;
-    status: "pending" | "answered";
+    status: "pending" | "answered" | "superseded";
     answer?: { option: ApprovalOptionKey; note?: string; ts: number };
     createdAt: number;
 }
