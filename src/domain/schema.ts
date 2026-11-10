@@ -1,5 +1,5 @@
 import { z } from "zod/mini";
-import { type AgentEvent, type ControlState, EVENT_TYPES, JOB_KINDS, JOB_STATUSES, type Job } from "./types";
+import { type AgentEvent, type ControlState, EVENT_TYPES, JOB_KINDS, JOB_STATUSES, type Job, type OperatorCommand } from "./types";
 
 const jobStatus = z.enum(JOB_STATUSES);
 const jobKind = z.enum(JOB_KINDS);
@@ -111,3 +111,13 @@ export const parseAgentEventData = (data: string): AgentEvent | null => {
     const result = agentEvent.safeParse(json);
     return result.success ? result.data : null;
 };
+
+export const operatorCommand: z.ZodMiniType<OperatorCommand> = z.discriminatedUnion("type", [
+    z.object({ type: z.literal("approval.answer"), approvalId: z.string(), option: optionKey, note: z.optional(z.string()) }),
+    z.object({ type: z.literal("job.hold"), jobId: z.string(), reason: z.string() }),
+    z.object({ type: z.literal("job.resume"), jobId: z.string() }),
+    z.object({ type: z.literal("job.cancel"), jobId: z.string() }),
+    z.object({ type: z.literal("job.retry"), jobId: z.string() }),
+    z.object({ type: z.literal("routing.set"), routing: routingTable }),
+    z.object({ type: z.literal("guard.toggle"), guardId: z.string(), enabled: z.boolean() }),
+]);

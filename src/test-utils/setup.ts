@@ -8,6 +8,7 @@ expect.extend(axeMatchers);
 afterEach(() => {
     cleanup();
     localStorage.clear();
+    sessionStorage.clear();
 });
 
 if (!window.matchMedia) {

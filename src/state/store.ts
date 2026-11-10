@@ -3,6 +3,7 @@ import { applyEvent, createInitialState } from "@/domain/reducer";
 import { DEFAULT_SEED, Simulator } from "@/domain/simulator";
 import { AGENT_EVENT, type AgentEventSource, type AgentMessageEvent, type ConnectionStatus, SimulatedAgentSource, parseAgentEvent } from "@/domain/source";
 import type { AgentEvent, ControlState, OperatorCommand } from "@/domain/types";
+import { type LoggedCommand, type PersistedWorld, saveWorld } from "./persist";
 
 interface Toast {
     id: string;
@@ -46,11 +47,25 @@ interface CreateAppStoreOptions {
     autoStart?: boolean;
     /** Supply a real backend instead of the simulator. */
     source?: AgentEventSource;
+    /** Rebuild a world saved by an earlier page load. */
+    restore?: PersistedWorld;
+    /** Where to keep the world so a reload gets it back. */
+    storage?: Storage;
 }
 
 const MAX_TOASTS = 3;
 /** Heartbeat spacing assumed until two heartbeats have shown the real one. */
 const DEFAULT_HEARTBEAT_GAP_MS = 15_000;
+/** A saved world longer than this is dropped, so a reload never stalls replaying it. */
+const MAX_REPLAY_TICKS = 5000;
+
+const replay = (simulator: Simulator, world: PersistedWorld) => {
+    for (const { tick, command } of world.commands) {
+        if (tick > simulator.tick) simulator.step(tick - simulator.tick);
+        simulator.send(command);
+    }
+    if (world.tick > simulator.tick) simulator.step(world.tick - simulator.tick);
+};
 
 const describeEvent = (event: AgentEvent, state: ControlState): string | null => {
     const ticket = event.jobId ? (state.jobs[event.jobId]?.ticket.id ?? event.jobId) : "";
@@ -71,11 +86,22 @@ const describeEvent = (event: AgentEvent, state: ControlState): string | null =>
 };
 
 export const createAppStore = (options: CreateAppStoreOptions = {}): AppStore => {
-    const simulator = options.source ? null : new Simulator({ seed: options.seed ?? DEFAULT_SEED, warmup: options.warmup ?? 0 });
+    const restore = options.restore && options.restore.tick <= MAX_REPLAY_TICKS ? options.restore : undefined;
+    const simulator = options.source ? null : new Simulator({ seed: restore?.seed ?? options.seed ?? DEFAULT_SEED, warmup: options.warmup ?? 0 });
+    if (simulator && restore) {
+        simulator.speed = restore.speed;
+        replay(simulator, restore);
+    }
+    const commandLog: LoggedCommand[] = restore ? [...restore.commands] : [];
     const source = options.source ?? new SimulatedAgentSource(simulator ?? new Simulator());
 
     const simStatus = (): SimStatus | null =>
         simulator ? { running: simulator.running, speed: simulator.speed, seed: simulator.seed, tick: simulator.tick } : null;
+
+    const persist = () => {
+        if (!options.storage || !simulator) return;
+        saveWorld(options.storage, { seed: simulator.seed, speed: simulator.speed, tick: simulator.tick, commands: commandLog });
+    };
 
     const store = createStore<AppState>()((set, get) => ({
         control: createInitialState(),
@@ -86,7 +112,13 @@ export const createAppStore = (options: CreateAppStoreOptions = {}): AppStore =>
         sim: simStatus(),
         toasts: [],
         announcement: "",
-        send: (command, signal) => source.send(command, signal),
+        send: async (command, signal) => {
+            const tick = simulator?.tick ?? 0;
+            await source.send(command, signal);
+            if (!simulator) return;
+            commandLog.push({ tick, command });
+            persist();
+        },
         play: () => {
             simulator?.start();
             set({ sim: simStatus() });
@@ -101,10 +133,13 @@ export const createAppStore = (options: CreateAppStoreOptions = {}): AppStore =>
         },
         reset: (seed) => {
             simulator?.reset(seed.trim() || DEFAULT_SEED);
+            commandLog.length = 0;
+            persist();
             set({ sim: simStatus(), toasts: [] });
         },
         setSpeed: (speed) => {
             if (simulator) simulator.speed = speed;
+            persist();
             set({ sim: simStatus() });
         },
         dismissToast: (id) => set({ toasts: get().toasts.filter((toast) => toast.id !== id) }),
@@ -133,6 +168,7 @@ export const createAppStore = (options: CreateAppStoreOptions = {}): AppStore =>
 
     source.subscribeStatus((connection) => store.setState({ connection }));
     source.addEventListener(AGENT_EVENT, onMessage);
+    if (options.storage && simulator) window.addEventListener("pagehide", persist);
     if (options.autoStart) store.getState().play();
     return store;
 };
