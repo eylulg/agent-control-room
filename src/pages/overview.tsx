@@ -1,5 +1,4 @@
 import { Sparkline } from "@eylulg/ui/stat";
-import { Cell, Column, Row, Table, TableBody, TableHeader } from "@eylulg/ui/table";
 import { Link } from "react-router";
 import { EventRow } from "@/components/app/event-row";
 import { PageHeader } from "@/components/app/page-header";
@@ -83,33 +82,25 @@ export const OverviewPage = () => {
                 </Panel>
 
                 <Panel title="Jobs by status" className="xl:col-span-2">
-                    <Table aria-label="Number of jobs in each status">
-                        <TableHeader>
-                            <Column isRowHeader>Status</Column>
-                            <Column>Jobs</Column>
-                        </TableHeader>
-                        <TableBody items={JOB_STATUSES.map((status) => ({ status }))}>
-                            {({ status }) => (
-                                <Row id={status}>
-                                    <Cell>
-                                        <StatusBadge status={status} />
-                                    </Cell>
-                                    <Cell>
-                                        <span className="flex items-center gap-2">
-                                            {counts[status] > 0 && (
-                                                <span
-                                                    aria-hidden="true"
-                                                    className="h-2 max-w-[calc(100%-2.5rem)] rounded-r bg-(--viz-series-1)"
-                                                    style={{ width: `${(counts[status] / maxCount) * 100}%` }}
-                                                />
-                                            )}
-                                            <span className="font-medium text-secondary tabular-nums">{counts[status]}</span>
-                                        </span>
-                                    </Cell>
-                                </Row>
-                            )}
-                        </TableBody>
-                    </Table>
+                    <ul aria-label="Number of jobs in each status" className="flex flex-col gap-2">
+                        {JOB_STATUSES.map((status) => (
+                            <li key={status} className="grid grid-cols-[10rem_1fr] items-center gap-3">
+                                <span>
+                                    <StatusBadge status={status} />
+                                </span>
+                                <span className="flex items-center gap-2">
+                                    {counts[status] > 0 && (
+                                        <span
+                                            aria-hidden="true"
+                                            className="h-2 max-w-[calc(100%-2.5rem)] rounded-r bg-(--viz-series-1)"
+                                            style={{ width: `${(counts[status] / maxCount) * 100}%` }}
+                                        />
+                                    )}
+                                    <span className="font-medium text-secondary tabular-nums">{counts[status]}</span>
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
                 </Panel>
             </div>
 
