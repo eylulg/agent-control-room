@@ -96,7 +96,7 @@ set by the library's init script before first paint so there is no flash.
 
 ## Run
 
-The design system is a local dependency (`"@eylulg/ui": "file:../ui"`). Clone
+The design system is a local dependency (`"@eylulg/ui": "file:../ui"`), installed as a copy with `npm install ../ui --install-links`. Run `npm run relink` after rebuilding it. Clone
 and build it next to this repo first:
 
 ```bash
