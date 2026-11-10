@@ -2,8 +2,8 @@ import { type ReactNode, useEffect } from "react";
 import { BrandMark, ProjectSwitcher, AppShell as Shell, SidebarNav, SiteFooter, ThemeToggle, TopNav } from "@eylulg/ui/chrome";
 import { ToastProvider } from "@eylulg/ui/toast";
 import { BarChart3, CheckCheck, FileText, LayoutGrid, Route, Settings, ShieldCheck } from "lucide-react";
-import { useLocation } from "react-router";
-import { listJobs, pendingApprovals } from "@/domain/selectors";
+import { matchPath, useLocation } from "react-router";
+import { pendingApprovals } from "@/domain/selectors";
 import { useAppStore } from "@/state/store-context";
 import { ApprovalToasts } from "./approval-toasts";
 import { HealthIndicator } from "./health-indicator";
@@ -60,12 +60,17 @@ const Header = () => (
 const SideNav = () => {
     const { pathname } = useLocation();
     const pending = useAppStore((s) => pendingApprovals(s.control).length);
-    const firstJob = useAppStore((s) => listJobs(s.control)[0]);
+    const openJobId = matchPath("/jobs/:jobId", pathname)?.params.jobId ?? "";
+    // The job being viewed, otherwise the newest one.
+    const jobId = useAppStore((s) => (s.control.jobs[openJobId] ? openJobId : s.control.jobOrder.at(-1)));
+    const ticketId = useAppStore((s) => (jobId ? s.control.jobs[jobId]?.ticket.id : undefined));
 
     const items = [
         { href: "/", label: "Overview", icon: <BarChart3 aria-hidden="true" />, isCurrent: pathname === "/" },
         { href: "/queue", label: "Queue", icon: <LayoutGrid aria-hidden="true" />, isCurrent: pathname === "/queue" },
-        ...(firstJob ? [{ href: `/jobs/${firstJob.id}`, label: "Job", icon: <FileText aria-hidden="true" />, isCurrent: pathname.startsWith("/jobs/") }] : []),
+        ...(jobId && ticketId
+            ? [{ href: `/jobs/${jobId}`, label: `Job ${ticketId}`, icon: <FileText aria-hidden="true" />, isCurrent: pathname.startsWith("/jobs/") }]
+            : []),
         {
             href: "/approvals",
             label: "Approvals",
