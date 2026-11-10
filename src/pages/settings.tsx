@@ -1,5 +1,6 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { Button } from "@eylulg/ui/button";
+import { cx } from "@eylulg/ui/cx";
 import { Input } from "@eylulg/ui/input";
 import { Select, SelectItem } from "@eylulg/ui/select";
 import type { Key } from "react-aria-components";
@@ -23,6 +24,7 @@ export const SettingsPage = () => {
     const pause = useAppStore((s) => s.pause);
     const step = useAppStore((s) => s.step);
     const [status, setStatus] = useState("");
+    const statusRef = useRef<HTMLParagraphElement>(null);
 
     function handleSpeed(key: Key | null) {
         if (key !== null) setSpeed(Number(key));
@@ -31,6 +33,8 @@ export const SettingsPage = () => {
     function handleReset(seed: string) {
         reset(seed);
         setStatus(`World reset with seed "${seed.trim() || DEFAULT_SEED}".`);
+        // The seed form remounts on reset and takes its focused button with it.
+        statusRef.current?.focus();
     }
 
     if (!sim) {
@@ -63,7 +67,7 @@ export const SettingsPage = () => {
                 </Panel>
                 <Panel title="Seed">
                     <SeedForm key={sim.seed} seed={sim.seed} onReset={handleReset} />
-                    <p role="status" className="mt-3 text-sm font-medium text-secondary empty:hidden">
+                    <p ref={statusRef} tabIndex={-1} role="status" className={cx("text-sm font-medium text-secondary", status ? "mt-3" : "sr-only")}>
                         {status}
                     </p>
                 </Panel>

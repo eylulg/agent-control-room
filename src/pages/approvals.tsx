@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@eylulg/ui/badge";
 import { Card, CardBody, CardHeader } from "@eylulg/ui/card";
+import { cx } from "@eylulg/ui/cx";
 import { Kbd } from "@eylulg/ui/kbd";
 import { Textarea } from "@eylulg/ui/textarea";
 import { Link } from "react-router";
 import { PageHeader } from "@/components/app/page-header";
 import { Panel } from "@/components/app/panel";
+import { StatusBadge } from "@/components/app/status-badge";
 import { inlineLink } from "@/components/app/styles";
 import { pendingApprovals } from "@/domain/selectors";
 import type { ApprovalOptionKey, ApprovalRequest } from "@/domain/types";
@@ -47,7 +49,8 @@ export const ApprovalsPage = () => {
         .slice(-RECENT_ANSWERS)
         .reverse();
 
-    // Answering removes the focused card, so focus moves to the confirmation that replaces it.
+    // Answering removes the focused card, so focus moves to the confirmation that replaces it. The element stays
+    // rendered (screen reader only while empty) because a hidden element cannot take focus.
     async function handleAnswer(approval: ApprovalRequest, option: ApprovalOptionKey) {
         const accepted = await run({ type: "approval.answer", approvalId: approval.id, option, note: notes[approval.id] });
         if (!accepted) return;
@@ -83,7 +86,7 @@ export const ApprovalsPage = () => {
                     </>
                 }
             />
-            <p ref={confirmationRef} tabIndex={-1} role="status" className="text-sm font-medium text-secondary empty:hidden">
+            <p ref={confirmationRef} tabIndex={-1} role="status" className={cx("text-sm font-medium text-secondary", !confirmation && "sr-only")}>
                 {confirmation}
             </p>
             {error && (
@@ -138,6 +141,7 @@ const ApprovalCard = ({ approval, note, onNote, onAnswer }: ApprovalCardProps) =
                     </Link>
                 )}
                 <span>{job?.ticket.title}</span>
+                {job && <StatusBadge status={job.status} />}
                 <span className="ml-auto text-xs">Asked at {formatClock(approval.createdAt)}</span>
             </div>
             <h2 id={headingId} className="font-display text-lg font-semibold text-primary">

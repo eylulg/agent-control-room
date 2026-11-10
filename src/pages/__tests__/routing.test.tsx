@@ -19,6 +19,6 @@ describe("RoutingPage", () => {
         await user.click(screen.getByRole("button", { name: "Save routing" }));
 
         expect(store.getState().control.routing.bug).toBe("claude-fable-5-1");
-        expect(screen.getByText("Routing saved. New jobs and retries use it from now on.")).toBeInTheDocument();
+        expect(screen.getByText("Routing saved. New jobs and retries use it from now on.")).toHaveFocus();
     });
 });

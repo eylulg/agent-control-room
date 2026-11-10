@@ -1,5 +1,6 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { Button } from "@eylulg/ui/button";
+import { cx } from "@eylulg/ui/cx";
 import { Select, SelectItem } from "@eylulg/ui/select";
 import { Cell, Column, Row, Table, TableBody, TableHeader } from "@eylulg/ui/table";
 import type { Key } from "react-aria-components";
@@ -26,10 +27,14 @@ export const RoutingPage = () => {
     const routing = useAppStore((s) => s.control.routing);
     const { run, error } = useCommand();
     const [status, setStatus] = useState("");
+    const statusRef = useRef<HTMLParagraphElement>(null);
 
     // Lives here, not in the editor: a saved table remounts the keyed editor, which would abort its own request.
+    // Save disables itself once the table is clean, so focus moves to the status line.
     async function handleSave(next: RoutingTable) {
-        if (await run({ type: "routing.set", routing: next })) setStatus("Routing saved. New jobs and retries use it from now on.");
+        if (!(await run({ type: "routing.set", routing: next }))) return;
+        setStatus("Routing saved. New jobs and retries use it from now on.");
+        statusRef.current?.focus();
     }
 
     return (
@@ -41,7 +46,7 @@ export const RoutingPage = () => {
             <Panel title="Routing table">
                 {/* Keyed by the saved table so the draft resets whenever routing changes, here or from the agent. */}
                 <RoutingEditor key={JSON.stringify(routing)} routing={routing} onSave={handleSave} />
-                <p role="status" className="mt-3 text-sm font-medium text-secondary empty:hidden">
+                <p ref={statusRef} tabIndex={-1} role="status" className={cx("text-sm font-medium text-secondary", status ? "mt-3" : "sr-only")}>
                     {status}
                 </p>
                 {error && (
