@@ -37,7 +37,7 @@ click through it.
 | Page       | What it shows                                                                                                                                |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Overview   | Health and heartbeat, active jobs, approvals waiting, guard blocks, throughput sparkline, jobs by status, events                             |
-| Queue      | Kanban by status with search and filters for kind and repository                                                                             |
+| Queue      | Jobs grouped by status (Done collapsed) with a switch to a board, search and filters for kind and repository                                 |
 | Job detail | Plan, timeline with auto-follow and pause, commits, CI runs, review findings and replies, guard events, PR link, hold, resume, cancel, retry |
 | Approvals  | A/B cards with the recommendation highlighted, optional note, answer with keys 1 and 2                                                       |
 | Routing    | Model per job kind with validation. Applies to new jobs and retries                                                                          |
@@ -55,7 +55,9 @@ operator answers always replay the same day. On each tick it:
 
 - picks up new tickets (fictional ids like `ACME-104`) with the model from the
   routing table,
-- plans, and sometimes asks for approval, which blocks the job until answered,
+- plans, and sometimes asks for approval, which blocks the job until answered
+  (a simulated teammate answers with the recommended option after 30 ticks, so
+  an unattended world keeps moving),
 - pushes commits, opens a PR, sometimes fails CI and fixes it,
 - gets review findings and replies to them,
 - holds a job for a designer and resumes it later,
