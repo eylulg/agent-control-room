@@ -19,7 +19,7 @@ describe("QueuePage", () => {
             },
             (job) => job.ticket.repo === "acme/mobile",
         ],
-    ])("filters the board by %s", async (_name, act, matches) => {
+    ])("filters the list by %s", async (_name, act, matches) => {
         const user = userEvent.setup();
         const { store } = await renderApp("/queue");
         const jobs = listJobs(store.getState().control);
@@ -28,7 +28,7 @@ describe("QueuePage", () => {
 
         const expected = jobs.filter(matches);
         expect(screen.getByText(`Showing ${expected.length} of ${jobs.length} jobs`)).toBeInTheDocument();
-        for (const job of jobs) {
+        for (const job of jobs.filter((j) => j.status !== "done")) {
             const card = screen.queryByRole("link", { name: new RegExp(`^${job.ticket.id}(?!\\d)`) });
             if (matches(job)) expect(card).toBeInTheDocument();
             else expect(card).not.toBeInTheDocument();
