@@ -1,22 +1,28 @@
 import { JOB_KINDS } from "../types";
-import { autoLayout } from "./layout";
 import { WORKFLOW_FORMAT_VERSION, type Workflow, type WorkflowEdge, type WorkflowNode } from "./types";
 
-const at = { x: 0, y: 0 };
+/**
+ * Four rows by three columns, read top to bottom and then left to right, with the two loops beside the step they repeat.
+ * The whole graph is about 760 by 470 units, so it opens fully visible on a laptop canvas at a zoom where text reads.
+ * A layered layout would run ten columns wide.
+ */
+const COLUMN = 270;
+const ROW = 130;
+const at = (column: number, row: number) => ({ x: column * COLUMN, y: row * ROW });
 
 const nodes: WorkflowNode[] = [
-    { id: "trigger", type: "trigger", label: "Ticket arrives", position: at, config: { kinds: [...JOB_KINDS] } },
-    { id: "plan", type: "plan", label: "Plan", position: at, config: {} },
-    { id: "approval", type: "approval", label: "Ask when unclear", position: at, config: {} },
-    { id: "build", type: "implement", label: "Implement", position: at, config: { mode: "build" } },
-    { id: "ci", type: "ci", label: "Run CI", position: at, config: { maxAttempts: 3 } },
-    { id: "ci-fix", type: "implement", label: "Fix CI", position: at, config: { mode: "fix" } },
-    { id: "review", type: "review", label: "Review", position: at, config: { maxRounds: 3 } },
-    { id: "review-fix", type: "implement", label: "Address findings", position: at, config: { mode: "fix" } },
-    { id: "dependency", type: "wait-dependency", label: "Wait for base PR", position: at, config: {} },
-    { id: "ready", type: "mark-ready", label: "Mark ready", position: at, config: {} },
-    { id: "merge-guard", type: "guard", label: "Merge guard", position: at, config: { action: "merge" } },
-    { id: "done", type: "end", label: "Done", position: at, config: { outcome: "done" } },
+    { id: "trigger", type: "trigger", label: "Ticket arrives", position: at(0, 0), config: { kinds: [...JOB_KINDS] } },
+    { id: "plan", type: "plan", label: "Plan", position: at(0, 1), config: {} },
+    { id: "approval", type: "approval", label: "Ask when unclear", position: at(0, 2), config: {} },
+    { id: "build", type: "implement", label: "Implement", position: at(0, 3), config: { mode: "build" } },
+    { id: "ci", type: "ci", label: "Run CI", position: at(1, 1), config: { maxAttempts: 3 } },
+    { id: "ci-fix", type: "implement", label: "Fix CI", position: at(1, 0), config: { mode: "fix" } },
+    { id: "review", type: "review", label: "Review", position: at(1, 2), config: { maxRounds: 3 } },
+    { id: "review-fix", type: "implement", label: "Address findings", position: at(1, 3), config: { mode: "fix" } },
+    { id: "dependency", type: "wait-dependency", label: "Wait for base PR", position: at(2, 0), config: {} },
+    { id: "ready", type: "mark-ready", label: "Mark ready", position: at(2, 1), config: {} },
+    { id: "merge-guard", type: "guard", label: "Merge guard", position: at(2, 2), config: { action: "merge" } },
+    { id: "done", type: "end", label: "Done", position: at(2, 3), config: { outcome: "done" } },
 ];
 
 const link = (node: string, port: string, to: string): WorkflowEdge => ({ id: `${node}:${port}`, from: { node, port }, to });
@@ -38,4 +44,4 @@ const edges: WorkflowEdge[] = [
 ];
 
 /** The workflow the simulator ran before workflows were data. Publishing it again changes nothing. */
-export const DEFAULT_WORKFLOW: Workflow = autoLayout({ version: WORKFLOW_FORMAT_VERSION, name: "Ticket to pull request", nodes, edges });
+export const DEFAULT_WORKFLOW: Workflow = { version: WORKFLOW_FORMAT_VERSION, name: "Ticket to pull request", nodes, edges };

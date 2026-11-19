@@ -105,7 +105,7 @@ export const WorkflowsPage = () => {
         <div className="flex flex-col gap-6">
             <PageHeader
                 title="Workflows"
-                description="What a job does, as a graph. Jobs walk the version that was published when they started. Edit a draft, check it with a dry run, then publish it."
+                description="What a job does, as a graph. Edit a draft, check it with a dry run, then publish it. A job keeps the version it started on."
                 actions={
                     <div className="flex flex-wrap gap-2">
                         <ImportButton />
@@ -129,25 +129,28 @@ export const WorkflowsPage = () => {
             )}
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
                 <div className="flex min-w-0 flex-col gap-4">
-                    <Panel title="Add a step">
+                    <section aria-labelledby="wf-palette-title" className="flex flex-col gap-2">
+                        <h2 id="wf-palette-title" className="text-sm font-semibold text-primary">
+                            Add a step
+                        </h2>
                         <Palette />
-                        <p className="mt-3 text-xs text-tertiary">Press a step to add it at the centre of the canvas, or drag it onto the canvas.</p>
+                        <p className="text-xs text-tertiary">Press a step to add it at the centre of the canvas, or drag it onto the canvas.</p>
                         {import.meta.env.DEV && (
-                            <Button className="mt-3" size="sm" variant="secondary" onPress={handleLoadLarge}>
+                            <Button className="self-start" size="sm" variant="secondary" onPress={handleLoadLarge}>
                                 Load 200 steps
                             </Button>
                         )}
-                    </Panel>
+                    </section>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         <EditToolbar />
-                        <div className="flex items-center gap-3">
-                            <DraftBadge />
-                            {view === "canvas" && <ZoomControls />}
-                        </div>
+                        <DraftBadge />
                     </div>
                     {view === "canvas" ? (
-                        <div className="h-[34rem]">
+                        <div className="relative h-[30rem]">
                             <Canvas />
+                            <div className="absolute right-3 bottom-3 rounded-lg bg-primary p-1 shadow-xs">
+                                <ZoomControls />
+                            </div>
                         </div>
                     ) : (
                         <Panel>
