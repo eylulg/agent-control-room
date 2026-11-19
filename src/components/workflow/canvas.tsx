@@ -12,6 +12,8 @@ export const PALETTE_MIME = "application/x-workflow-node";
 
 const WHEEL_ZOOM_RATE = 0.0025;
 const GRID_DOT = 24;
+/** The first view opens on the whole workflow, but never smaller than this, where text is still readable. */
+const OPENING_MIN_ZOOM = 0.55;
 
 const snap = (value: number): number => Math.round(value / GRID_STEP) * GRID_STEP;
 
@@ -32,7 +34,9 @@ export const Canvas = () => {
 
         const measure = () => {
             const rect = element.getBoundingClientRect();
-            store.getState().setCanvasSize({ width: rect.width, height: rect.height });
+            const state = store.getState();
+            state.setCanvasSize({ width: rect.width, height: rect.height });
+            if (!state.fitted && rect.width > 0) state.fit(OPENING_MIN_ZOOM);
         };
         measure();
         const observer = new ResizeObserver(measure);

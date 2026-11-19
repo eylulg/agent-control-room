@@ -76,6 +76,8 @@ export interface EditorState {
     viewport: Viewport;
     canvasSize: CanvasSize;
     view: EditorView;
+    /** True once the view has been fitted to the graph, so the first visit opens on the whole workflow and later ones keep the user's view. */
+    fitted: boolean;
     connecting: Connecting | null;
     menu: NodeMenuState | null;
     overlay: Overlay | null;
@@ -106,7 +108,7 @@ export interface EditorState {
     setCanvasSize: (size: CanvasSize) => void;
     panBy: (dx: number, dy: number) => void;
     zoomBy: (factor: number, anchor?: Position) => void;
-    fit: () => void;
+    fit: (minZoom?: number) => void;
     startConnecting: (nodeId: string, portId: string, x: number, y: number) => void;
     moveConnecting: (x: number, y: number) => void;
     stopConnecting: () => void;
@@ -218,6 +220,7 @@ export const createEditorStore = ({ draft, published, storage, announce = () => 
             viewport: { x: 40, y: 40, zoom: 1 },
             canvasSize: { width: 0, height: 0 },
             view: "canvas",
+            fitted: false,
             connecting: null,
             menu: null,
             overlay: null,
@@ -375,17 +378,18 @@ export const createEditorStore = ({ draft, published, storage, announce = () => 
                 const ratio = zoom / viewport.zoom;
                 set({ viewport: { zoom, x: at.x - (at.x - viewport.x) * ratio, y: at.y - (at.y - viewport.y) * ratio } });
             },
-            fit: () => {
+            fit: (minZoom = MIN_ZOOM) => {
                 const { history, canvasSize } = get();
                 const nodes = history.present.nodes;
                 if (nodes.length === 0 || canvasSize.width === 0) return set({ viewport: { x: FIT_PADDING, y: FIT_PADDING, zoom: 1 } });
+                set({ fitted: true });
                 const left = Math.min(...nodes.map((node) => node.position.x));
                 const top = Math.min(...nodes.map((node) => node.position.y));
                 const width = Math.max(...nodes.map((node) => node.position.x + NODE_WIDTH)) - left;
                 const height = Math.max(...nodes.map((node) => node.position.y + NODE_HEIGHT)) - top;
                 const zoom = Math.min(
                     1,
-                    Math.max(MIN_ZOOM, Math.min((canvasSize.width - FIT_PADDING * 2) / width, (canvasSize.height - FIT_PADDING * 2) / height)),
+                    Math.max(minZoom, Math.min((canvasSize.width - FIT_PADDING * 2) / width, (canvasSize.height - FIT_PADDING * 2) / height)),
                 );
                 set({
                     viewport: {

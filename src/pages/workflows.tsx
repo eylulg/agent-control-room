@@ -124,17 +124,17 @@ export const WorkflowsPage = () => {
                     {error}
                 </p>
             )}
-            <div className="grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)_20rem]">
-                <Panel title="Add a step">
-                    <Palette />
-                    <p className="mt-3 text-xs text-tertiary">Press a step to add it at the centre of the canvas, or drag it onto the canvas.</p>
-                    {import.meta.env.DEV && (
-                        <Button className="mt-3" size="sm" variant="secondary" onPress={handleLoadLarge}>
-                            Load 200 steps
-                        </Button>
-                    )}
-                </Panel>
-                <div className="flex min-w-0 flex-col gap-3">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                <div className="flex min-w-0 flex-col gap-4">
+                    <Panel title="Add a step">
+                        <Palette />
+                        <p className="mt-3 text-xs text-tertiary">Press a step to add it at the centre of the canvas, or drag it onto the canvas.</p>
+                        {import.meta.env.DEV && (
+                            <Button className="mt-3" size="sm" variant="secondary" onPress={handleLoadLarge}>
+                                Load 200 steps
+                            </Button>
+                        )}
+                    </Panel>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         <EditToolbar />
                         <div className="flex items-center gap-3">

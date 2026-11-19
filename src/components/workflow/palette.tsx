@@ -23,7 +23,7 @@ export const Palette = () => {
     }
 
     return (
-        <ul aria-label="Step types" className="flex flex-col gap-1">
+        <ul aria-label="Step types" className="flex flex-wrap gap-2">
             {NODE_TYPES.map((type) => {
                 const Icon = NODE_ICON[type];
                 return (
