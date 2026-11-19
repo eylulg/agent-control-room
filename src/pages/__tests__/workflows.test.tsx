@@ -1,5 +1,5 @@
 import { screen, within } from "@testing-library/react";
-import { act } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
@@ -35,7 +35,7 @@ describe("WorkflowsPage keyboard flows", () => {
 
         expect(screen.getByRole("status", { name: "Editor announcements" })).toHaveTextContent("Connected Condition True to Plan.");
         expect(node).toHaveAccessibleDescription(expect.stringContaining("True goes to Plan. False is not connected."));
-        expect(node).toHaveFocus();
+        await waitFor(() => expect(node).toHaveFocus());
     });
 
     it("deletes the focused step with Delete and brings it back with undo", async () => {
@@ -342,6 +342,49 @@ describe("WorkflowsPage keyboard flows", () => {
 
             expect(screen.queryByRole("button", { name: "Delete Condition" })).not.toBeInTheDocument();
             expect(within(screen.getByRole("list", { name: "Workflow outline" })).getAllByRole("button")).toContain(document.activeElement);
+        });
+    });
+
+    describe("pointer", () => {
+        const at = (clientX: number, clientY: number) => ({ clientX, clientY });
+
+        it("drags a step and records one move", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            const plan = screen.getByRole("option", { name: "Plan" });
+            const before = plan.style.transform;
+
+            await user.pointer([
+                { keys: "[MouseLeft>]", target: plan, coords: at(100, 100) },
+                { coords: at(130, 120) },
+                { coords: at(160, 140) },
+                { keys: "[/MouseLeft]" },
+            ]);
+
+            expect(plan.style.transform).not.toBe(before);
+            expect(screen.getByRole("status", { name: "Editor announcements" })).toHaveTextContent('Moved "Plan".');
+            await user.click(screen.getByRole("button", { name: "Undo" }));
+            expect(plan.style.transform).toBe(before);
+        });
+
+        it("connects a port to a step by dragging from the port onto the step", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            const condition = await addCondition(user);
+            const plan = screen.getByRole("option", { name: "Plan" });
+            // jsdom has no layout, so hit testing is the one thing stubbed: the pointer is released over the Plan step.
+            Object.defineProperty(document, "elementFromPoint", { configurable: true, value: () => plan });
+            // The port handles are decorative for assistive technology, so they have no role to query by.
+            const port = condition.querySelector<HTMLElement>('[data-port="true"]');
+            if (!port) throw new Error("The Condition step has no True port");
+
+            try {
+                await user.pointer([{ keys: "[MouseLeft>]", target: port, coords: at(10, 10) }, { coords: at(50, 50) }, { keys: "[/MouseLeft]" }]);
+            } finally {
+                Reflect.deleteProperty(document, "elementFromPoint");
+            }
+
+            expect(screen.getByRole("status", { name: "Editor announcements" })).toHaveTextContent("Connected Condition True to Plan.");
         });
     });
 });

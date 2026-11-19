@@ -96,9 +96,9 @@ event type and command) is in [docs/protocol.md](docs/protocol.md).
 
 **The graph is data and the simulator interprets it.** A workflow is a typed graph (`src/domain/workflow`) with a zod schema and a format `version`. The old phase machine became one executor per node type. Each tick a job runs its current node, which returns the port to leave through, or stays. Before changing the simulator I recorded event streams for three seeds and a fixed command script and committed them as a test. The default workflow reproduces them exactly, with the new node move events removed and sequence numbers renumbered, because those events did not exist then. Cycles are only valid through a bounded retry port (a CI check's Fail port or a review's Findings port), and the node holds the bound, so a published workflow always ends.
 
-**Versions.** Publishing is an operator command that travels the same event stream as everything else (`workflow.publish`, then `workflow.published`). A job keeps the version that was latest when it was created, so a publish never changes a job halfway. A retry starts a new walk and takes the latest version. The cost is that several versions are alive at once, so the execution view counts only jobs on the newest one.
+**Versions.** Publishing is an operator command that travels the same event stream as everything else (`workflow.publish`, then `workflow.published`). A job keeps the version that was latest when it was created, so a publish never changes a job halfway. A retry starts a new walk and takes the latest version. The cost is that several versions are alive at once. The execution view counts jobs of every version on the steps and connections that still exist, and says how many open jobs run an older one. Only the last 20 versions are kept, so tracing a job from an older one says the version is gone instead of drawing its path on a different graph.
 
-**Keyboard and outline model.** Every pointer action has a keyboard path. The canvas is a listbox of steps. Tab enters it once, arrow keys move in topological order, Alt plus an arrow moves a step one grid step, and Enter opens a menu with Connect to, Disconnect, Edit settings, Duplicate and Delete. Each step's accessible description says what connects in and out. The Outline view shows the same graph as nested lists, with a select on every port to choose where it leads, so the whole graph can be built without the canvas. Moves, connections and deletions are announced in the shared live region. Reduced motion turns off the flowing edge animation.
+**Keyboard and outline model.** Every pointer action has a keyboard path. The canvas is a listbox of steps. Tab enters it once, arrow keys move in topological order, Alt plus an arrow moves a step one grid step, and Enter opens a menu with Connect to, Disconnect, Edit settings, Duplicate and Delete. Each step's accessible description says what connects in and out. The Outline view shows the same graph as one flat list in the order a job meets the steps, with a select on every port to choose where it leads, so the whole graph can be built without the canvas, and it fits a phone. The list never nests, so it reads the same at any size. Moves, connections and deletions are announced in the editor's own live region, and when an action removes the step that had focus, focus moves to a neighbouring step. Reduced motion turns off the flowing edge animation.
 
 **Undo.** Each edit is a labelled command that stores the graph before and after it, capped at 100. Graphs are immutable and share every node an edit did not touch, so keeping both sides is cheap and I did not have to write an inverse for each command. A drag is previewed without recording and committed as one command when the pointer is released. A new edit clears redo. The history is a pure reducer with its own tests, and the draft is saved to session storage with the other persistence helpers.
 
@@ -150,7 +150,8 @@ vitest-axe covers:
 - focus: where it lands after navigation, after dismissing a toast, after
   answering an approval and after each job action
 - the workflow graph logic (validation, cycles, reachability, order, layout), the undo history and the golden simulator streams
-- editor keyboard flows: add, connect through the menu, delete, undo, publish, the outline
+- editor flows: add, connect through the menu, delete, undo, publish, the outline, where focus lands after each removal, a draft typed for one step staying on it, drag and connect with the pointer, trace and dry run
+- ambiguous graphs (repeated ids, two connections on a port) refused on import, and a page that throws leaving the shell usable
 - axe on every page
 
 jsdom computes no colours, so contrast in light and dark mode was checked
@@ -161,7 +162,7 @@ separately in a real browser with axe-core.
 ## Deploy
 
 `.github/workflows/ci.yml` runs a gitleaks secret scan, commitlint on pull
-requests, typecheck, lint, format check, knip, test and build on every push and
+requests, typecheck, lint, format check, knip, test, build and a size budget for the first chunk on every push and
 pull request. `.github/workflows/deploy.yml` builds with
 `base: '/agent-control-room/'` and publishes `dist` to GitHub Pages.
 
