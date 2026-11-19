@@ -67,11 +67,11 @@ Rules:
 
 ```ts
 interface AgentEvent {
-    seq: number; // monotonic, also the SSE id
-    ts: number; // epoch milliseconds
-    jobId: string | null; // null for global events
-    type: EventType;
-    payload: object; // shape depends on type, see below
+  seq: number; // monotonic, also the SSE id
+  ts: number; // epoch milliseconds
+  jobId: string | null; // null for global events
+  type: EventType;
+  payload: object; // shape depends on type, see below
 }
 ```
 
@@ -169,12 +169,18 @@ surface the app needs plus a `send` method:
 
 ```ts
 interface AgentEventSource {
-    readonly url: string;
-    readonly readyState: 0 | 1 | 2;
-    addEventListener(type: "agent-event", listener: (event: { data: string; lastEventId: string }) => void): void;
-    removeEventListener(type: "agent-event", listener: (event: { data: string; lastEventId: string }) => void): void;
-    close(): void;
-    send(command: OperatorCommand, signal?: AbortSignal): Promise<void>;
+  readonly url: string;
+  readonly readyState: 0 | 1 | 2;
+  addEventListener(
+    type: 'agent-event',
+    listener: (event: { data: string; lastEventId: string }) => void,
+  ): void;
+  removeEventListener(
+    type: 'agent-event',
+    listener: (event: { data: string; lastEventId: string }) => void,
+  ): void;
+  close(): void;
+  send(command: OperatorCommand, signal?: AbortSignal): Promise<void>;
 }
 ```
 
