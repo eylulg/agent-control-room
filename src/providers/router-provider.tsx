@@ -1,7 +1,6 @@
 import { type PropsWithChildren } from "react";
-import { RouterProvider } from "react-aria-components";
-import { useHref, useNavigate } from "react-router";
-import type { NavigateOptions } from "react-router";
+import { LinkRouter } from "@eylulg/ui/chrome";
+import { type NavigateOptions, useHref, useNavigate } from "react-router";
 
 declare module "react-aria-components" {
     interface RouterConfig {
@@ -9,12 +8,13 @@ declare module "react-aria-components" {
     }
 }
 
+/** Lets React Aria links navigate through React Router, and load other projects as pages. */
 export const RouteProvider = ({ children }: PropsWithChildren) => {
     const navigate = useNavigate();
 
     return (
-        <RouterProvider navigate={navigate} useHref={useHref}>
+        <LinkRouter navigate={navigate} useHref={useHref}>
             {children}
-        </RouterProvider>
+        </LinkRouter>
     );
 };
