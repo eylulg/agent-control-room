@@ -161,19 +161,17 @@ separately in a real browser with axe-core.
 
 ## Deploy
 
-`.github/workflows/ci.yml` runs a gitleaks secret scan, commitlint on pull
-requests, typecheck, lint, format check, knip, test, build and a size budget for the first chunk on every push and
+`.github/workflows/ci.yml` runs a gitleaks secret scan, typecheck, lint, format check, knip, test, build and a size budget for the first chunk on every push and
 pull request. `.github/workflows/deploy.yml` builds with
 `base: '/agent-control-room/'` and publishes `dist` to GitHub Pages.
 
 Because the dependency is `file:../ui`, the workflows use
-`.github/actions/install`, which checks out `eylulg/ui` into `ui-src`, builds it
-and points the dependency at it for that run only. Once the library is
+`.github/actions/install`, which checks out `eylulg/ui` next to the app, builds it
+and installs it as a copy with `--install-links`. Once the library is
 published to npm, change the dependency to `^1.0.0`, delete that action and use
 `npm ci` again. Vercel deploys need that publish too.
 
-Commits follow Conventional Commits, enforced by commitlint in a Husky
-`commit-msg` hook. Dependabot opens one grouped update a month.
+Commit messages are plain sentences in the past tense. Dependabot opens one grouped update a month.
 
 ## License
 
