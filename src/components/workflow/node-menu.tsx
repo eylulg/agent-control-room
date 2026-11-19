@@ -26,13 +26,15 @@ const OpenMenu = ({ nodeId, view }: { nodeId: string; view: "root" | "connect" |
     const selected = useEditor((s) => s.selected);
     // The menu mounts only while it is open, from a step that exists, so the step's element is there when this first renders.
     const [anchor] = useState(() => document.getElementById(nodeDomId(nodeId)));
+    const names = useEditor((s) => s.analysis.names);
     const node = workflow.nodes.find((candidate) => candidate.id === nodeId);
     if (!node) return null;
+    const nameOf = (id: string) => names[id] ?? id;
+    const title = nameOf(node.id);
 
     // Actions apply to the whole selection when the menu was opened on a selected node.
     const targets = selected.includes(node.id) ? selected : [node.id];
     const outgoing = workflow.edges.filter((edge) => edge.from.node === node.id);
-    const nameOf = (id: string) => workflow.nodes.find((candidate) => candidate.id === id)?.label ?? id;
     const many = targets.length > 1;
 
     function handleOpenChange(open: boolean) {
@@ -67,9 +69,9 @@ const OpenMenu = ({ nodeId, view }: { nodeId: string; view: "root" | "connect" |
     }
 
     return (
-        <Popover isOpen onOpenChange={handleOpenChange} triggerRef={{ current: anchor }} placement="bottom start" aria-label={`Actions for ${node.label}`}>
+        <Popover isOpen onOpenChange={handleOpenChange} triggerRef={{ current: anchor }} placement="bottom start" aria-label={`Actions for ${title}`}>
             {view === "root" && (
-                <Menu aria-label={`Actions for ${node.label}`} {...OPEN_ON_FIRST} onAction={handleRootAction} className="flex flex-col outline-none">
+                <Menu aria-label={`Actions for ${title}`} {...OPEN_ON_FIRST} onAction={handleRootAction} className="flex flex-col outline-none">
                     <Item id="connect" icon={Link2} textValue="Connect to">
                         Connect to…
                     </Item>
@@ -99,7 +101,7 @@ const OpenMenu = ({ nodeId, view }: { nodeId: string; view: "root" | "connect" |
                 </Menu>
             )}
             {view === "connect" && (
-                <Menu aria-label={`Connect ${node.label} to`} {...OPEN_ON_FIRST} onAction={handleConnectAction} className="flex max-h-72 flex-col outline-none">
+                <Menu aria-label={`Connect ${title} to`} {...OPEN_ON_FIRST} onAction={handleConnectAction} className="flex max-h-72 flex-col outline-none">
                     <Item id="back" icon={ArrowLeft} textValue="Back">
                         Back
                     </Item>
@@ -112,8 +114,8 @@ const OpenMenu = ({ nodeId, view }: { nodeId: string; view: "root" | "connect" |
                     {PORTS[node.type].map((port) => (
                         <Section key={port.id} title={PORTS[node.type].length > 1 ? `${port.label} port` : "Next step"}>
                             {validTargets(workflow, node.id, port.id).map((target) => (
-                                <Item key={target.id} id={`${port.id}|${target.id}`} textValue={`${port.label} to ${target.label}`}>
-                                    {target.label}
+                                <Item key={target.id} id={`${port.id}|${target.id}`} textValue={`${port.label} to ${nameOf(target.id)}`}>
+                                    {nameOf(target.id)}
                                 </Item>
                             ))}
                         </Section>
@@ -121,7 +123,7 @@ const OpenMenu = ({ nodeId, view }: { nodeId: string; view: "root" | "connect" |
                 </Menu>
             )}
             {view === "disconnect" && (
-                <Menu aria-label={`Disconnect ${node.label}`} {...OPEN_ON_FIRST} onAction={handleDisconnectAction} className="flex flex-col outline-none">
+                <Menu aria-label={`Disconnect ${title}`} {...OPEN_ON_FIRST} onAction={handleDisconnectAction} className="flex flex-col outline-none">
                     <Item id="back" icon={ArrowLeft} textValue="Back">
                         Back
                     </Item>

@@ -21,9 +21,22 @@ const nextNodeId = (workflow: Pick<Workflow, "nodes">, type: NodeType): string =
     for (let n = 1; ; n++) if (!taken.has(`${type}-${n}`)) return `${type}-${n}`;
 };
 
+/** The label itself when no step has it, otherwise the label with the smallest number from 2 that no step has. */
+const freshLabel = (nodes: readonly WorkflowNode[], label: string): string => {
+    const taken = new Set(nodes.map((node) => node.label));
+    if (!taken.has(label)) return label;
+    for (let n = 2; ; n++) if (!taken.has(`${label} ${n}`)) return `${label} ${n}`;
+};
+
 export const createNode = (workflow: Pick<Workflow, "nodes">, type: NodeType, position: Position): WorkflowNode =>
     // Safe: DEFAULT_CONFIG[type] returns the config that belongs to `type`, but TypeScript cannot correlate the two through a variable.
-    ({ id: nextNodeId(workflow, type), type, label: NODE_META[type].label, position, config: DEFAULT_CONFIG[type]() }) as WorkflowNode;
+    ({
+        id: nextNodeId(workflow, type),
+        type,
+        label: freshLabel(workflow.nodes, NODE_META[type].label),
+        position,
+        config: DEFAULT_CONFIG[type](),
+    }) as WorkflowNode;
 
 export const addNode = (workflow: Workflow, node: WorkflowNode): Workflow => ({ ...workflow, nodes: [...workflow.nodes, node] });
 
@@ -80,7 +93,11 @@ export const duplicateNodes = (workflow: Workflow, ids: ReadonlySet<string>): { 
         if (!ids.has(node.id) || node.type === "trigger") continue;
         const position = { x: node.position.x + GRID_STEP * 2, y: node.position.y + GRID_STEP * 2 };
         // Safe: a copy keeps the type, so it keeps the matching config.
-        const copy = { ...createNode(next, node.type, position), label: node.label, config: structuredClone(node.config) } as WorkflowNode;
+        const copy = {
+            ...createNode(next, node.type, position),
+            label: freshLabel(next.nodes, node.label.replace(/ \d+$/, "")),
+            config: structuredClone(node.config),
+        } as WorkflowNode;
         mapping.set(node.id, copy.id);
         next = addNode(next, copy);
     }
@@ -90,6 +107,26 @@ export const duplicateNodes = (workflow: Workflow, ids: ReadonlySet<string>): { 
         if (from && to) next = connect(next, from, edge.from.port, to);
     }
     return { workflow: next, created: [...mapping.values()] };
+};
+
+/**
+ * A name for every step that no other step shares, for controls that must be told apart: a label used twice gets its number in
+ * the order given. Imported files and renamed steps can repeat a label, so this does not rely on `freshLabel`.
+ */
+export const uniqueNames = (workflow: Pick<Workflow, "nodes">, order: readonly string[]): Record<string, string> => {
+    const count = new Map<string, number>();
+    for (const node of workflow.nodes) count.set(node.label, (count.get(node.label) ?? 0) + 1);
+    const seen = new Map<string, number>();
+    const names: Record<string, string> = {};
+    const byId = new Map(workflow.nodes.map((node) => [node.id, node]));
+    for (const id of [...order, ...workflow.nodes.map((node) => node.id)]) {
+        const node = byId.get(id);
+        if (!node || id in names) continue;
+        const nth = (seen.get(node.label) ?? 0) + 1;
+        seen.set(node.label, nth);
+        names[id] = (count.get(node.label) ?? 0) > 1 && nth > 1 ? `${node.label} (${nth})` : node.label;
+    }
+    return names;
 };
 
 const labelOf = (nodes: Map<string, WorkflowNode>, id: string): string => nodes.get(id)?.label ?? id;

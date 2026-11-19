@@ -42,11 +42,13 @@ export const NodeView = memo(function NodeView({ id }: NodeViewProps) {
     const problems = useEditor((s) => s.analysis.problemsByNode[id] ?? 0);
     const overlay = useEditor((s) => s.overlay?.nodes[id]);
     const connectedPorts = useEditor((s) => s.analysis.connectedPorts[id]);
+    const unique = useEditor((s) => s.analysis.names[id]);
     if (!node) return null;
 
     const Icon = NODE_ICON[node.type];
     const typeLabel = NODE_META[node.type].label;
-    const name = node.label === typeLabel ? node.label : `${node.label}, ${typeLabel}`;
+    const shared = unique ?? node.label;
+    const name = shared === typeLabel ? shared : `${shared}, ${typeLabel}`;
     const status = [description, problems > 0 ? `${problems} ${problems === 1 ? "problem" : "problems"}.` : "", describeOverlay(overlay)]
         .filter(Boolean)
         .join(" ");

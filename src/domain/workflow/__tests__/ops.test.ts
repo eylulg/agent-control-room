@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultWorkflow, withNode } from "@/test-utils/workflow";
-import { connect, deleteNodes, describeNode, duplicateNodes, validTargets } from "../ops";
+import { topologicalOrder } from "../graph";
+import { connect, createNode, deleteNodes, describeNode, duplicateNodes, uniqueNames, validTargets } from "../ops";
 
 describe("workflow operations", () => {
     it("offers every step except the trigger as a target, and the node itself only for a retry port", () => {
@@ -41,5 +42,28 @@ describe("workflow operations", () => {
         const { workflow, id } = withNode("condition");
 
         expect(describeNode(workflow, id)).toBe("Condition. Nothing connects in. True is not connected. False is not connected.");
+    });
+
+    it("gives a copy and a second step of the same type a label of their own", () => {
+        const workflow = defaultWorkflow();
+
+        const second = createNode(workflow, "plan", { x: 0, y: 0 });
+        const copy = duplicateNodes(workflow, new Set(["build"]));
+        const again = duplicateNodes(copy.workflow, new Set(copy.created));
+
+        expect(second.label).toBe("Plan 2");
+        expect(copy.workflow.nodes.find((node) => node.id === copy.created[0])?.label).toBe("Implement 2");
+        expect(again.workflow.nodes.find((node) => node.id === again.created[0])?.label).toBe("Implement 3");
+    });
+
+    it("names steps that share a label in the order a job meets them", () => {
+        const workflow = defaultWorkflow();
+        const renamed = { ...workflow, nodes: workflow.nodes.map((node) => (node.id === "ci-fix" ? { ...node, label: "Implement" } : node)) };
+
+        const names = uniqueNames(renamed, topologicalOrder(renamed));
+
+        expect(names.build).toBe("Implement");
+        expect(names["ci-fix"]).toBe("Implement (2)");
+        expect(names.plan).toBe("Plan");
     });
 });

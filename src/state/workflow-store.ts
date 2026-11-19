@@ -2,7 +2,7 @@ import { type StoreApi, createStore } from "zustand/vanilla";
 import { nodeIndex, topologicalOrder } from "@/domain/workflow/graph";
 import { type History, commit, createHistory, preview, redo, undo } from "@/domain/workflow/history";
 import { autoLayout } from "@/domain/workflow/layout";
-import { addNode, connect, createNode, deleteNodes, describeNode, disconnect, duplicateNodes, moveNodes, updateNode } from "@/domain/workflow/ops";
+import { addNode, connect, createNode, deleteNodes, describeNode, disconnect, duplicateNodes, moveNodes, uniqueNames, updateNode } from "@/domain/workflow/ops";
 import type { Overlay } from "@/domain/workflow/overlay";
 import {
     GRID_STEP,
@@ -38,6 +38,8 @@ interface Analysis {
     connectedPorts: Record<string, string[]>;
     /** Node ids in the order the roving tabindex and the outline visit them. */
     order: string[];
+    /** A name per step that no other step shares, for controls that must be told apart. */
+    names: Record<string, string>;
 }
 
 interface Connecting {
@@ -140,7 +142,8 @@ const analyse = (workflow: Workflow): Analysis => {
     const descriptions = Object.fromEntries(workflow.nodes.map((node) => [node.id, describeNode(workflow, node.id)]));
     const connectedPorts: Record<string, string[]> = {};
     for (const edge of workflow.edges) connectedPorts[edge.from.node] = [...(connectedPorts[edge.from.node] ?? []), edge.from.port];
-    return { problems, problemsByNode, descriptions, connectedPorts, order: topologicalOrder(workflow) };
+    const order = topologicalOrder(workflow);
+    return { problems, problemsByNode, descriptions, connectedPorts, order, names: uniqueNames(workflow, order) };
 };
 
 /** Keeps the previous object for every node and connection whose overlay did not change, so only the ones that did re-render. */

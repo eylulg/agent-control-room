@@ -279,4 +279,45 @@ describe("WorkflowsPage keyboard flows", () => {
             expect(screen.getByRole("option", { name: "Run CI, CI check" })).toBeInTheDocument();
         });
     });
+
+    describe("outline", () => {
+        it("connects a port by choosing its target and announces it", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            await addCondition(user);
+            await user.click(screen.getByRole("radio", { name: "Outline" }));
+
+            await user.click(screen.getByRole("button", { name: /Condition, True goes to/ }));
+            await user.click(await screen.findByRole("option", { name: "Plan" }));
+
+            expect(screen.getByTestId("live-region")).toHaveTextContent("Connected Condition True to Plan.");
+            expect(screen.getByRole("button", { name: /Condition, True goes to/ })).toHaveTextContent("Plan");
+        });
+
+        it("lists the steps in one flat list and tells steps with the same label apart", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            await user.click(screen.getByRole("button", { name: "Add Plan" }));
+            await user.click(screen.getByRole("radio", { name: "Outline" }));
+
+            const list = screen.getByRole("list", { name: "Workflow outline" });
+
+            expect(within(list).getAllByRole("listitem")).toHaveLength(13);
+            expect(within(list).queryAllByRole("list")).toHaveLength(0);
+            expect(within(list).getByRole("button", { name: "Delete Plan" })).toBeInTheDocument();
+            expect(within(list).getByRole("button", { name: "Delete Plan 2" })).toBeInTheDocument();
+        });
+
+        it("moves focus to another step after Delete", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            await addCondition(user);
+            await user.click(screen.getByRole("radio", { name: "Outline" }));
+
+            await user.click(screen.getByRole("button", { name: "Delete Condition" }));
+
+            expect(screen.queryByRole("button", { name: "Delete Condition" })).not.toBeInTheDocument();
+            expect(within(screen.getByRole("list", { name: "Workflow outline" })).getAllByRole("button")).toContain(document.activeElement);
+        });
+    });
 });
