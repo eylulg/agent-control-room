@@ -5,6 +5,7 @@ import { Rocket, Undo2 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Panel } from "@/components/app/panel";
 import { Canvas } from "@/components/workflow/canvas";
+import { EditorLiveRegion } from "@/components/workflow/editor-live-region";
 import { useFocusRequests } from "@/components/workflow/focus-step";
 import { Inspector } from "@/components/workflow/inspector";
 import { ExportButton, ImportButton } from "@/components/workflow/io-dialogs";
@@ -30,7 +31,7 @@ const SHORTCUTS: [string, string][] = [
     ["Delete", "Delete the selected steps or connection."],
     ["Cmd or Ctrl + D", "Duplicate the selected steps."],
     ["Cmd or Ctrl + Z", "Undo. Add Shift to redo."],
-    ["Cmd or Ctrl + wheel", "Zoom. The wheel alone pans."],
+    ["Cmd or Ctrl + wheel", "Zoom. The wheel alone scrolls the page. Drag the background to pan."],
 ];
 
 const isEditable = (target: EventTarget | null): boolean =>
@@ -56,11 +57,12 @@ export const WorkflowsPage = () => {
         if (dry.run) return runOverlay(dry.run.workflow, dry.run.control.runs[dry.run.jobId], dry.run.control.jobs[dry.run.jobId]);
         const traced = traceJobId ? control.runs[traceJobId] : undefined;
         if (traced) {
-            const workflow = control.workflows.find((candidate) => candidate.revision === traced.revision)?.workflow ?? published;
-            return runOverlay(workflow, traced, control.jobs[traceJobId ?? ""]);
+            // Only the last versions are kept. Drawing the path on a different graph would light the wrong steps, so a missing one draws nothing.
+            const workflow = control.workflows.find((candidate) => candidate.revision === traced.revision)?.workflow;
+            return workflow ? runOverlay(workflow, traced, control.jobs[traceJobId ?? ""]) : null;
         }
         return showLive ? liveOverlay(control) : null;
-    }, [dry.run, traceJobId, showLive, control, published]);
+    }, [dry.run, traceJobId, showLive, control]);
 
     useEffect(() => {
         editor.getState().setOverlay(overlay);
@@ -119,6 +121,7 @@ export const WorkflowsPage = () => {
                     </div>
                 }
             />
+            <EditorLiveRegion />
             <p ref={statusRef} tabIndex={-1} role="status" className={status ? "text-sm font-medium text-secondary" : "sr-only"}>
                 {status}
             </p>

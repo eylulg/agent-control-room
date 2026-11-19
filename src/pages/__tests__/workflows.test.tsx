@@ -3,7 +3,9 @@ import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
+import { updateNode } from "@/domain/workflow/ops";
 import { renderApp } from "@/test-utils/render-app";
+import { defaultWorkflow } from "@/test-utils/workflow";
 
 const addCondition = async (user: ReturnType<typeof userEvent.setup>) => {
     await user.click(screen.getByRole("button", { name: "Add Condition" }));
@@ -18,7 +20,7 @@ describe("WorkflowsPage keyboard flows", () => {
         const node = await addCondition(user);
 
         expect(node).toHaveAttribute("aria-selected", "true");
-        expect(screen.getByTestId("live-region")).toHaveTextContent("Added Condition. 13 steps in the workflow.");
+        expect(screen.getByRole("status", { name: "Editor announcements" })).toHaveTextContent("Added Condition. 13 steps in the workflow.");
     });
 
     it("connects a step through its menu and describes the connection to a screen reader", async () => {
@@ -31,7 +33,7 @@ describe("WorkflowsPage keyboard flows", () => {
         await user.click(await screen.findByRole("menuitem", { name: "Connect to…" }));
         await user.click(within(await screen.findByRole("group", { name: "True port" })).getByRole("menuitem", { name: "Plan" }));
 
-        expect(screen.getByTestId("live-region")).toHaveTextContent("Connected Condition True to Plan.");
+        expect(screen.getByRole("status", { name: "Editor announcements" })).toHaveTextContent("Connected Condition True to Plan.");
         expect(node).toHaveAccessibleDescription(expect.stringContaining("True goes to Plan. False is not connected."));
         expect(node).toHaveFocus();
     });
@@ -48,7 +50,7 @@ describe("WorkflowsPage keyboard flows", () => {
         await user.keyboard("{Control>}z{/Control}");
 
         expect(screen.getByRole("option", { name: "Condition" })).toBeInTheDocument();
-        expect(screen.getByTestId("live-region")).toHaveTextContent("Undid: Delete Condition.");
+        expect(screen.getByRole("status", { name: "Editor announcements" })).toHaveTextContent("Undid: Delete Condition.");
     });
 
     it("moves between steps with the arrow keys and moves a step with Alt and an arrow", async () => {
@@ -64,7 +66,7 @@ describe("WorkflowsPage keyboard flows", () => {
 
         expect(second?.getAttribute("aria-label")).toBe("Plan");
         expect(second?.style.transform).not.toBe(before);
-        expect(screen.getByTestId("live-region")).toHaveTextContent(/^Moved "Plan" to \d+, \d+\.$/);
+        expect(screen.getByRole("status", { name: "Editor announcements" })).toHaveTextContent(/^Moved "Plan" to \d+, \d+\.$/);
     });
 
     it("keeps Publish disabled while the draft is unchanged and while it has problems", async () => {
@@ -76,7 +78,7 @@ describe("WorkflowsPage keyboard flows", () => {
         await addCondition(user);
 
         expect(publish).toBeDisabled();
-        expect(within(screen.getByRole("heading", { name: "Problems" }).closest("section") ?? document.body).getAllByRole("button").length).toBeGreaterThan(0);
+        expect(within(screen.getByRole("list", { name: "Problems" })).getAllByRole("button").length).toBeGreaterThan(0);
     });
 
     it("publishes a valid change as a new version and moves focus to the status line", async () => {
@@ -119,6 +121,25 @@ describe("WorkflowsPage keyboard flows", () => {
         expect(within(path).getAllByRole("listitem")[0]).toHaveTextContent("Ticket arrives");
     });
 
+    it("says so when the version a traced job ran on is no longer kept", async () => {
+        const user = userEvent.setup();
+        const { store } = await renderApp("/workflows");
+        const job = Object.values(store.getState().control.jobs).find((candidate) => store.getState().control.runs[candidate.id]);
+        if (!job) throw new Error("The seeded world has no job with a run");
+        await user.click(screen.getByRole("tab", { name: "Trace a job" }));
+        await user.click(screen.getByRole("button", { name: /Job to trace/ }));
+        await user.click(await screen.findByRole("option", { name: `${job.ticket.id}: ${job.ticket.title}` }));
+
+        for (let i = 0; i < 21; i++) {
+            await act(() =>
+                store.getState().send({ type: "workflow.publish", workflow: updateNode(defaultWorkflow(), "ci", { config: { maxAttempts: 4 + (i % 2) } }) }),
+            );
+        }
+
+        expect(await screen.findByText(/Version 1 is no longer kept/)).toBeInTheDocument();
+        expect(screen.queryByRole("list", { name: "Path of the job" })).not.toBeInTheDocument();
+    });
+
     it("runs a dry run of the draft to the end, one step at a time", async () => {
         const user = userEvent.setup();
         await renderApp("/workflows");
@@ -126,12 +147,15 @@ describe("WorkflowsPage keyboard flows", () => {
         await user.click(screen.getByRole("tab", { name: "Dry run" }));
         await user.click(screen.getByRole("button", { name: "Start dry run" }));
         const step = screen.getByRole("button", { name: "Step" });
+        await user.click(step);
+        expect(screen.getAllByRole("status").map((region) => region.textContent)).not.toContainEqual(expect.stringMatching(/^ACME-\d+ is/));
         for (let i = 0; i < 80 && !step.hasAttribute("disabled"); i++) await user.click(step);
 
         expect(step).toBeDisabled();
         expect(screen.getByRole("button", { name: "Play" })).toBeDisabled();
         const states = within(screen.getByRole("list", { name: "Step states" }));
         expect(states.getByText("Done")).toBeInTheDocument();
+        expect(screen.getAllByRole("status").map((region) => region.textContent)).toContainEqual(expect.stringMatching(/^Dry run finished after \d+ steps\./));
     });
 
     it("keeps a label typed for one step on that step when another is selected before the field blurs", async () => {
@@ -290,7 +314,7 @@ describe("WorkflowsPage keyboard flows", () => {
             await user.click(screen.getByRole("button", { name: /Condition, True goes to/ }));
             await user.click(await screen.findByRole("option", { name: "Plan" }));
 
-            expect(screen.getByTestId("live-region")).toHaveTextContent("Connected Condition True to Plan.");
+            expect(screen.getByRole("status", { name: "Editor announcements" })).toHaveTextContent("Connected Condition True to Plan.");
             expect(screen.getByRole("button", { name: /Condition, True goes to/ })).toHaveTextContent("Plan");
         });
 

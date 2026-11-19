@@ -57,7 +57,10 @@ export const nodeStates = (workflow: Workflow, run: JobRun | undefined, job: Job
 
 const blank = (): NodeOverlay => ({ state: "idle", count: 0, visits: [] });
 
-/** Jobs on each node of the newest published workflow, and how busy each connection has been. */
+/**
+ * Jobs on each step, and how busy each connection has been. Jobs from older versions count too, on the steps and connections whose ids
+ * still exist, so publishing does not empty the view. Ids that no longer exist are never drawn.
+ */
 export const liveOverlay = (control: Pick<ControlState, "jobs" | "runs" | "workflows" | "events">): Overlay => {
     const latest = control.workflows.at(-1);
     const overlay: Overlay = { nodes: {}, edges: {} };
@@ -65,7 +68,7 @@ export const liveOverlay = (control: Pick<ControlState, "jobs" | "runs" | "workf
     const now = control.events.at(-1)?.ts ?? 0;
     for (const [jobId, run] of Object.entries(control.runs)) {
         const job = control.jobs[jobId];
-        if (!job || run.revision !== latest.revision) continue;
+        if (!job) continue;
         for (const step of run.steps) {
             if (!step.edgeId) continue;
             const edge = overlay.edges[step.edgeId] ?? { count: 0, recent: false, traced: false };

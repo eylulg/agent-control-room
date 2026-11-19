@@ -82,6 +82,8 @@ export interface EditorState {
     connecting: Connecting | null;
     menu: NodeMenuState | null;
     overlay: Overlay | null;
+    /** What the editor last announced to screen readers. It has its own live region, so the simulator cannot overwrite it. */
+    announcement: string;
     /** True until the inspector has moved focus to its first field, as asked by "Edit settings". */
     inspectorPending: boolean;
     /** A new object each time something asks for focus to go to the current step. Without `force`, focus only moves when it was lost. */
@@ -128,7 +130,6 @@ export interface EditorStoreOptions {
     draft: Workflow;
     published: Workflow;
     storage?: Storage;
-    announce?: (text: string) => void;
 }
 
 const sameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
@@ -166,11 +167,13 @@ const plural = (count: number, one: string, many: string): string => `${count} $
 
 export type EditorStore = StoreApi<EditorState>;
 
-export const createEditorStore = ({ draft, published, storage, announce = () => {} }: EditorStoreOptions): EditorStore => {
+export const createEditorStore = ({ draft, published, storage }: EditorStoreOptions): EditorStore => {
     /** The graph as it was when the current drag began. Each frame is computed from it, so frames never add up errors. */
     let dragStart: { workflow: Workflow; ids: ReadonlySet<string> } | null = null;
 
     const store = createStore<EditorState>()((set, get) => {
+        // The same text twice in a row is not announced again, so alternate a trailing space.
+        const announce = (text: string) => set((state) => ({ announcement: state.announcement === text ? `${text}\u00a0` : text }));
         const nodesOf = (ids: readonly string[]): WorkflowNode[] => ids.flatMap((id) => get().byId.get(id) ?? []);
         const nameOf = (id: string): string => get().byId.get(id)?.label ?? id;
         const describeSet = (ids: readonly string[]): string => (ids.length === 1 ? `"${nameOf(ids[0] ?? "")}"` : plural(ids.length, "step", "steps"));
@@ -230,6 +233,7 @@ export const createEditorStore = ({ draft, published, storage, announce = () => 
             connecting: null,
             menu: null,
             overlay: null,
+            announcement: "",
             inspectorPending: false,
             focusRequest: null,
 

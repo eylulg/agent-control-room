@@ -6,7 +6,6 @@ import { createEditorStore } from "./workflow-store";
 
 /**
  * Keeps one editor per app, above the router, so a half edited draft is still there after a visit to another page.
- * The editor announces through the same live region as the rest of the app.
  */
 export const WorkflowEditorProvider = ({ children }: { children: ReactNode }) => {
     const app = useContext(StoreContext);
@@ -20,8 +19,6 @@ export const WorkflowEditorProvider = ({ children }: { children: ReactNode }) =>
             published,
             draft: (storage && loadDraft(storage)) ?? published,
             storage: storage ?? undefined,
-            // The same text twice in a row is not announced again, so alternate a trailing space.
-            announce: (text) => app.setState((state) => ({ announcement: state.announcement === text ? `${text}\u00a0` : text })),
         });
     });
 

@@ -23,6 +23,14 @@ const nodeClass = (selected: boolean, hasProblems: boolean) =>
         selected ? "border-brand ring-4 ring-focus/25" : hasProblems ? "border-error" : "border-default",
     );
 
+/** The text of the badge on a step, so the accessible name can carry the same words that are on screen. */
+const badgeText = (overlay: NodeOverlay | undefined): string => {
+    if (!overlay) return "";
+    if (overlay.count > 0) return `${overlay.count} ${overlay.count === 1 ? "job" : "jobs"}`;
+    if (overlay.state === "idle") return "";
+    return `${RUN_STATE[overlay.state].label}${overlay.visits.length > 0 ? ` ${formatClock(overlay.visits[0] ?? 0)}` : ""}`;
+};
+
 const describeOverlay = (overlay: NodeOverlay | undefined): string => {
     if (!overlay) return "";
     const parts: string[] = [];
@@ -48,7 +56,7 @@ export const NodeView = memo(function NodeView({ id }: NodeViewProps) {
     const Icon = NODE_ICON[node.type];
     const typeLabel = NODE_META[node.type].label;
     const shared = unique ?? node.label;
-    const name = shared === typeLabel ? shared : `${shared}, ${typeLabel}`;
+    const name = [shared === typeLabel ? shared : `${shared}, ${typeLabel}`, badgeText(overlay)].filter(Boolean).join(", ");
     const status = [description, problems > 0 ? `${problems} ${problems === 1 ? "problem" : "problems"}.` : "", describeOverlay(overlay)]
         .filter(Boolean)
         .join(" ");
@@ -211,19 +219,11 @@ export const NodeView = memo(function NodeView({ id }: NodeViewProps) {
 });
 
 const OverlayBadge = ({ overlay }: { overlay: NodeOverlay }) => {
-    const { label, color } = RUN_STATE[overlay.state];
-    if (overlay.count > 0) {
-        return (
-            <Badge size="sm" color={color} dot>
-                {overlay.count} {overlay.count === 1 ? "job" : "jobs"}
-            </Badge>
-        );
-    }
-    if (overlay.state === "idle") return null;
+    const text = badgeText(overlay);
+    if (!text) return null;
     return (
-        <Badge size="sm" color={color} dot>
-            {label}
-            {overlay.visits.length > 0 && ` ${formatClock(overlay.visits[0] ?? 0)}`}
+        <Badge size="sm" color={RUN_STATE[overlay.state].color} dot>
+            {text}
         </Badge>
     );
 };

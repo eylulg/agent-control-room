@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Simulator } from "@/domain/simulator";
 import { defaultWorkflow } from "@/test-utils/workflow";
 import { generateWorkflow } from "../generate";
+import { updateNode } from "../ops";
 import { liveOverlay, nodeStates } from "../overlay";
 import { validateWorkflow } from "../validate";
 
@@ -16,6 +17,18 @@ describe("execution overlay", () => {
 
         expect(counted).toBe(open.length);
         expect(Object.keys(overlay.edges).length).toBeGreaterThan(0);
+    });
+
+    it("keeps counting open jobs from an older version after a publish", () => {
+        const sim = new Simulator({ seed: "overlay" });
+        sim.step(20);
+        const before = Object.values(liveOverlay(sim.state).nodes).reduce((sum, node) => sum + node.count, 0);
+
+        sim.send({ type: "workflow.publish", workflow: updateNode(defaultWorkflow(), "ci", { config: { maxAttempts: 5 } }) });
+
+        const after = Object.values(liveOverlay(sim.state).nodes).reduce((sum, node) => sum + node.count, 0);
+        expect(before).toBeGreaterThan(0);
+        expect(after).toBe(before);
     });
 
     it("marks passed, current and never visited nodes of a finished job", () => {

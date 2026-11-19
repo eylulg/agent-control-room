@@ -42,28 +42,23 @@ export const Canvas = () => {
         const observer = new ResizeObserver(measure);
         observer.observe(element);
 
-        // Wheel events can arrive several times per frame. They are summed and applied once per frame.
-        let pan = { x: 0, y: 0 };
+        // Zoom events can arrive several times per frame. They are summed and applied once per frame.
         let zoom = { factor: 1, x: 0, y: 0 };
         let frame = 0;
         const flush = () => {
             frame = 0;
             const state = store.getState();
-            if (pan.x !== 0 || pan.y !== 0) state.panBy(pan.x, pan.y);
             if (zoom.factor !== 1) state.zoomBy(zoom.factor, { x: zoom.x, y: zoom.y });
-            pan = { x: 0, y: 0 };
             zoom = { factor: 1, x: 0, y: 0 };
         };
         // Wheel and key handlers are native listeners. React attaches wheel listeners as passive, and zooming has to cancel the page scroll. The key handler
         // sits on the surface because the listbox of nodes is not itself focusable, its options are.
+        // A plain wheel is left alone so the page scrolls past the canvas. Only a zoom gesture is taken.
         const handleWheel = (event: WheelEvent) => {
+            if (!(event.ctrlKey || event.metaKey)) return;
             event.preventDefault();
             const rect = element.getBoundingClientRect();
-            if (event.ctrlKey || event.metaKey) {
-                zoom = { factor: zoom.factor * Math.exp(-event.deltaY * WHEEL_ZOOM_RATE), x: event.clientX - rect.left, y: event.clientY - rect.top };
-            } else {
-                pan = { x: pan.x - event.deltaX, y: pan.y - event.deltaY };
-            }
+            zoom = { factor: zoom.factor * Math.exp(-event.deltaY * WHEEL_ZOOM_RATE), x: event.clientX - rect.left, y: event.clientY - rect.top };
             if (frame === 0) frame = window.requestAnimationFrame(flush);
         };
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -140,7 +135,7 @@ export const Canvas = () => {
             role="group"
             tabIndex={-1}
             aria-label="Workflow canvas"
-            className="relative h-full min-h-[24rem] touch-none overflow-hidden rounded-lg border border-default bg-secondary"
+            className="relative h-full min-h-[24rem] touch-pan-y overflow-hidden rounded-lg border border-default bg-secondary"
             style={{
                 backgroundImage: "radial-gradient(var(--ui-border-default) 1px, transparent 1px)",
                 backgroundSize: `${dot}px ${dot}px`,

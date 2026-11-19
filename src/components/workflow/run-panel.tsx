@@ -54,8 +54,11 @@ export const RunPanel = ({ showLive, onShowLive, traceJobId, onTrace, dry }: Run
 );
 
 const LivePanel = ({ showLive, onShowLive }: Pick<RunPanelProps, "showLive" | "onShowLive">) => {
-    const latest = useAppStore((s) => s.control.workflows.at(-1)?.revision ?? 1);
-    const olderJobs = useAppStore((s) => Object.values(s.control.runs).filter((run) => run.revision !== (s.control.workflows.at(-1)?.revision ?? 1)).length);
+    const control = useAppStore((s) => s.control);
+    const latest = control.workflows.at(-1)?.revision ?? 1;
+    const olderJobs = Object.values(control.jobs).filter(
+        (job) => job.status !== "done" && job.status !== "failed" && (control.runs[job.id]?.revision ?? latest) !== latest,
+    ).length;
     const dirty = useEditor((s) => s.dirty);
 
     return (
@@ -63,11 +66,16 @@ const LivePanel = ({ showLive, onShowLive }: Pick<RunPanelProps, "showLive" | "o
             <Switch
                 isSelected={showLive}
                 onChange={onShowLive}
-                hint={`Counts jobs on each step of version ${latest}, with the connections they took. Numbers on a connection are how many jobs took it.`}
+                hint="Counts the jobs on each step, with the connections they took. Numbers on a connection are how many jobs took it."
             >
                 Show live jobs on the canvas
             </Switch>
-            {olderJobs > 0 && <p className="text-sm text-tertiary">{olderJobs} jobs started on an older version and are not counted.</p>}
+            {olderJobs > 0 && (
+                <p className="text-sm text-tertiary">
+                    {olderJobs} open {olderJobs === 1 ? "job runs" : "jobs run"} an older version. {olderJobs === 1 ? "It is" : "They are"} counted on steps
+                    that still exist in version {latest}.
+                </p>
+            )}
             {dirty && <p className="text-sm text-tertiary">The canvas shows a draft. Counts appear on steps that exist in version {latest} too.</p>}
         </div>
     );
@@ -96,6 +104,11 @@ const TracePanel = ({ jobId, onTrace }: Pick<RunPanelProps, "onTrace"> & { jobId
                     <SelectItem key={job.id} id={job.id}>{`${job.ticket.id}: ${job.ticket.title}`}</SelectItem>
                 ))}
             </Select>
+            {run && !workflow && (
+                <p role="status" className="text-sm text-tertiary">
+                    Version {run.revision} is no longer kept, so this job&apos;s path cannot be shown.
+                </p>
+            )}
             {run && workflow && (
                 <>
                     <p className="text-sm text-secondary">
@@ -196,8 +209,11 @@ const DryRunStatus = ({ workflow, run }: { workflow: Workflow; run: NonNullable<
 
     return (
         <div className="flex flex-col gap-2">
-            <p role="status" className="text-sm text-secondary">
-                {job ? `${job.ticket.id} is ${STATUS_META[job.status].label.toLowerCase()}. Tick ${run.control.health.tick}.` : "Waiting for the job."}
+            <p className="text-sm text-secondary">
+                {job ? `${job.ticket.id} is ${STATUS_META[job.status].label.toLowerCase()}. Step ${run.steps}.` : "Waiting for the job."}
+            </p>
+            <p role="status" className="sr-only">
+                {run.finished && job ? `Dry run finished after ${run.steps} steps. ${job.ticket.id} is ${STATUS_META[job.status].label.toLowerCase()}.` : ""}
             </p>
             <ul aria-label="Step states" className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
                 {workflow.nodes.map((node) => {

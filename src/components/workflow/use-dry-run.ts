@@ -13,13 +13,15 @@ export interface DryRun {
     jobId: string;
     playing: boolean;
     finished: boolean;
+    /** Steps taken so far. The simulator's own tick only moves on heartbeats, which is not what a person watching counts. */
+    steps: number;
 }
 
-const snapshotOf = (sim: Simulator, workflow: Workflow, playing: boolean): DryRun => {
+const snapshotOf = (sim: Simulator, workflow: Workflow, playing: boolean, steps: number): DryRun => {
     const jobId = sim.state.jobOrder[0] ?? "";
     const status = sim.state.jobs[jobId]?.status;
     const finished = status === "done" || status === "failed";
-    return { workflow, control: sim.state, jobId, playing: playing && !finished, finished };
+    return { workflow, control: sim.state, jobId, playing: playing && !finished, finished, steps };
 };
 
 /**
@@ -32,7 +34,7 @@ const advanceSim = (sim: Simulator): void => {
     sim.step();
 };
 
-const refreshed = (sim: Simulator) => (current: DryRun | null) => (current ? snapshotOf(sim, current.workflow, current.playing) : current);
+const refreshed = (sim: Simulator) => (current: DryRun | null) => (current ? snapshotOf(sim, current.workflow, current.playing, current.steps + 1) : current);
 
 /**
  * A sandboxed simulator that sends one job of a chosen kind through a draft. It shares nothing with the live world:
@@ -56,7 +58,7 @@ export const useDryRun = () => {
     function start(workflow: Workflow, kind: JobKind, seed: string) {
         const sim = new Simulator({ seed: seed.trim() || "dry-run", workflow, only: kind });
         simulator.current = sim;
-        setRun(snapshotOf(sim, workflow, false));
+        setRun(snapshotOf(sim, workflow, false, 0));
     }
 
     function step() {
