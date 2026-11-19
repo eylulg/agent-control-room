@@ -12,7 +12,7 @@ import { JOB_KINDS, type JobKind } from "@/domain/types";
 import { nodeStates } from "@/domain/workflow/overlay";
 import type { Workflow } from "@/domain/workflow/types";
 import { useAppStore } from "@/state/store-context";
-import { useEditor } from "@/state/workflow-context";
+import { useEditor, useEditorStore } from "@/state/workflow-context";
 import { KIND_LABEL, STATUS_META, formatClock } from "@/utils/format";
 import { moveFocusFrom } from "./focus-step";
 import { RUN_STATE } from "./node-meta";
@@ -131,7 +131,7 @@ const TracePanel = ({ jobId, onTrace }: Pick<RunPanelProps, "onTrace"> & { jobId
 };
 
 const DryRunPanel = ({ dry }: { dry: DryRunApi }) => {
-    const draft = useEditor((s) => s.history.present);
+    const store = useEditorStore();
     const blocked = useEditor((s) => s.analysis.problems.length > 0);
     const [kind, setKind] = useState<JobKind>("feature");
     const [seed, setSeed] = useState("dry-run");
@@ -150,7 +150,7 @@ const DryRunPanel = ({ dry }: { dry: DryRunApi }) => {
     }
 
     function handleStart() {
-        dry.start(draft, kind, seed);
+        dry.start(store.getState().history.present, kind, seed);
     }
 
     return (

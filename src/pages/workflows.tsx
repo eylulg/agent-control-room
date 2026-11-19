@@ -14,7 +14,7 @@ import { Palette } from "@/components/workflow/palette";
 import { ProblemsPanel } from "@/components/workflow/problems-panel";
 import { RunPanel } from "@/components/workflow/run-panel";
 import { DraftBadge, EditToolbar, ZoomControls } from "@/components/workflow/toolbar";
-import { useDryRun } from "@/components/workflow/use-dry-run";
+import { type DryRun, useDryRun } from "@/components/workflow/use-dry-run";
 import { generateWorkflow } from "@/domain/workflow/generate";
 import { liveOverlay, runOverlay } from "@/domain/workflow/overlay";
 import { useAppStore } from "@/state/store-context";
@@ -44,24 +44,16 @@ export const WorkflowsPage = () => (
     </WorkflowEditorProvider>
 );
 
-const WorkflowsView = () => {
+/**
+ * Computes what the canvas shows for the simulator's jobs, a traced job or a dry run, and hands it to the editor. It renders nothing, and it is
+ * the only thing here that follows the simulator, so an event re-renders this and the steps whose overlay changed, not the whole page.
+ */
+const OverlayBridge = ({ dry, showLive, traceJobId }: { dry: DryRun | null; showLive: boolean; traceJobId: string | null }) => {
     const editor = useEditorStore();
-    const { run, error } = useCommand();
     const control = useAppStore((s) => s.control);
-    const view = useEditor((s) => s.view);
-    const dirty = useEditor((s) => s.dirty);
-    const invalid = useEditor((s) => s.analysis.problems.length > 0);
-    const draft = useEditor((s) => s.history.present);
-    const published = useEditor((s) => s.published);
-    const [showLive, setShowLive] = useState(true);
-    const [traceJobId, setTraceJobId] = useState<string | null>(null);
-    const [status, setStatus] = useState("");
-    const statusRef = useRef<HTMLParagraphElement>(null);
-    const dry = useDryRun();
-    useFocusRequests();
 
     const overlay = useMemo(() => {
-        if (dry.run) return runOverlay(dry.run.workflow, dry.run.control.runs[dry.run.jobId], dry.run.control.jobs[dry.run.jobId]);
+        if (dry) return runOverlay(dry.workflow, dry.control.runs[dry.jobId], dry.control.jobs[dry.jobId]);
         const traced = traceJobId ? control.runs[traceJobId] : undefined;
         if (traced) {
             // Only the last versions are kept. Drawing the path on a different graph would light the wrong steps, so a missing one draws nothing.
@@ -69,13 +61,29 @@ const WorkflowsView = () => {
             return workflow ? runOverlay(workflow, traced, control.jobs[traceJobId ?? ""]) : null;
         }
         return showLive ? liveOverlay(control) : null;
-    }, [dry.run, traceJobId, showLive, control]);
+    }, [dry, traceJobId, showLive, control]);
 
     useEffect(() => {
         editor.getState().setOverlay(overlay);
     }, [editor, overlay]);
 
     useEffect(() => () => editor.getState().setOverlay(null), [editor]);
+
+    return null;
+};
+
+const WorkflowsView = () => {
+    const editor = useEditorStore();
+    const { run, error } = useCommand();
+    const view = useEditor((s) => s.view);
+    const dirty = useEditor((s) => s.dirty);
+    const invalid = useEditor((s) => s.analysis.problems.length > 0);
+    const [showLive, setShowLive] = useState(true);
+    const [traceJobId, setTraceJobId] = useState<string | null>(null);
+    const [status, setStatus] = useState("");
+    const statusRef = useRef<HTMLParagraphElement>(null);
+    const dry = useDryRun();
+    useFocusRequests();
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -95,13 +103,13 @@ const WorkflowsView = () => {
     }, [editor]);
 
     async function handlePublish() {
-        if (!(await run({ type: "workflow.publish", workflow: draft }))) return;
+        if (!(await run({ type: "workflow.publish", workflow: editor.getState().history.present }))) return;
         setStatus("Published. Jobs created from now on use it. Running jobs keep their version.");
         statusRef.current?.focus();
     }
 
     function handleRevert() {
-        editor.getState().replace(published, "Discard draft changes");
+        editor.getState().replace(editor.getState().published, "Discard draft changes");
         editor.getState().requestFocus(true);
     }
 
@@ -128,6 +136,7 @@ const WorkflowsView = () => {
                     </div>
                 }
             />
+            <OverlayBridge dry={dry.run} showLive={showLive} traceJobId={traceJobId} />
             <EditorLiveRegion />
             <p ref={statusRef} tabIndex={-1} role="status" className={status ? "text-sm font-medium text-secondary" : "sr-only"}>
                 {status}

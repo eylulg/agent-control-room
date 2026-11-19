@@ -11,11 +11,10 @@ import { useEditor, useEditorStore } from "@/state/workflow-context";
 const FILE_NAME = "workflow.json";
 
 export const ExportButton = () => {
-    const workflow = useEditor((s) => s.history.present);
-    const json = serializeWorkflow(workflow);
+    const store = useEditorStore();
 
     function handleDownload() {
-        const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+        const url = URL.createObjectURL(new Blob([serializeWorkflow(store.getState().history.present)], { type: "application/json" }));
         const link = document.createElement("a");
         link.href = url;
         link.download = FILE_NAME;
@@ -41,11 +40,20 @@ export const ExportButton = () => {
                     </>
                 )}
             >
-                <CodeBlock label="Workflow JSON" copyable copyLabel="Copy JSON" copiedLabel="JSON copied" wrap>
-                    {json}
-                </CodeBlock>
+                <ExportedJson />
             </Dialog>
         </DialogTrigger>
+    );
+};
+
+/** Serialises the draft only while the dialog is open, so a drag does not stringify the graph on every frame. */
+const ExportedJson = () => {
+    const workflow = useEditor((s) => s.history.present);
+
+    return (
+        <CodeBlock label="Workflow JSON" copyable copyLabel="Copy JSON" copiedLabel="JSON copied" wrap>
+            {serializeWorkflow(workflow)}
+        </CodeBlock>
     );
 };
 
