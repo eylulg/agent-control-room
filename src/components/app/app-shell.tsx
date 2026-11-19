@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect } from "react";
 import { BrandMark, ProjectSwitcher, AppShell as Shell, SidebarNav, SiteFooter, ThemeToggle, TopNav } from "@eylulg/ui/chrome";
 import { ToastProvider } from "@eylulg/ui/toast";
-import { BarChart3, CheckCheck, FileText, LayoutGrid, Route, Settings, ShieldCheck } from "lucide-react";
+import { BarChart3, CheckCheck, FileText, LayoutGrid, Route, Settings, ShieldCheck, Workflow } from "lucide-react";
 import { matchPath, useLocation } from "react-router";
 import { pendingApprovals } from "@/domain/selectors";
 import { useAppStore } from "@/state/store-context";
@@ -84,6 +84,7 @@ const SideNav = () => {
                     </>
                 ) : undefined,
         },
+        { href: "/workflows", label: "Workflows", icon: <Workflow aria-hidden="true" />, isCurrent: pathname === "/workflows" },
         { href: "/routing", label: "Routing", icon: <Route aria-hidden="true" />, isCurrent: pathname === "/routing" },
         { href: "/guards", label: "Guards", icon: <ShieldCheck aria-hidden="true" />, isCurrent: pathname === "/guards" },
         { href: "/settings", label: "Settings", icon: <Settings aria-hidden="true" />, isCurrent: pathname === "/settings" },

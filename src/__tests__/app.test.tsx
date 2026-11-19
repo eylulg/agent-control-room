@@ -11,11 +11,14 @@ const stepUntilApproval = (store: AppStore) => {
 
 describe("App", () => {
     // jsdom computes no colours, so a dark mode run would repeat this one. Contrast in both themes is checked in a real browser.
-    it.each(["/", "/queue", "/jobs/job-1", "/approvals", "/routing", "/guards", "/settings", "/nowhere"])("renders %s without axe violations", async (path) => {
-        const { container } = await renderApp(path);
+    it.each(["/", "/queue", "/jobs/job-1", "/approvals", "/routing", "/workflows", "/guards", "/settings", "/nowhere"])(
+        "renders %s without axe violations",
+        async (path) => {
+            const { container } = await renderApp(path);
 
-        expect(await axe(container)).toHaveNoViolations();
-    });
+            expect(await axe(container)).toHaveNoViolations();
+        },
+    );
 
     it("raises a toast and announces it when the agent asks for approval", async () => {
         const { store } = await renderApp("/", { warmup: 0 });

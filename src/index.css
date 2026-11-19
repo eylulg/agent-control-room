@@ -26,3 +26,16 @@
         scroll-behavior: auto !important;
     }
 }
+
+/* Connections a job took a moment ago flow. With reduced motion they only change colour. */
+@media (prefers-reduced-motion: no-preference) {
+    .wf-edge-active {
+        stroke-dasharray: 8 6;
+        animation: wf-flow 0.8s linear infinite;
+    }
+}
+@keyframes wf-flow {
+    to {
+        stroke-dashoffset: -14;
+    }
+}
