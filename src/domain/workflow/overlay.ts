@@ -12,7 +12,7 @@ export interface NodeOverlay {
     visits: number[];
 }
 
-export interface EdgeOverlay {
+interface EdgeOverlay {
     /** Times a job took this connection. */
     count: number;
     /** Taken within the last few ticks. */

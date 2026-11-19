@@ -19,13 +19,13 @@ import {
 import { type Problem, validateWorkflow } from "@/domain/workflow/validate";
 import { saveDraft } from "./persist";
 
-export interface Viewport {
+interface Viewport {
     x: number;
     y: number;
     zoom: number;
 }
 
-export interface CanvasSize {
+interface CanvasSize {
     width: number;
     height: number;
 }
@@ -54,10 +54,10 @@ interface NodeMenuState {
     view: "root" | "connect" | "disconnect";
 }
 
-export type EditorView = "canvas" | "outline";
+type EditorView = "canvas" | "outline";
 
-export const MIN_ZOOM = 0.2;
-export const MAX_ZOOM = 2;
+const MIN_ZOOM = 0.2;
+const MAX_ZOOM = 2;
 const FIT_PADDING = 48;
 
 export interface EditorState {

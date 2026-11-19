@@ -11,9 +11,9 @@ export interface Position {
 }
 
 export const CONDITION_FIELDS = ["kind", "repo", "attempt"] as const;
-export type ConditionField = (typeof CONDITION_FIELDS)[number];
+type ConditionField = (typeof CONDITION_FIELDS)[number];
 export const CONDITION_OPERATORS = ["equals", "not-equals", "at-least"] as const;
-export type ConditionOperator = (typeof CONDITION_OPERATORS)[number];
+type ConditionOperator = (typeof CONDITION_OPERATORS)[number];
 
 export const GUARD_NODE_ACTIONS = ["merge", "skip-hooks", "post-as-owner"] as const satisfies readonly GuardAction[];
 

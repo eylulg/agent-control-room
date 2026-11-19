@@ -3,7 +3,7 @@ import { Simulator } from "@/domain/simulator";
 import type { AgentEvent } from "@/domain/types";
 
 export const GOLDEN_SEEDS = ["control-room", "alpha", "golden-3"] as const;
-export const GOLDEN_TICKS = 120;
+const GOLDEN_TICKS = 120;
 
 type Step = (sim: Simulator) => void;
 

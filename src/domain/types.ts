@@ -147,13 +147,13 @@ export const EVENT_TYPES = [
 export type EventType = (typeof EVENT_TYPES)[number];
 
 /** One version of the workflow that jobs walk. Version numbers only grow. */
-export interface PublishedWorkflow {
+interface PublishedWorkflow {
     revision: number;
     publishedAt: number;
     workflow: Workflow;
 }
 
-export interface RunStep {
+interface RunStep {
     nodeId: string;
     /** The connection the job took to get here. Null for the trigger. */
     edgeId: string | null;

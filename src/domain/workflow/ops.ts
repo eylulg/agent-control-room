@@ -13,10 +13,10 @@ import {
     type WorkflowNode,
 } from "./types";
 
-export const edgeId = (nodeId: string, portId: string): string => `${nodeId}:${portId}`;
+const edgeId = (nodeId: string, portId: string): string => `${nodeId}:${portId}`;
 
 /** The smallest unused `<type>-<n>` id. Deterministic, so a replayed command history gives the same ids. */
-export const nextNodeId = (workflow: Pick<Workflow, "nodes">, type: NodeType): string => {
+const nextNodeId = (workflow: Pick<Workflow, "nodes">, type: NodeType): string => {
     const taken = new Set(workflow.nodes.map((node) => node.id));
     for (let n = 1; ; n++) if (!taken.has(`${type}-${n}`)) return `${type}-${n}`;
 };
@@ -68,9 +68,6 @@ export const deleteNodes = (workflow: Workflow, ids: ReadonlySet<string>): Workf
     nodes: workflow.nodes.filter((node) => !ids.has(node.id)),
     edges: workflow.edges.filter((edge) => !ids.has(edge.from.node) && !ids.has(edge.to)),
 });
-
-/** Every connection into or out of a node. */
-export const edgesOf = (workflow: Workflow, nodeId: string): WorkflowEdge[] => workflow.edges.filter((edge) => edge.from.node === nodeId || edge.to === nodeId);
 
 /**
  * Copies nodes one grid step down and right, with the connections between them. A workflow has one trigger, so triggers are skipped.
