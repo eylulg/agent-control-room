@@ -1,17 +1,17 @@
 import { findBackEdges, incomingEdges, nodeIndex, topologicalOrder } from "./graph";
 import { GRID_STEP, NODE_HEIGHT, NODE_WIDTH, type Workflow } from "./types";
 
-const COLUMN_GAP = 100;
-const ROW_GAP = 40;
+const COLUMN_GAP = 40;
+const ROW_GAP = 60;
 const MARGIN = 40;
 const SWEEPS = 3;
 
 const snap = (value: number): number => Math.round(value / GRID_STEP) * GRID_STEP;
 
 /**
- * A layered layout, left to right. A node sits one column after its furthest predecessor
- * (back edges ignored), and rows inside a column are ordered by the average row of the
- * predecessors so edges cross as little as a few sweeps can manage. Columns are centred.
+ * A layered layout, top to bottom, the way connections leave the bottom of a step and enter the top of the next. A node sits one row
+ * below its furthest predecessor (back edges ignored), and steps inside a row are ordered by the average position of the
+ * predecessors so edges cross as little as a few sweeps can manage. Rows are centred.
  */
 export const autoLayout = (workflow: Workflow): Workflow => {
     const back = findBackEdges(workflow);
@@ -49,12 +49,12 @@ export const autoLayout = (workflow: Workflow): Workflow => {
         place();
     }
 
-    const tallest = Math.max(0, ...columns.map((ids) => ids.length));
+    const widest = Math.max(0, ...columns.map((ids) => ids.length));
     const positions = new Map<string, { x: number; y: number }>();
-    columns.forEach((ids, column) => {
-        const offset = ((tallest - ids.length) * (NODE_HEIGHT + ROW_GAP)) / 2;
+    columns.forEach((ids, layerIndex) => {
+        const offset = ((widest - ids.length) * (NODE_WIDTH + COLUMN_GAP)) / 2;
         ids.forEach((id, i) => {
-            positions.set(id, { x: snap(MARGIN + column * (NODE_WIDTH + COLUMN_GAP)), y: snap(MARGIN + offset + i * (NODE_HEIGHT + ROW_GAP)) });
+            positions.set(id, { x: snap(MARGIN + offset + i * (NODE_WIDTH + COLUMN_GAP)), y: snap(MARGIN + layerIndex * (NODE_HEIGHT + ROW_GAP)) });
         });
     });
 

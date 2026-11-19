@@ -114,14 +114,15 @@ export const NODE_WIDTH = 224;
 export const NODE_HEIGHT = 80;
 export const GRID_STEP = 20;
 
-/** Where an output port sits relative to the node's top left corner. Ports are spread down the right edge. */
+/** Where an output port sits relative to the node's top left corner. Ports are spread along the bottom edge. */
 export const portOffset = (type: NodeType, portId: string): Position => {
     const ports = PORTS[type];
     const index = Math.max(
         0,
         ports.findIndex((port) => port.id === portId),
     );
-    return { x: NODE_WIDTH, y: (NODE_HEIGHT * (index + 1)) / (ports.length + 1) };
+    return { x: (NODE_WIDTH * (index + 1)) / (ports.length + 1), y: NODE_HEIGHT };
 };
 
-export const INPUT_OFFSET: Position = { x: 0, y: NODE_HEIGHT / 2 };
+/** The input sits at the middle of the top edge. */
+export const INPUT_OFFSET: Position = { x: NODE_WIDTH / 2, y: 0 };

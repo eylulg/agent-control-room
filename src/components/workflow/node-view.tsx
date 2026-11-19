@@ -199,7 +199,7 @@ export const NodeView = memo(function NodeView({ id }: NodeViewProps) {
                     <span
                         aria-hidden="true"
                         data-port="in"
-                        className="absolute top-1/2 -left-1.5 size-3 -translate-y-1/2 rounded-full border-2 border-strong bg-primary"
+                        className="absolute -top-1.5 left-1/2 size-3 -translate-x-1/2 rounded-full border-2 border-strong bg-primary"
                     />
                 )}
                 {ports.map((port, index) => (
@@ -209,15 +209,15 @@ export const NodeView = memo(function NodeView({ id }: NodeViewProps) {
                         data-port={port.id}
                         onPointerDown={handlePortDown(port.id)}
                         className={cx(
-                            "absolute -right-2 flex size-4 -translate-y-1/2 cursor-crosshair items-center justify-center rounded-full border-2 border-strong hover:border-brand",
+                            "absolute -bottom-2 flex size-4 -translate-x-1/2 cursor-crosshair items-center justify-center rounded-full border-2 border-strong hover:border-brand",
                             connectedPorts?.includes(port.id) ? "bg-fg-tertiary" : "bg-primary",
                         )}
-                        style={{ top: `${((index + 1) / (ports.length + 1)) * 100}%` }}
+                        style={{ left: `${((index + 1) / (ports.length + 1)) * 100}%` }}
                     >
                         {ports.length > 1 && (
                             <span
                                 data-label={port.label}
-                                className="pointer-events-none absolute right-5 text-[10px] leading-none whitespace-nowrap text-tertiary after:content-[attr(data-label)]"
+                                className="pointer-events-none absolute top-3.5 left-2 text-[10px] leading-none whitespace-nowrap text-tertiary after:content-[attr(data-label)]"
                             />
                         )}
                     </span>

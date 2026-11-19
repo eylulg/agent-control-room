@@ -6,13 +6,13 @@ import { autoLayout } from "../layout";
 import { NODE_HEIGHT, NODE_WIDTH } from "../types";
 
 describe("autoLayout", () => {
-    it("puts every step to the right of the steps that feed it and overlaps none", () => {
+    it("puts every step below the steps that feed it and overlaps none", () => {
         const workflow = autoLayout(defaultWorkflow());
         const at = new Map(workflow.nodes.map((node) => [node.id, node.position]));
         const back = findBackEdges(workflow);
 
         for (const edge of workflow.edges.filter((e) => !back.has(e.id))) {
-            expect(at.get(edge.to)?.x).toBeGreaterThan(at.get(edge.from.node)?.x ?? Infinity);
+            expect(at.get(edge.to)?.y).toBeGreaterThan(at.get(edge.from.node)?.y ?? Infinity);
         }
         for (const a of workflow.nodes) {
             for (const b of workflow.nodes) {
@@ -35,7 +35,7 @@ describe("autoLayout", () => {
         const width = Math.max(...nodes.map((node) => node.position.x + NODE_WIDTH)) - Math.min(...nodes.map((node) => node.position.x));
         const height = Math.max(...nodes.map((node) => node.position.y + NODE_HEIGHT)) - Math.min(...nodes.map((node) => node.position.y));
 
-        expect(width).toBeLessThanOrEqual(800);
+        expect(width).toBeLessThanOrEqual(900);
         expect(height).toBeLessThanOrEqual(480);
         for (const a of nodes) {
             for (const b of nodes) {

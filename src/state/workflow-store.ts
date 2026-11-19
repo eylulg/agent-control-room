@@ -1,5 +1,5 @@
 import { type StoreApi, createStore } from "zustand/vanilla";
-import { nodeIndex, topologicalOrder } from "@/domain/workflow/graph";
+import { findBackEdges, nodeIndex, topologicalOrder } from "@/domain/workflow/graph";
 import { type History, commit, createHistory, preview, redo, undo } from "@/domain/workflow/history";
 import { autoLayout } from "@/domain/workflow/layout";
 import { addNode, connect, createNode, deleteNodes, describeNode, disconnect, duplicateNodes, moveNodes, uniqueNames, updateNode } from "@/domain/workflow/ops";
@@ -40,6 +40,8 @@ interface Analysis {
     order: string[];
     /** A name per step that no other step shares, for controls that must be told apart. */
     names: Record<string, string>;
+    /** Connections that lead back up to an earlier step, such as the loop through a Fail port. */
+    backEdges: ReadonlySet<string>;
 }
 
 interface Connecting {
@@ -144,7 +146,7 @@ const analyse = (workflow: Workflow): Analysis => {
     const connectedPorts: Record<string, string[]> = {};
     for (const edge of workflow.edges) connectedPorts[edge.from.node] = [...(connectedPorts[edge.from.node] ?? []), edge.from.port];
     const order = topologicalOrder(workflow);
-    return { problems, problemsByNode, descriptions, connectedPorts, order, names: uniqueNames(workflow, order) };
+    return { problems, problemsByNode, descriptions, connectedPorts, order, names: uniqueNames(workflow, order), backEdges: findBackEdges(workflow) };
 };
 
 /** Keeps the previous object for every node and connection whose overlay did not change, so only the ones that did re-render. */
