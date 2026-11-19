@@ -1,41 +1,41 @@
-@import "tailwindcss";
-@import "@eylulg/ui/fonts.css";
-@import "@eylulg/ui/theme.css";
-@import "@eylulg/ui/themes/control-room.css";
-@source "../node_modules/@eylulg/ui/dist";
+@import 'tailwindcss';
+@import '@eylulg/ui/fonts.css';
+@import '@eylulg/ui/theme.css';
+@import '@eylulg/ui/themes/control-room.css';
+@source '../node_modules/@eylulg/ui/dist';
 
 /* Data viz roles (validated with the dataviz palette checker, light and dark). */
 :root {
-    --viz-series-1: #2a78d6;
-    --viz-gridline: #e1e0d9;
-    --viz-baseline: #c3c2b7;
+  --viz-series-1: #2a78d6;
+  --viz-gridline: #e1e0d9;
+  --viz-baseline: #c3c2b7;
 }
 .dark-mode {
-    --viz-series-1: #3987e5;
-    --viz-gridline: #2c2c2a;
-    --viz-baseline: #383835;
+  --viz-series-1: #3987e5;
+  --viz-gridline: #2c2c2a;
+  --viz-baseline: #383835;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Connections a job took a moment ago flow. With reduced motion they only change colour. */
 @media (prefers-reduced-motion: no-preference) {
-    .wf-edge-active {
-        stroke-dasharray: 8 6;
-        animation: wf-flow 0.8s linear infinite;
-    }
+  .wf-edge-active {
+    stroke-dasharray: 8 6;
+    animation: wf-flow 0.8s linear infinite;
+  }
 }
 @keyframes wf-flow {
-    to {
-        stroke-dashoffset: -14;
-    }
+  to {
+    stroke-dashoffset: -14;
+  }
 }
