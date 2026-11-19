@@ -10,7 +10,7 @@ interface PageHeaderProps {
 /** The library page header, plus the document title that goes with the page. */
 export const PageHeader = ({ title, description, actions }: PageHeaderProps) => {
     useEffect(() => {
-        document.title = `${title} | Agent control room`;
+        document.title = `${title} | Agent workflows`;
     }, [title]);
 
     return <Header title={title} description={description} actions={actions} />;

@@ -42,7 +42,7 @@ export const AppShell = ({ children }: AppShellProps) => {
 
 const Header = () => (
     <TopNav
-        productName="Agent control room"
+        productName="Agent workflows"
         logo={<BrandMark />}
         LinkComponent={RouterLink}
         mobileMenu={
