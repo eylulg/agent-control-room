@@ -1,10 +1,15 @@
 import { DEFAULT_GUARDS } from "./guards";
 import { DEFAULT_ROUTING } from "./routing";
 import { type AgentEvent, type ControlState, type Job } from "./types";
+import { DEFAULT_WORKFLOW } from "./workflow/default";
+import type { Workflow } from "./workflow/types";
 
 const MAX_EVENTS = 400;
+const MAX_WORKFLOWS = 20;
+/** Loops are bounded, so a run this long means something is wrong. It stops growing instead of eating memory. */
+const MAX_STEPS = 400;
 
-export const createInitialState = (): ControlState => ({
+export const createInitialState = (workflow: Workflow = DEFAULT_WORKFLOW): ControlState => ({
     jobs: {},
     jobOrder: [],
     approvals: {},
@@ -13,6 +18,8 @@ export const createInitialState = (): ControlState => ({
     events: [],
     completions: [],
     health: { lastHeartbeat: null, tick: 0, activeJobs: 0 },
+    workflows: [{ revision: 1, publishedAt: 0, workflow }],
+    runs: {},
 });
 
 const patchJob = (state: ControlState, event: AgentEvent, patch: (job: Job) => Partial<Job>): ControlState => {
@@ -28,6 +35,11 @@ const supersedeApprovals = (state: ControlState, jobId: string | null): ControlS
     const approvals = { ...state.approvals };
     for (const approval of stale) approvals[approval.id] = { ...approval, status: "superseded" };
     return { ...state, approvals };
+};
+
+const withoutRun = (runs: ControlState["runs"], jobId: string | null): ControlState["runs"] => {
+    if (!jobId || !runs[jobId]) return runs;
+    return Object.fromEntries(Object.entries(runs).filter(([id]) => id !== jobId));
 };
 
 const applyToJob = (state: ControlState, event: AgentEvent): ControlState => {
@@ -110,7 +122,7 @@ const applyToJob = (state: ControlState, event: AgentEvent): ControlState => {
         case "job.resumed":
             return patchJob(state, event, (job) => ({ status: job.statusBeforeHold ?? "implementing", holdReason: undefined, statusBeforeHold: undefined }));
         case "job.retried":
-            return patchJob(supersedeApprovals(state, event.jobId), event, () => ({
+            return patchJob({ ...supersedeApprovals(state, event.jobId), runs: withoutRun(state.runs, event.jobId) }, event, () => ({
                 status: "queued",
                 attempts: event.payload.attempt,
                 model: event.payload.model,
@@ -127,11 +139,25 @@ const applyToJob = (state: ControlState, event: AgentEvent): ControlState => {
                 failureReason: event.payload.reason,
                 holdReason: undefined,
             }));
+        case "workflow.published":
+            return {
+                ...state,
+                workflows: [...state.workflows, { revision: event.payload.revision, publishedAt: event.ts, workflow: event.payload.workflow }].slice(
+                    -MAX_WORKFLOWS,
+                ),
+            };
         case "health.heartbeat":
             return { ...state, health: { lastHeartbeat: event.ts, tick: event.payload.tick, activeJobs: event.payload.activeJobs } };
         default:
             return state;
     }
+};
+
+const recordStep = (state: ControlState, event: AgentEvent & { type: "job.node" }): ControlState => {
+    if (!event.jobId) return state;
+    const run = state.runs[event.jobId] ?? { revision: event.payload.revision, steps: [] };
+    const steps = [...run.steps, { nodeId: event.payload.nodeId, edgeId: event.payload.edgeId, ts: event.ts }].slice(-MAX_STEPS);
+    return { ...state, runs: { ...state.runs, [event.jobId]: { ...run, steps } } };
 };
 
 /**
@@ -140,6 +166,9 @@ const applyToJob = (state: ControlState, event: AgentEvent): ControlState => {
  */
 export const applyEvent = (state: ControlState, event: AgentEvent): ControlState => {
     if (event.type === "world.snapshot") return event.payload.state;
+
+    // Node moves are bookkeeping for the workflow view. They stay out of the timelines and the event feed.
+    if (event.type === "job.node") return recordStep(state, event);
 
     let next: ControlState;
     if (event.type === "job.created") {

@@ -1,3 +1,5 @@
+import type { Workflow } from "./workflow/types";
+
 export const JOB_KINDS = ["feature", "bug", "chore", "review-fix", "release"] as const;
 export type JobKind = (typeof JOB_KINDS)[number];
 
@@ -138,9 +140,31 @@ export const EVENT_TYPES = [
     "job.retried",
     "job.done",
     "job.failed",
+    "job.node",
+    "workflow.published",
     "health.heartbeat",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
+
+/** One version of the workflow that jobs walk. Version numbers only grow. */
+export interface PublishedWorkflow {
+    revision: number;
+    publishedAt: number;
+    workflow: Workflow;
+}
+
+export interface RunStep {
+    nodeId: string;
+    /** The connection the job took to get here. Null for the trigger. */
+    edgeId: string | null;
+    ts: number;
+}
+
+/** Where a job has been in the workflow it started with. */
+export interface JobRun {
+    revision: number;
+    steps: RunStep[];
+}
 
 interface HealthState {
     lastHeartbeat: number | null;
@@ -158,6 +182,9 @@ export interface ControlState {
     events: AgentEvent[];
     completions: number[];
     health: HealthState;
+    /** Published workflows, oldest first. The last one is what new jobs use. */
+    workflows: PublishedWorkflow[];
+    runs: Record<string, JobRun>;
 }
 
 export interface EventPayloads {
@@ -183,6 +210,8 @@ export interface EventPayloads {
     "job.retried": { attempt: number; model: string };
     "job.done": { prNumber?: number };
     "job.failed": { reason: string; cancelled?: boolean };
+    "job.node": { nodeId: string; edgeId: string | null; revision: number };
+    "workflow.published": { revision: number; workflow: Workflow };
     "health.heartbeat": { tick: number; activeJobs: number; queueDepth: number };
 }
 
@@ -205,4 +234,5 @@ export type OperatorCommand =
     | { type: "job.cancel"; jobId: string }
     | { type: "job.retry"; jobId: string }
     | { type: "routing.set"; routing: RoutingTable }
-    | { type: "guard.toggle"; guardId: string; enabled: boolean };
+    | { type: "guard.toggle"; guardId: string; enabled: boolean }
+    | { type: "workflow.publish"; workflow: Workflow };
