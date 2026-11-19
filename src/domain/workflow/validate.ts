@@ -16,6 +16,10 @@ const MAX_ATTEMPTS = 10;
 
 const wholeNumber = (value: number, min: number, max: number): boolean => Number.isInteger(value) && value >= min && value <= max;
 
+/** The rule for a retry or round limit, written as the person typed it. Undefined means it is fine. */
+export const attemptsError = (text: string): string | undefined =>
+    /^\d+$/.test(text.trim()) && wholeNumber(Number(text), 1, MAX_ATTEMPTS) ? undefined : `Enter a whole number from 1 to ${MAX_ATTEMPTS}.`;
+
 /** Field level errors for one node, keyed by field name. The inspector shows them next to the field. */
 export const configErrors = (node: WorkflowNode): ConfigErrors => {
     const errors: ConfigErrors = {};
@@ -26,12 +30,16 @@ export const configErrors = (node: WorkflowNode): ConfigErrors => {
         case "trigger":
             if (node.config.kinds.length === 0) errors.kinds = "Choose at least one job kind.";
             break;
-        case "ci":
-            if (!wholeNumber(node.config.maxAttempts, 1, MAX_ATTEMPTS)) errors.maxAttempts = `Enter a whole number from 1 to ${MAX_ATTEMPTS}.`;
+        case "ci": {
+            const error = attemptsError(String(node.config.maxAttempts));
+            if (error) errors.maxAttempts = error;
             break;
-        case "review":
-            if (!wholeNumber(node.config.maxRounds, 1, MAX_ATTEMPTS)) errors.maxRounds = `Enter a whole number from 1 to ${MAX_ATTEMPTS}.`;
+        }
+        case "review": {
+            const error = attemptsError(String(node.config.maxRounds));
+            if (error) errors.maxRounds = error;
             break;
+        }
         case "condition": {
             const { field, operator, value } = node.config;
             if (field === "attempt") {

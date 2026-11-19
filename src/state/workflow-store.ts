@@ -345,7 +345,10 @@ export const createEditorStore = ({ draft, published, storage, announce = () => 
                     },
                 );
             },
-            updateNode: (id, patch) => run(`Edit ${nameOf(id)}`, updateNode(get().history.present, id, patch), `Updated ${patch.label ?? nameOf(id)}.`),
+            updateNode: (id, patch) => {
+                if (!get().byId.has(id)) return;
+                run(`Edit ${nameOf(id)}`, updateNode(get().history.present, id, patch), `Updated ${patch.label ?? nameOf(id)}.`);
+            },
             tidy: () => run("Tidy up", autoLayout(get().history.present), "Tidied up the layout."),
             replace: (workflow, label) =>
                 run(label, workflow, `${label}. ${plural(workflow.nodes.length, "step", "steps")}.`, { selected: [], selectedEdge: null }),

@@ -131,4 +131,32 @@ describe("WorkflowsPage keyboard flows", () => {
         const states = within(screen.getByRole("list", { name: "Step states" }));
         expect(states.getByText("Done")).toBeInTheDocument();
     });
+
+    it("keeps a label typed for one step on that step when another is selected before the field blurs", async () => {
+        const user = userEvent.setup();
+        await renderApp("/workflows");
+
+        await user.click(screen.getByRole("option", { name: "Plan" }));
+        await user.type(screen.getByRole("textbox", { name: "Label" }), " the work");
+        await user.click(screen.getByRole("option", { name: "Review" }));
+
+        expect(screen.getByRole("option", { name: "Plan the work, Plan" })).toBeInTheDocument();
+        expect(screen.getByRole("option", { name: "Review" })).toBeInTheDocument();
+        expect(screen.getByRole("textbox", { name: "Label" })).toHaveValue("Review");
+    });
+
+    it("keeps a limit typed for one step on that step when another is selected", async () => {
+        const user = userEvent.setup();
+        await renderApp("/workflows");
+
+        await user.click(screen.getByRole("option", { name: "Run CI, CI check" }));
+        const limit = screen.getByRole("textbox", { name: "Failures before the job fails" });
+        await user.clear(limit);
+        await user.type(limit, "7");
+        await user.click(screen.getByRole("option", { name: "Review" }));
+
+        expect(screen.getByRole("textbox", { name: "Finding rounds before moving on" })).toHaveValue("3");
+        await user.click(screen.getByRole("option", { name: "Run CI, CI check" }));
+        expect(screen.getByRole("textbox", { name: "Failures before the job fails" })).toHaveValue("7");
+    });
 });
