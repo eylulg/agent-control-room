@@ -6,7 +6,6 @@ import { OverviewPage } from "@/pages/overview";
 import { RouteProvider } from "@/providers/router-provider";
 import { AppStoreProvider } from "@/state/context";
 import type { AppStore } from "@/state/store";
-import { WorkflowEditorProvider } from "@/state/workflow-provider";
 
 interface AppProps {
     store: AppStore;
@@ -35,23 +34,21 @@ const PageBoundary = ({ children }: { children: ReactNode }) => {
 export const App = ({ store }: AppProps) => (
     <AppStoreProvider store={store}>
         <RouteProvider>
-            <WorkflowEditorProvider>
-                <AppShell>
-                    <PageBoundary>
-                        <Routes>
-                            <Route path="/" element={<OverviewPage />} />
-                            <Route path="/queue" element={<QueuePage />} />
-                            <Route path="/jobs/:jobId" element={<JobDetailPage />} />
-                            <Route path="/approvals" element={<ApprovalsPage />} />
-                            <Route path="/workflows" element={<WorkflowsPage />} />
-                            <Route path="/routing" element={<RoutingPage />} />
-                            <Route path="/guards" element={<GuardsPage />} />
-                            <Route path="/settings" element={<SettingsPage />} />
-                            <Route path="*" element={<NotFoundPage />} />
-                        </Routes>
-                    </PageBoundary>
-                </AppShell>
-            </WorkflowEditorProvider>
+            <AppShell>
+                <PageBoundary>
+                    <Routes>
+                        <Route path="/" element={<OverviewPage />} />
+                        <Route path="/queue" element={<QueuePage />} />
+                        <Route path="/jobs/:jobId" element={<JobDetailPage />} />
+                        <Route path="/approvals" element={<ApprovalsPage />} />
+                        <Route path="/workflows" element={<WorkflowsPage />} />
+                        <Route path="/routing" element={<RoutingPage />} />
+                        <Route path="/guards" element={<GuardsPage />} />
+                        <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                </PageBoundary>
+            </AppShell>
         </RouteProvider>
     </AppStoreProvider>
 );

@@ -20,6 +20,7 @@ import { liveOverlay, runOverlay } from "@/domain/workflow/overlay";
 import { useAppStore } from "@/state/store-context";
 import { useCommand } from "@/state/use-command";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
+import { WorkflowEditorProvider } from "@/state/workflow-provider";
 
 const SHORTCUTS: [string, string][] = [
     ["Tab", "Enter the canvas. Tab again leaves it."],
@@ -37,7 +38,13 @@ const SHORTCUTS: [string, string][] = [
 const isEditable = (target: EventTarget | null): boolean =>
     target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
-export const WorkflowsPage = () => {
+export const WorkflowsPage = () => (
+    <WorkflowEditorProvider>
+        <WorkflowsView />
+    </WorkflowEditorProvider>
+);
+
+const WorkflowsView = () => {
     const editor = useEditorStore();
     const { run, error } = useCommand();
     const control = useAppStore((s) => s.control);
