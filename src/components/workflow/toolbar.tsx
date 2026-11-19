@@ -6,7 +6,7 @@ import { SegmentedControl, SegmentedControlItem } from "@eylulg/ui/segmented-con
 import { LayoutDashboard, List, Maximize, Redo2, Undo2, Wand2, ZoomIn, ZoomOut } from "lucide-react";
 import type { Key } from "react-aria-components";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
-import { moveFocusFrom } from "./focus-step";
+import { useFocusHandoff } from "./focus-step";
 
 const ZOOM_STEP = 1.2;
 const UNDO_ID = "wf-undo";
@@ -19,10 +19,12 @@ export const EditToolbar = () => {
     const canRedo = useEditor((s) => s.history.future.length > 0);
     const view = useEditor((s) => s.view);
 
+    const { groupProps, handoff } = useFocusHandoff();
+
     useLayoutEffect(() => {
-        if (!canUndo) moveFocusFrom(UNDO_ID, canRedo ? REDO_ID : TIDY_ID);
-        if (!canRedo) moveFocusFrom(REDO_ID, canUndo ? UNDO_ID : TIDY_ID);
-    }, [canUndo, canRedo]);
+        if (!canUndo) handoff(UNDO_ID, canRedo ? REDO_ID : TIDY_ID);
+        if (!canRedo) handoff(REDO_ID, canUndo ? UNDO_ID : TIDY_ID);
+    }, [canUndo, canRedo, handoff]);
 
     function handleUndo() {
         store.getState().undo();
@@ -38,7 +40,7 @@ export const EditToolbar = () => {
     }
 
     return (
-        <div role="toolbar" aria-label="Edit workflow" className="flex flex-wrap items-center gap-2">
+        <div role="toolbar" aria-label="Edit workflow" className="flex flex-wrap items-center gap-2" {...groupProps}>
             <Button id={UNDO_ID} variant="secondary" size="sm" iconLeading={Undo2} onPress={handleUndo} isDisabled={!canUndo}>
                 Undo
             </Button>

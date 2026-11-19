@@ -55,8 +55,11 @@ export const NodeView = memo(function NodeView({ id }: NodeViewProps) {
 
     const Icon = NODE_ICON[node.type];
     const typeLabel = NODE_META[node.type].label;
-    const shared = unique ?? node.label;
-    const name = [shared === typeLabel ? shared : `${shared}, ${typeLabel}`, badgeText(overlay)].filter(Boolean).join(", ");
+    // The name carries the words that are on screen, so a voice user can say what they see. The type is left off a step still named after its
+    // type, as it is on screen, and a number tells apart steps that share a label.
+    const showType = node.label !== typeLabel;
+    const number = unique && unique !== node.label ? unique.slice(node.label.length).trim() : "";
+    const name = [node.label, showType ? typeLabel : "", badgeText(overlay), number].filter(Boolean).join(", ");
     const status = [description, problems > 0 ? `${problems} ${problems === 1 ? "problem" : "problems"}.` : "", describeOverlay(overlay)]
         .filter(Boolean)
         .join(" ");
@@ -164,57 +167,63 @@ export const NodeView = memo(function NodeView({ id }: NodeViewProps) {
     }
 
     return (
-        <div
-            id={nodeDomId(id)}
-            role="option"
-            aria-selected={selected}
-            aria-label={name}
-            aria-describedby={`${nodeDomId(id)}-description`}
-            tabIndex={tabbable ? 0 : -1}
-            data-node-id={id}
-            className={nodeClass(selected, problems > 0)}
-            style={{ width: NODE_WIDTH, height: NODE_HEIGHT, transform: `translate(${node.position.x}px, ${node.position.y}px)` }}
-            onPointerDown={handlePointerDown}
-            onKeyDown={handleKeyDown}
-            onFocus={handleFocus}
-        >
-            <span id={`${nodeDomId(id)}-description`} className="sr-only">
+        <>
+            {/* Outside the option, so axe does not count the description as the option's visible text when it compares that with the name. */}
+            <span hidden id={`${nodeDomId(id)}-description`}>
                 {status}
             </span>
-            <span aria-hidden="true" className="flex min-w-0 items-center gap-2">
-                <Icon className="size-4 shrink-0 text-fg-brand" />
-                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">{node.label}</span>
-                {problems > 0 && <TriangleAlert className="size-4 shrink-0 text-fg-error" />}
-            </span>
-            <span aria-hidden="true" className="flex items-center gap-2 text-xs text-tertiary">
-                <span className="truncate">{typeLabel}</span>
-                {overlay && <OverlayBadge overlay={overlay} />}
-            </span>
-            {node.type !== "trigger" && (
-                <span
-                    aria-hidden="true"
-                    data-port="in"
-                    className="absolute top-1/2 -left-1.5 size-3 -translate-y-1/2 rounded-full border-2 border-strong bg-primary"
-                />
-            )}
-            {ports.map((port, index) => (
-                <span
-                    key={port.id}
-                    aria-hidden="true"
-                    data-port={port.id}
-                    onPointerDown={handlePortDown(port.id)}
-                    className={cx(
-                        "absolute -right-2 flex size-4 -translate-y-1/2 cursor-crosshair items-center justify-center rounded-full border-2 border-strong hover:border-brand",
-                        connectedPorts?.includes(port.id) ? "bg-fg-tertiary" : "bg-primary",
-                    )}
-                    style={{ top: `${((index + 1) / (ports.length + 1)) * 100}%` }}
-                >
-                    {ports.length > 1 && (
-                        <span className="pointer-events-none absolute right-5 text-[10px] leading-none whitespace-nowrap text-tertiary">{port.label}</span>
-                    )}
+            <div
+                id={nodeDomId(id)}
+                role="option"
+                aria-selected={selected}
+                aria-label={name}
+                aria-describedby={`${nodeDomId(id)}-description`}
+                tabIndex={tabbable ? 0 : -1}
+                data-node-id={id}
+                className={nodeClass(selected, problems > 0)}
+                style={{ width: NODE_WIDTH, height: NODE_HEIGHT, transform: `translate(${node.position.x}px, ${node.position.y}px)` }}
+                onPointerDown={handlePointerDown}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+            >
+                {/* The spaces between the lines are not drawn, but they keep the text a checker reads from the page in step with the name. The port labels are CSS content for the same reason. */}
+                <span aria-hidden="true" className="flex min-w-0 items-center gap-2">
+                    <Icon className="size-4 shrink-0 text-fg-brand" />
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">{node.label}</span>
+                    {problems > 0 && <TriangleAlert className="size-4 shrink-0 text-fg-error" />}
+                </span>{" "}
+                <span aria-hidden="true" className="flex items-center gap-2 text-xs text-tertiary">
+                    {showType && <span className="truncate">{typeLabel}</span>} {overlay && <OverlayBadge overlay={overlay} />}
                 </span>
-            ))}
-        </div>
+                {node.type !== "trigger" && (
+                    <span
+                        aria-hidden="true"
+                        data-port="in"
+                        className="absolute top-1/2 -left-1.5 size-3 -translate-y-1/2 rounded-full border-2 border-strong bg-primary"
+                    />
+                )}
+                {ports.map((port, index) => (
+                    <span
+                        key={port.id}
+                        aria-hidden="true"
+                        data-port={port.id}
+                        onPointerDown={handlePortDown(port.id)}
+                        className={cx(
+                            "absolute -right-2 flex size-4 -translate-y-1/2 cursor-crosshair items-center justify-center rounded-full border-2 border-strong hover:border-brand",
+                            connectedPorts?.includes(port.id) ? "bg-fg-tertiary" : "bg-primary",
+                        )}
+                        style={{ top: `${((index + 1) / (ports.length + 1)) * 100}%` }}
+                    >
+                        {ports.length > 1 && (
+                            <span
+                                data-label={port.label}
+                                className="pointer-events-none absolute right-5 text-[10px] leading-none whitespace-nowrap text-tertiary after:content-[attr(data-label)]"
+                            />
+                        )}
+                    </span>
+                ))}
+            </div>
+        </>
     );
 });
 

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { type FocusEvent, useCallback, useLayoutEffect, useRef } from "react";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
 import type { EditorStore } from "@/state/workflow-store";
 import { nodeDomId, outlineDomId } from "./geometry";
@@ -30,7 +30,27 @@ export const useFocusRequests = (): void => {
     }, [request, store]);
 };
 
-/** A button that disables itself while it has focus would drop focus to the page. This hands focus to another control first. */
-export const moveFocusFrom = (fromId: string, toId: string): void => {
-    if (document.activeElement?.id === fromId) document.getElementById(toId)?.focus();
+/**
+ * A button that disables itself while it has focus loses it, and browsers drop focus to the page at that moment. This remembers which control
+ * of a group was focused last, so the group can hand focus to another control when that one goes away.
+ */
+export const useFocusHandoff = () => {
+    const last = useRef("");
+
+    function handleFocus(event: FocusEvent<HTMLElement>) {
+        last.current = event.target.id;
+    }
+
+    function handleBlur(event: FocusEvent<HTMLElement>) {
+        if (event.relatedTarget) last.current = "";
+    }
+
+    // Stable, because the groups call it from an effect.
+    const handoff = useCallback((fromId: string, toId: string) => {
+        const active = document.activeElement;
+        if (last.current !== fromId || (active && active !== document.body && active.id !== fromId)) return;
+        document.getElementById(toId)?.focus();
+    }, []);
+
+    return { groupProps: { onFocus: handleFocus, onBlur: handleBlur }, handoff };
 };

@@ -14,7 +14,7 @@ import type { Workflow } from "@/domain/workflow/types";
 import { useAppStore } from "@/state/store-context";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
 import { KIND_LABEL, STATUS_META, formatClock } from "@/utils/format";
-import { moveFocusFrom } from "./focus-step";
+import { useFocusHandoff } from "./focus-step";
 import { RUN_STATE } from "./node-meta";
 import type { useDryRun } from "./use-dry-run";
 
@@ -138,11 +138,13 @@ const DryRunPanel = ({ dry }: { dry: DryRunApi }) => {
     const { run } = dry;
     const finished = run?.finished ?? false;
 
+    const { groupProps, handoff } = useFocusHandoff();
+
     useLayoutEffect(() => {
         if (!finished) return;
-        moveFocusFrom(DRY_PLAY_ID, DRY_RESTART_ID);
-        moveFocusFrom(DRY_STEP_ID, DRY_RESTART_ID);
-    }, [finished]);
+        handoff(DRY_PLAY_ID, DRY_RESTART_ID);
+        handoff(DRY_STEP_ID, DRY_RESTART_ID);
+    }, [finished, handoff]);
 
     function handleKind(key: Key | null) {
         const next = JOB_KINDS.find((candidate) => candidate === key);
@@ -165,7 +167,7 @@ const DryRunPanel = ({ dry }: { dry: DryRunApi }) => {
                 </Select>
                 <Input label="Seed" value={seed} onChange={setSeed} isDisabled={run?.playing} />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2" {...groupProps}>
                 <Button id={DRY_RESTART_ID} size="sm" onPress={handleStart} isDisabled={blocked || run?.playing} iconLeading={RotateCcw}>
                     {run ? "Restart dry run" : "Start dry run"}
                 </Button>
