@@ -54,6 +54,28 @@ export const canReachEnd = (workflow: Graph): Set<string> => {
     return seen;
 };
 
+export interface Duplicates {
+    nodeIds: string[];
+    edgeIds: string[];
+    /** Output ports with more than one connection, as `node/port`. */
+    ports: string[];
+}
+
+/** What makes a graph ambiguous: ids used twice, and a port that leads to two places. */
+export const findDuplicates = (workflow: Graph): Duplicates => {
+    const repeated = (values: string[]): string[] => {
+        const seen = new Set<string>();
+        const again = new Set<string>();
+        for (const value of values) (seen.has(value) ? again : seen).add(value);
+        return [...again];
+    };
+    return {
+        nodeIds: repeated(workflow.nodes.map((node) => node.id)),
+        edgeIds: repeated(workflow.edges.map((edge) => edge.id)),
+        ports: repeated(workflow.edges.map((edge) => `${edge.from.node}/${edge.from.port}`)),
+    };
+};
+
 /**
  * Edges that point back up the graph: the ones a depth first walk from the trigger
  * (then from any other node, top left first) meets while their target is still open.
@@ -105,28 +127,39 @@ export const findCycles = (workflow: Graph, { ignoreRetry = false }: { ignoreRet
     const stack: string[] = [];
     const cycles: string[][] = [];
 
-    const connect = (id: string) => {
-        index.set(id, counter);
-        low.set(id, counter);
-        counter += 1;
-        stack.push(id);
-        onStack.add(id);
-        for (const next of out.get(id) ?? []) {
-            if (!index.has(next)) {
-                connect(next);
-                low.set(id, Math.min(low.get(id) ?? 0, low.get(next) ?? 0));
-            } else if (onStack.has(next)) {
-                low.set(id, Math.min(low.get(id) ?? 0, index.get(next) ?? 0));
+    // An explicit stack of frames, so a chain of thousands of steps cannot overflow the call stack.
+    const connect = (start: string) => {
+        const frames: { id: string; next: number }[] = [];
+        const enter = (id: string) => {
+            index.set(id, counter);
+            low.set(id, counter);
+            counter += 1;
+            stack.push(id);
+            onStack.add(id);
+            frames.push({ id, next: 0 });
+        };
+        enter(start);
+        for (let frame = frames.at(-1); frame; frame = frames.at(-1)) {
+            const successors = out.get(frame.id) ?? [];
+            const next = successors[frame.next];
+            if (next !== undefined) {
+                frame.next += 1;
+                if (!index.has(next)) enter(next);
+                else if (onStack.has(next)) low.set(frame.id, Math.min(low.get(frame.id) ?? 0, index.get(next) ?? 0));
+                continue;
             }
+            frames.pop();
+            const parent = frames.at(-1);
+            if (parent) low.set(parent.id, Math.min(low.get(parent.id) ?? 0, low.get(frame.id) ?? 0));
+            if (low.get(frame.id) !== index.get(frame.id)) continue;
+            const group: string[] = [];
+            for (let top = stack.pop(); top !== undefined; top = stack.pop()) {
+                onStack.delete(top);
+                group.push(top);
+                if (top === frame.id) break;
+            }
+            if (group.length > 1 || successors.includes(frame.id)) cycles.push(group.reverse());
         }
-        if (low.get(id) !== index.get(id)) return;
-        const group: string[] = [];
-        for (let top = stack.pop(); top !== undefined; top = stack.pop()) {
-            onStack.delete(top);
-            group.push(top);
-            if (top === id) break;
-        }
-        if (group.length > 1 || (out.get(id) ?? []).includes(id)) cycles.push(group.reverse());
     };
 
     for (const node of workflow.nodes) if (!index.has(node.id)) connect(node.id);

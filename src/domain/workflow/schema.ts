@@ -1,5 +1,6 @@
 import { z } from "zod/mini";
 import { JOB_KINDS } from "../types";
+import { findDuplicates } from "./graph";
 import { CONDITION_FIELDS, CONDITION_OPERATORS, GUARD_NODE_ACTIONS, WORKFLOW_FORMAT_VERSION, type Workflow } from "./types";
 
 const position = z.object({ x: z.number(), y: z.number() });
@@ -24,12 +25,19 @@ const workflowNode = z.discriminatedUnion("type", [
 
 const edge = z.object({ id: z.string(), from: z.object({ node: z.string(), port: z.string() }), to: z.string() });
 
-export const workflowSchema: z.ZodMiniType<Workflow> = z.object({
-    version: z.literal(WORKFLOW_FORMAT_VERSION),
-    name: z.string(),
-    nodes: z.array(workflowNode),
-    edges: z.array(edge),
-});
+/** A graph with a repeated id or a port that leads two ways has no single meaning, so it is refused wherever a workflow comes in. */
+export const workflowSchema: z.ZodMiniType<Workflow> = z
+    .object({
+        version: z.literal(WORKFLOW_FORMAT_VERSION),
+        name: z.string(),
+        nodes: z.array(workflowNode),
+        edges: z.array(edge),
+    })
+    .check(
+        z.refine((workflow) => findDuplicates(workflow).nodeIds.length === 0, "Two steps share an id. Every step needs its own id."),
+        z.refine((workflow) => findDuplicates(workflow).edgeIds.length === 0, "Two connections share an id. Every connection needs its own id."),
+        z.refine((workflow) => findDuplicates(workflow).ports.length === 0, "A port has two connections. A port leads to one step."),
+    );
 
 export type ParseResult = { ok: true; workflow: Workflow } | { ok: false; error: string };
 
@@ -47,6 +55,7 @@ export const parseWorkflow = (text: string): ParseResult => {
     const result = workflowSchema.safeParse(json);
     if (result.success) return { ok: true, workflow: result.data };
     const issue = result.error.issues[0];
+    if (issue?.code === "custom") return { ok: false, error: `This workflow is ambiguous. ${issue.message}` };
     const where = issue?.path.length ? ` at ${issue.path.join(".")}` : "";
     return { ok: false, error: `The workflow does not match the expected shape${where}. Export one from this page to see the format.` };
 };

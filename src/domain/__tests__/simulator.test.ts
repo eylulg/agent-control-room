@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultWorkflow, without } from "@/test-utils/workflow";
+import { chainOf, defaultWorkflow, without } from "@/test-utils/workflow";
 import { DEFAULT_ROUTING } from "../routing";
 import { pendingApprovals } from "../selectors";
 import { Simulator, TEAMMATE_AFTER_TICKS } from "../simulator";
@@ -223,6 +223,14 @@ describe("Simulator", () => {
             const jobs = Object.values(sim.state.jobs);
             expect(jobs).toHaveLength(1);
             expect(sim.state.runs["job-1"]?.steps.at(-1)?.nodeId).toBe("done");
+        });
+
+        it("lets a long chain of instant steps rest between ticks instead of failing the job", () => {
+            const sim = new Simulator({ seed: "chain", workflow: chainOf(60), only: "chore" });
+
+            sim.step(30);
+
+            expect(Object.values(sim.state.jobs)[0]?.status).toBe("done");
         });
     });
 });

@@ -16,7 +16,7 @@ const MAX_PARALLEL = 4;
 const MAX_ACTIVE = 8;
 /** Hard cap including parked jobs, so an unattended inbox cannot grow forever. */
 const MAX_OPEN = 16;
-/** Nodes that may run in one tick. A bound against a workflow made only of nodes that never rest. */
+/** Nodes that may run in one tick. A longer chain carries on in the next tick, so one tick stays bounded. */
 const MAX_HOPS = 40;
 export const HEARTBEAT_EVERY = 5;
 /** A simulated teammate answers an approval with the recommended option once it has waited this many ticks. */
@@ -423,7 +423,7 @@ export class Simulator {
             }
             if (!outcome.sameTick) return;
         }
-        this.emit("job.failed", job.id, { reason: "The workflow moved the job through too many steps in one tick." });
+        // A long chain of steps that finish at once is not an error. The job rests here and carries on next tick.
     }
 
     private publish(workflow: Workflow): void {

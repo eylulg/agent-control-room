@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { defaultWorkflow, withNode, without } from "@/test-utils/workflow";
+import { chainOf, defaultWorkflow, withNode, without } from "@/test-utils/workflow";
 import { connect, disconnect, updateNode } from "../ops";
+import type { Workflow, WorkflowNode } from "../types";
 import { configErrors, validateWorkflow } from "../validate";
 
 const messages = (workflow: Parameters<typeof validateWorkflow>[0]) => validateWorkflow(workflow).map((problem) => problem.message);
@@ -59,6 +60,30 @@ describe("validateWorkflow", () => {
         const workflow = updateNode(defaultWorkflow(), "ci", { config: { maxAttempts: 0 } });
 
         expect(validateWorkflow(workflow)).toEqual([expect.objectContaining({ nodeId: "ci", message: expect.stringContaining("whole number from 1 to 10") })]);
+    });
+
+    it.each([
+        [
+            "a step id used twice",
+            (w: Workflow) => ({ ...w, nodes: [...w.nodes, { ...w.nodes[1], position: { x: 9, y: 9 } } as WorkflowNode] }),
+            "Two steps share the id plan",
+        ],
+        [
+            "a connection id used twice",
+            (w: Workflow) => ({ ...w, edges: w.edges.map((edge) => ({ ...edge, id: "same" })) }),
+            "Two connections share the id same",
+        ],
+        [
+            "two connections on one port",
+            (w: Workflow) => ({ ...w, edges: [...w.edges, { id: "extra", from: { node: "trigger", port: "next" }, to: "done" }] }),
+            "has two connections on its Next port",
+        ],
+    ])("reports %s", (_name, break_, expected) => {
+        expect(messages(break_(defaultWorkflow())).join("\n")).toContain(expected);
+    });
+
+    it("validates a chain of thousands of steps without overflowing the stack", () => {
+        expect(validateWorkflow(chainOf(10000))).toEqual([]);
     });
 });
 

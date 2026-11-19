@@ -1,5 +1,5 @@
 import { JOB_KINDS } from "../types";
-import { canReachEnd, findCycles, nodeIndex, reachableFrom } from "./graph";
+import { canReachEnd, findCycles, findDuplicates, nodeIndex, reachableFrom } from "./graph";
 import { NODE_META, PORTS, type Workflow, type WorkflowNode } from "./types";
 
 export interface Problem {
@@ -60,11 +60,16 @@ export const validateWorkflow = (workflow: Workflow): Problem[] => {
     const nodes = nodeIndex(workflow);
     const add = (problem: Omit<Problem, "id">) => problems.push({ ...problem, id: `${problems.length}` });
 
+    const duplicates = findDuplicates(workflow);
+    for (const id of duplicates.nodeIds) add({ nodeId: id, message: `Two steps share the id ${id}. Delete one of them.` });
+    for (const id of duplicates.edgeIds) add({ edgeId: id, message: `Two connections share the id ${id}. Delete one of them.` });
+
     const triggers = workflow.nodes.filter((node) => node.type === "trigger");
     if (triggers.length === 0) add({ message: "Add a trigger. A workflow needs exactly one." });
     for (const extra of triggers.slice(1)) add({ nodeId: extra.id, message: `${name(extra)} is a second trigger. Delete it, a workflow has exactly one.` });
 
     const seen = new Set<string>();
+    const usedPorts = new Set<string>();
     for (const edge of workflow.edges) {
         const source = nodes.get(edge.from.node);
         const key = `${edge.from.node}/${edge.from.port}/${edge.to}`;
@@ -73,8 +78,18 @@ export const validateWorkflow = (workflow: Workflow): Problem[] => {
             add({ edgeId: edge.id, nodeId: source.id, message: `${name(source)} has no port called ${edge.from.port}.` });
         else if (edge.to === triggers[0]?.id)
             add({ edgeId: edge.id, nodeId: source.id, message: `Nothing may connect into the trigger. Disconnect ${name(source)}.` });
+        const port = `${edge.from.node}/${edge.from.port}`;
         if (seen.has(key)) add({ edgeId: edge.id, message: "Two connections are identical. Delete one of them." });
+        else if (usedPorts.has(port) && source) {
+            const label = PORTS[source.type].find((candidate) => candidate.id === edge.from.port)?.label ?? edge.from.port;
+            add({
+                edgeId: edge.id,
+                nodeId: source.id,
+                message: `${name(source)} has two connections on its ${label} port. A port leads to one step. Delete one.`,
+            });
+        }
         seen.add(key);
+        usedPorts.add(port);
     }
 
     const connected = new Set(workflow.edges.map((edge) => `${edge.from.node}/${edge.from.port}`));
