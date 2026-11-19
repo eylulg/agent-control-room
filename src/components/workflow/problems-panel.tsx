@@ -1,5 +1,5 @@
-import { Button } from "@eylulg/ui/button";
 import { CircleCheck, TriangleAlert } from "lucide-react";
+import { linkButton } from "@/components/app/styles";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
 import { focusStep } from "./focus-step";
 
@@ -22,16 +22,16 @@ export const ProblemsPanel = () => {
     }
 
     return (
-        <ul aria-label="Problems" className="flex flex-col gap-1">
+        <ul aria-label="Problems" className="flex flex-col gap-3">
             {problems.map((problem) => (
                 <li key={problem.id} className="flex items-start gap-2 text-sm">
-                    <TriangleAlert aria-hidden="true" className="mt-2 size-4 shrink-0 text-fg-error" />
+                    <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-fg-error" />
                     {problem.nodeId ? (
-                        <Button variant="tertiary" size="sm" className="h-auto min-w-0 py-1 text-left whitespace-normal" onPress={handleFocus(problem.nodeId)}>
+                        <button type="button" className={linkButton} onClick={handleFocus(problem.nodeId)}>
                             {problem.message}
-                        </Button>
+                        </button>
                     ) : (
-                        <span className="py-1 text-secondary">{problem.message}</span>
+                        <span className="text-secondary">{problem.message}</span>
                     )}
                 </li>
             ))}
