@@ -70,9 +70,10 @@ const LivePanel = ({ showLive, onShowLive }: Pick<RunPanelProps, "showLive" | "o
 };
 
 const TracePanel = ({ jobId, onTrace }: Pick<RunPanelProps, "onTrace"> & { jobId: string | null }) => {
-    const jobs = useAppStore((s) => listJobs(s.control).filter((job) => s.control.runs[job.id]));
-    const run = useAppStore((s) => (jobId ? s.control.runs[jobId] : undefined));
-    const workflow = useAppStore((s) => (run ? s.control.workflows.find((published) => published.revision === run.revision)?.workflow : undefined));
+    const control = useAppStore((s) => s.control);
+    const jobs = listJobs(control).filter((job) => control.runs[job.id]);
+    const run = jobId ? control.runs[jobId] : undefined;
+    const workflow = run ? control.workflows.find((published) => published.revision === run.revision)?.workflow : undefined;
 
     function handleChange(key: Key | null) {
         onTrace(key === null || key === NO_TRACE ? null : String(key));

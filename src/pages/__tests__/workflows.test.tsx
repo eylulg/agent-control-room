@@ -101,4 +101,34 @@ describe("WorkflowsPage keyboard flows", () => {
         expect(await screen.findByRole("list", { name: "Workflow outline" })).toBeInTheDocument();
         expect(await axe(container)).toHaveNoViolations();
     });
+
+    it("traces a job and lists the steps it took", async () => {
+        const user = userEvent.setup();
+        const { store } = await renderApp("/workflows");
+        const job = Object.values(store.getState().control.jobs).find((candidate) => store.getState().control.runs[candidate.id]);
+        if (!job) throw new Error("The seeded world has no job with a run");
+
+        await user.click(screen.getByRole("tab", { name: "Trace a job" }));
+        await user.click(screen.getByRole("button", { name: /Job to trace/ }));
+        await user.click(await screen.findByRole("option", { name: `${job.ticket.id}: ${job.ticket.title}` }));
+
+        const path = await screen.findByRole("list", { name: "Path of the job" });
+        expect(within(path).getAllByRole("listitem").length).toBe(store.getState().control.runs[job.id]?.steps.length);
+        expect(within(path).getAllByRole("listitem")[0]).toHaveTextContent("Ticket arrives");
+    });
+
+    it("runs a dry run of the draft to the end, one step at a time", async () => {
+        const user = userEvent.setup();
+        await renderApp("/workflows");
+
+        await user.click(screen.getByRole("tab", { name: "Dry run" }));
+        await user.click(screen.getByRole("button", { name: "Start dry run" }));
+        const step = screen.getByRole("button", { name: "Step" });
+        for (let i = 0; i < 80 && !step.hasAttribute("disabled"); i++) await user.click(step);
+
+        expect(step).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Play" })).toBeDisabled();
+        const states = within(screen.getByRole("list", { name: "Step states" }));
+        expect(states.getByText("Done")).toBeInTheDocument();
+    });
 });
