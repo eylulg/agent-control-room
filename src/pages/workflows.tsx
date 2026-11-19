@@ -5,6 +5,7 @@ import { Rocket, Undo2 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Panel } from "@/components/app/panel";
 import { Canvas } from "@/components/workflow/canvas";
+import { useFocusRequests } from "@/components/workflow/focus-step";
 import { Inspector } from "@/components/workflow/inspector";
 import { ExportButton, ImportButton } from "@/components/workflow/io-dialogs";
 import { OutlineView } from "@/components/workflow/outline-view";
@@ -49,6 +50,7 @@ export const WorkflowsPage = () => {
     const [status, setStatus] = useState("");
     const statusRef = useRef<HTMLParagraphElement>(null);
     const dry = useDryRun();
+    useFocusRequests();
 
     const overlay = useMemo(() => {
         if (dry.run) return runOverlay(dry.run.workflow, dry.run.control.runs[dry.run.jobId], dry.run.control.jobs[dry.run.jobId]);
@@ -91,6 +93,7 @@ export const WorkflowsPage = () => {
 
     function handleRevert() {
         editor.getState().replace(published, "Discard draft changes");
+        editor.getState().requestFocus(true);
     }
 
     function handleLoadLarge() {

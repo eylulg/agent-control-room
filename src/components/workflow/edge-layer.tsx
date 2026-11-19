@@ -1,7 +1,7 @@
 import { type MouseEvent, memo } from "react";
 import { cx } from "@eylulg/ui/cx";
 import { useEditor } from "@/state/workflow-context";
-import { edgePath, inputPoint, midpoint, outputPoint } from "./geometry";
+import { CANVAS_DOM_ID, edgePath, inputPoint, midpoint, outputPoint } from "./geometry";
 
 interface EdgeViewProps {
     id: string;
@@ -29,6 +29,7 @@ const EdgeView = memo(function EdgeView({ id }: EdgeViewProps) {
     function handlePointerDown(event: MouseEvent) {
         event.stopPropagation();
         select(id);
+        document.getElementById(CANVAS_DOM_ID)?.focus({ preventScroll: true });
     }
 
     return (

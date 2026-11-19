@@ -50,7 +50,6 @@ interface Connecting {
 
 interface NodeMenuState {
     nodeId: string;
-    anchor: HTMLElement;
     view: "root" | "connect" | "disconnect";
 }
 
@@ -81,8 +80,10 @@ export interface EditorState {
     connecting: Connecting | null;
     menu: NodeMenuState | null;
     overlay: Overlay | null;
-    /** Bumped to ask the inspector to move focus to its first field. */
-    inspectorRequest: number;
+    /** True until the inspector has moved focus to its first field, as asked by "Edit settings". */
+    inspectorPending: boolean;
+    /** A new object each time something asks for focus to go to the current step. Without `force`, focus only moves when it was lost. */
+    focusRequest: { force: boolean } | null;
     addNode: (type: NodeType, position?: Position) => void;
     select: (id: string, additive: boolean) => void;
     selectEdge: (id: string) => void;
@@ -112,10 +113,12 @@ export interface EditorState {
     startConnecting: (nodeId: string, portId: string, x: number, y: number) => void;
     moveConnecting: (x: number, y: number) => void;
     stopConnecting: () => void;
-    openMenu: (nodeId: string, anchor: HTMLElement) => void;
+    openMenu: (nodeId: string) => void;
     setMenuView: (view: NodeMenuState["view"]) => void;
     closeMenu: () => void;
-    requestInspector: () => void;
+    requestInspector: (nodeId: string) => void;
+    consumeInspectorRequest: () => void;
+    requestFocus: (force?: boolean) => void;
 }
 
 export interface EditorStoreOptions {
@@ -224,7 +227,8 @@ export const createEditorStore = ({ draft, published, storage, announce = () => 
             connecting: null,
             menu: null,
             overlay: null,
-            inspectorRequest: 0,
+            inspectorPending: false,
+            focusRequest: null,
 
             addNode: (type, position) => {
                 const { viewport, canvasSize, history } = get();
@@ -324,6 +328,7 @@ export const createEditorStore = ({ draft, published, storage, announce = () => 
                 run(`Delete ${names.replaceAll('"', "")}`, deleteNodes(get().history.present, new Set(ids)), `Deleted ${names}.`, {
                     selected: [],
                     focusId: survivors[Math.min(Math.max(next - 1, 0), survivors.length - 1)] ?? null,
+                    focusRequest: { force: false },
                 });
             },
             deleteSelection: () => {
@@ -356,13 +361,13 @@ export const createEditorStore = ({ draft, published, storage, announce = () => 
             undo: () => {
                 const result = undo(get().history);
                 if (!result) return;
-                set(place(result.history, { analysed: true }));
+                set({ ...place(result.history, { analysed: true }), focusRequest: { force: false } });
                 announce(`Undid: ${result.label}.`);
             },
             redo: () => {
                 const result = redo(get().history);
                 if (!result) return;
-                set(place(result.history, { analysed: true }));
+                set({ ...place(result.history, { analysed: true }), focusRequest: { force: false } });
                 announce(`Redid: ${result.label}.`);
             },
 
@@ -410,13 +415,19 @@ export const createEditorStore = ({ draft, published, storage, announce = () => 
             },
             stopConnecting: () => set({ connecting: null }),
 
-            openMenu: (nodeId, anchor) => set({ menu: { nodeId, anchor, view: "root" } }),
+            openMenu: (nodeId) => set({ menu: { nodeId, view: "root" } }),
             setMenuView: (view) => {
                 const { menu } = get();
                 if (menu) set({ menu: { ...menu, view } });
             },
             closeMenu: () => set({ menu: null }),
-            requestInspector: () => set({ inspectorRequest: get().inspectorRequest + 1 }),
+            requestInspector: (nodeId) => {
+                const { selected } = get();
+                const alone = selected.length === 1 && selected[0] === nodeId;
+                set({ ...(alone ? {} : { selected: [nodeId], selectedEdge: null, focusId: nodeId }), inspectorPending: true });
+            },
+            consumeInspectorRequest: () => set({ inspectorPending: false }),
+            requestFocus: (force = false) => set({ focusRequest: { force } }),
         };
     });
 

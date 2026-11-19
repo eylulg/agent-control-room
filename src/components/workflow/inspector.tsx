@@ -65,8 +65,7 @@ const Actions = ({ ids, store }: { ids: readonly string[]; store: ReturnType<typ
 
 const NodeForm = ({ node }: { node: WorkflowNode }) => {
     const store = useEditorStore();
-    const request = useEditor((s) => s.inspectorRequest);
-    const seen = useRef(request);
+    const pending = useEditor((s) => s.inspectorPending);
     const labelInput = useRef<HTMLInputElement>(null);
 
     function commitLabel(text: string): boolean {
@@ -76,10 +75,10 @@ const NodeForm = ({ node }: { node: WorkflowNode }) => {
     const label = useDraft(node.label, commitLabel);
 
     useEffect(() => {
-        if (request === seen.current) return;
-        seen.current = request;
+        if (!pending) return;
         labelInput.current?.focus();
-    }, [request]);
+        store.getState().consumeInspectorRequest();
+    }, [pending, store]);
 
     const errors = configErrors({ ...node, label: label.shown });
 

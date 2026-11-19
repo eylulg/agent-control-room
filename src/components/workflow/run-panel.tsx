@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { Badge } from "@eylulg/ui/badge";
 import { Button } from "@eylulg/ui/button";
 import { Input } from "@eylulg/ui/input";
@@ -14,6 +14,7 @@ import type { Workflow } from "@/domain/workflow/types";
 import { useAppStore } from "@/state/store-context";
 import { useEditor } from "@/state/workflow-context";
 import { KIND_LABEL, STATUS_META, formatClock } from "@/utils/format";
+import { moveFocusFrom } from "./focus-step";
 import { RUN_STATE } from "./node-meta";
 import type { useDryRun } from "./use-dry-run";
 
@@ -28,6 +29,9 @@ interface RunPanelProps {
 }
 
 const NO_TRACE = "none";
+const DRY_PLAY_ID = "wf-dry-play";
+const DRY_STEP_ID = "wf-dry-step";
+const DRY_RESTART_ID = "wf-dry-restart";
 
 /** What the workflow is doing: the live world, one job's path, or a dry run of the draft. */
 export const RunPanel = ({ showLive, onShowLive, traceJobId, onTrace, dry }: RunPanelProps) => (
@@ -119,6 +123,13 @@ const DryRunPanel = ({ dry }: { dry: DryRunApi }) => {
     const [kind, setKind] = useState<JobKind>("feature");
     const [seed, setSeed] = useState("dry-run");
     const { run } = dry;
+    const finished = run?.finished ?? false;
+
+    useLayoutEffect(() => {
+        if (!finished) return;
+        moveFocusFrom(DRY_PLAY_ID, DRY_RESTART_ID);
+        moveFocusFrom(DRY_STEP_ID, DRY_RESTART_ID);
+    }, [finished]);
 
     function handleKind(key: Key | null) {
         const next = JOB_KINDS.find((candidate) => candidate === key);
@@ -142,7 +153,7 @@ const DryRunPanel = ({ dry }: { dry: DryRunApi }) => {
                 <Input label="Seed" value={seed} onChange={setSeed} isDisabled={run?.playing} />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm" onPress={handleStart} isDisabled={blocked || run?.playing} iconLeading={RotateCcw}>
+                <Button id={DRY_RESTART_ID} size="sm" onPress={handleStart} isDisabled={blocked || run?.playing} iconLeading={RotateCcw}>
                     {run ? "Restart dry run" : "Start dry run"}
                 </Button>
                 {run &&
@@ -151,12 +162,19 @@ const DryRunPanel = ({ dry }: { dry: DryRunApi }) => {
                             Pause
                         </Button>
                     ) : (
-                        <Button size="sm" variant="secondary" iconLeading={Play} onPress={dry.play} isDisabled={run.finished}>
+                        <Button id={DRY_PLAY_ID} size="sm" variant="secondary" iconLeading={Play} onPress={dry.play} isDisabled={run.finished}>
                             Play
                         </Button>
                     ))}
                 {run && (
-                    <Button size="sm" variant="secondary" iconLeading={SkipForward} onPress={dry.step} isDisabled={run.finished || run.playing}>
+                    <Button
+                        id={DRY_STEP_ID}
+                        size="sm"
+                        variant="secondary"
+                        iconLeading={SkipForward}
+                        onPress={dry.step}
+                        isDisabled={run.finished || run.playing}
+                    >
                         Step
                     </Button>
                 )}

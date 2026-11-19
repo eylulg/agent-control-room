@@ -115,14 +115,14 @@ export const NodeView = memo(function NodeView({ id }: NodeViewProps) {
                 return state.select(id, true);
             case "Enter":
                 event.preventDefault();
-                return state.openMenu(id, event.currentTarget);
+                return state.openMenu(id);
             case "ContextMenu":
                 event.preventDefault();
-                return state.openMenu(id, event.currentTarget);
+                return state.openMenu(id);
             case "F10":
                 if (!event.shiftKey) return;
                 event.preventDefault();
-                return state.openMenu(id, event.currentTarget);
+                return state.openMenu(id);
         }
     }
 

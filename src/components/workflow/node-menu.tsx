@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from "react";
+import { type ComponentType, type ReactNode, useState } from "react";
 import { cx } from "@eylulg/ui/cx";
 import { Popover } from "@eylulg/ui/popover";
 import { ArrowLeft, Copy, Link2, Settings2, Trash2, Unlink } from "lucide-react";
@@ -6,6 +6,7 @@ import { Header, Menu, MenuItem, MenuSection, Separator } from "react-aria-compo
 import { validTargets } from "@/domain/workflow/ops";
 import { PORTS } from "@/domain/workflow/types";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
+import { nodeDomId } from "./geometry";
 
 // A menu opened from the keyboard starts on its first item. The rule against autoFocus is about pages that grab focus on load.
 const OPEN_ON_FIRST = { autoFocus: "first" } as const;
@@ -15,12 +16,18 @@ const OPEN_ON_FIRST = { autoFocus: "first" } as const;
  * It opens on Enter, the context menu key or Shift+F10 on a node, and returns focus to the node when it closes.
  */
 export const NodeMenu = () => {
-    const store = useEditorStore();
     const menu = useEditor((s) => s.menu);
+    return menu ? <OpenMenu key={menu.nodeId} nodeId={menu.nodeId} view={menu.view} /> : null;
+};
+
+const OpenMenu = ({ nodeId, view }: { nodeId: string; view: "root" | "connect" | "disconnect" }) => {
+    const store = useEditorStore();
     const workflow = useEditor((s) => s.history.present);
     const selected = useEditor((s) => s.selected);
-    const node = menu ? workflow.nodes.find((candidate) => candidate.id === menu.nodeId) : undefined;
-    if (!menu || !node) return null;
+    // The menu mounts only while it is open, from a step that exists, so the step's element is there when this first renders.
+    const [anchor] = useState(() => document.getElementById(nodeDomId(nodeId)));
+    const node = workflow.nodes.find((candidate) => candidate.id === nodeId);
+    if (!node) return null;
 
     // Actions apply to the whole selection when the menu was opened on a selected node.
     const targets = selected.includes(node.id) ? selected : [node.id];
@@ -41,7 +48,7 @@ export const NodeMenu = () => {
         const state = store.getState();
         if (key === "connect") return state.setMenuView("connect");
         if (key === "disconnect") return state.setMenuView("disconnect");
-        if (key === "settings") return act(() => state.requestInspector());
+        if (key === "settings") return act(() => state.requestInspector(nodeId));
         if (key === "duplicate") return act(() => state.duplicate(targets));
         if (key === "delete") return act(() => state.deleteIds(targets));
     }
@@ -60,8 +67,8 @@ export const NodeMenu = () => {
     }
 
     return (
-        <Popover isOpen onOpenChange={handleOpenChange} triggerRef={{ current: menu.anchor }} placement="bottom start" aria-label={`Actions for ${node.label}`}>
-            {menu.view === "root" && (
+        <Popover isOpen onOpenChange={handleOpenChange} triggerRef={{ current: anchor }} placement="bottom start" aria-label={`Actions for ${node.label}`}>
+            {view === "root" && (
                 <Menu aria-label={`Actions for ${node.label}`} {...OPEN_ON_FIRST} onAction={handleRootAction} className="flex flex-col outline-none">
                     <Item id="connect" icon={Link2} textValue="Connect to">
                         Connect to…
@@ -91,7 +98,7 @@ export const NodeMenu = () => {
                     </Item>
                 </Menu>
             )}
-            {menu.view === "connect" && (
+            {view === "connect" && (
                 <Menu aria-label={`Connect ${node.label} to`} {...OPEN_ON_FIRST} onAction={handleConnectAction} className="flex max-h-72 flex-col outline-none">
                     <Item id="back" icon={ArrowLeft} textValue="Back">
                         Back
@@ -113,7 +120,7 @@ export const NodeMenu = () => {
                     ))}
                 </Menu>
             )}
-            {menu.view === "disconnect" && (
+            {view === "disconnect" && (
                 <Menu aria-label={`Disconnect ${node.label}`} {...OPEN_ON_FIRST} onAction={handleDisconnectAction} className="flex flex-col outline-none">
                     <Item id="back" icon={ArrowLeft} textValue="Back">
                         Back

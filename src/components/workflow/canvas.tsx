@@ -3,7 +3,7 @@ import { isNodeType } from "@/domain/workflow/ops";
 import { GRID_STEP, NODE_HEIGHT, NODE_WIDTH } from "@/domain/workflow/types";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
 import { EdgeLayer } from "./edge-layer";
-import { CANVAS_DOM_ID, nodeDomId } from "./geometry";
+import { CANVAS_DOM_ID } from "./geometry";
 import { NodeMenu } from "./node-menu";
 import { NodeView } from "./node-view";
 import { trackPointer } from "./track-pointer";
@@ -73,19 +73,19 @@ export const Canvas = () => {
                 else state.clearSelection();
                 return;
             }
+            // The same rule as the step menu: the selection if the step in focus belongs to it, otherwise the step in focus alone.
+            const focused = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-node-id]")?.dataset.nodeId : undefined;
+            const targets = focused && !state.selected.includes(focused) ? [focused] : state.selected;
             if (event.key === "Delete" || event.key === "Backspace") {
                 event.preventDefault();
-                if (state.selected.length > 0 || state.selectedEdge) state.deleteSelection();
-                else if (state.focusId) state.deleteIds([state.focusId]);
+                if (state.selectedEdge && !focused) state.disconnectEdge(state.selectedEdge);
+                else state.deleteIds(targets);
                 return;
             }
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "d") {
                 event.preventDefault();
-                state.duplicate(state.selected.length > 0 ? state.selected : state.focusId ? [state.focusId] : []);
-                requestAnimationFrame(() => {
-                    const first = store.getState().selected[0];
-                    if (first) document.getElementById(nodeDomId(first))?.focus();
-                });
+                state.duplicate(targets);
+                state.requestFocus(true);
             }
         };
         element.addEventListener("wheel", handleWheel, { passive: false });
@@ -128,10 +128,7 @@ export const Canvas = () => {
         const x = snap((event.clientX - rect.left - current.x) / current.zoom - NODE_WIDTH / 2);
         const y = snap((event.clientY - rect.top - current.y) / current.zoom - NODE_HEIGHT / 2);
         store.getState().addNode(type, { x, y });
-        requestAnimationFrame(() => {
-            const added = store.getState().focusId;
-            if (added) document.getElementById(nodeDomId(added))?.focus();
-        });
+        store.getState().requestFocus(true);
     }
 
     const dot = GRID_DOT * viewport.zoom;
@@ -141,6 +138,7 @@ export const Canvas = () => {
             ref={surface}
             id={CANVAS_DOM_ID}
             role="group"
+            tabIndex={-1}
             aria-label="Workflow canvas"
             className="relative h-full min-h-[24rem] touch-none overflow-hidden rounded-lg border border-default bg-secondary"
             style={{

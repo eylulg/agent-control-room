@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "react";
 import { Badge } from "@eylulg/ui/badge";
 import { Button } from "@eylulg/ui/button";
 import { IconButton } from "@eylulg/ui/icon-button";
@@ -5,14 +6,23 @@ import { SegmentedControl, SegmentedControlItem } from "@eylulg/ui/segmented-con
 import { LayoutDashboard, List, Maximize, Redo2, Undo2, Wand2, ZoomIn, ZoomOut } from "lucide-react";
 import type { Key } from "react-aria-components";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
+import { moveFocusFrom } from "./focus-step";
 
 const ZOOM_STEP = 1.2;
+const UNDO_ID = "wf-undo";
+const REDO_ID = "wf-redo";
+const TIDY_ID = "wf-tidy";
 
 export const EditToolbar = () => {
     const store = useEditorStore();
     const canUndo = useEditor((s) => s.history.past.length > 0);
     const canRedo = useEditor((s) => s.history.future.length > 0);
     const view = useEditor((s) => s.view);
+
+    useLayoutEffect(() => {
+        if (!canUndo) moveFocusFrom(UNDO_ID, canRedo ? REDO_ID : TIDY_ID);
+        if (!canRedo) moveFocusFrom(REDO_ID, canUndo ? UNDO_ID : TIDY_ID);
+    }, [canUndo, canRedo]);
 
     function handleUndo() {
         store.getState().undo();
@@ -29,13 +39,13 @@ export const EditToolbar = () => {
 
     return (
         <div role="toolbar" aria-label="Edit workflow" className="flex flex-wrap items-center gap-2">
-            <Button variant="secondary" size="sm" iconLeading={Undo2} onPress={handleUndo} isDisabled={!canUndo}>
+            <Button id={UNDO_ID} variant="secondary" size="sm" iconLeading={Undo2} onPress={handleUndo} isDisabled={!canUndo}>
                 Undo
             </Button>
-            <Button variant="secondary" size="sm" iconLeading={Redo2} onPress={handleRedo} isDisabled={!canRedo}>
+            <Button id={REDO_ID} variant="secondary" size="sm" iconLeading={Redo2} onPress={handleRedo} isDisabled={!canRedo}>
                 Redo
             </Button>
-            <Button variant="secondary" size="sm" iconLeading={Wand2} onPress={handleTidy}>
+            <Button id={TIDY_ID} variant="secondary" size="sm" iconLeading={Wand2} onPress={handleTidy}>
                 Tidy up
             </Button>
             <SegmentedControl aria-label="Workflow view" size="sm" selectedKey={view} onSelectionChange={handleView}>

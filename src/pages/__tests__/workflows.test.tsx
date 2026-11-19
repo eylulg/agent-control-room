@@ -1,6 +1,7 @@
 import { screen, within } from "@testing-library/react";
+import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
 import { renderApp } from "@/test-utils/render-app";
 
@@ -43,6 +44,7 @@ describe("WorkflowsPage keyboard flows", () => {
         node.focus();
         await user.keyboard("{Delete}");
         expect(screen.queryByRole("option", { name: "Condition" })).not.toBeInTheDocument();
+        expect(document.activeElement).toHaveAttribute("role", "option");
         await user.keyboard("{Control>}z{/Control}");
 
         expect(screen.getByRole("option", { name: "Condition" })).toBeInTheDocument();
@@ -158,5 +160,123 @@ describe("WorkflowsPage keyboard flows", () => {
         expect(screen.getByRole("textbox", { name: "Finding rounds before moving on" })).toHaveValue("3");
         await user.click(screen.getByRole("option", { name: "Run CI, CI check" }));
         expect(screen.getByRole("textbox", { name: "Failures before the job fails" })).toHaveValue("7");
+    });
+
+    describe("focus", () => {
+        const focusedOption = () => expect(document.activeElement).toHaveAttribute("role", "option");
+
+        it("goes to a remaining step after Delete from the step menu", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            const node = await addCondition(user);
+
+            node.focus();
+            await user.keyboard("{Enter}");
+            await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
+
+            expect(screen.queryByRole("option", { name: "Condition" })).not.toBeInTheDocument();
+            focusedOption();
+        });
+
+        it("goes to a remaining step after Delete in the settings panel", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            await addCondition(user);
+
+            await user.click(screen.getByRole("button", { name: "Delete" }));
+
+            expect(screen.queryByRole("option", { name: "Condition" })).not.toBeInTheDocument();
+            focusedOption();
+        });
+
+        it("goes to a remaining step when undo removes the step that had focus", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            const node = await addCondition(user);
+
+            node.focus();
+            await user.keyboard("{Control>}z{/Control}");
+
+            expect(screen.queryByRole("option", { name: "Condition" })).not.toBeInTheDocument();
+            focusedOption();
+        });
+
+        it("goes to a step after Discard draft changes, which disables itself", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            await addCondition(user);
+
+            await user.click(screen.getByRole("button", { name: "Discard draft changes" }));
+
+            expect(screen.getByRole("button", { name: "Discard draft changes" })).toBeDisabled();
+            focusedOption();
+        });
+
+        it("goes to Redo when Undo runs out of history", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+            await addCondition(user);
+
+            await user.click(screen.getByRole("button", { name: "Undo" }));
+
+            expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+            expect(screen.getByRole("button", { name: "Redo" })).toHaveFocus();
+        });
+
+        it("goes to Restart dry run when a played dry run finishes", async () => {
+            vi.useFakeTimers({ shouldAdvanceTime: true });
+            try {
+                const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+                await renderApp("/workflows");
+
+                await user.click(screen.getByRole("tab", { name: "Dry run" }));
+                await user.click(screen.getByRole("button", { name: "Start dry run" }));
+                await user.click(screen.getByRole("button", { name: "Play" }));
+                await act(() => vi.advanceTimersByTimeAsync(450 * 80));
+
+                expect(screen.getByRole("button", { name: "Play" })).toBeDisabled();
+                expect(screen.getByRole("button", { name: "Restart dry run" })).toHaveFocus();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+    });
+
+    describe("step menu", () => {
+        it("opens the settings of the step it belongs to, not of the selected one", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+
+            await user.click(screen.getByRole("option", { name: "Run CI, CI check" }));
+            screen.getByRole("option", { name: "Plan" }).focus();
+            await user.keyboard("{Enter}");
+            await user.click(await screen.findByRole("menuitem", { name: "Edit settings" }));
+
+            expect(screen.getByRole("textbox", { name: "Label" })).toHaveValue("Plan");
+            expect(screen.getByRole("textbox", { name: "Label" })).toHaveFocus();
+        });
+
+        it("opens settings for a step reached with the arrow keys and never selected", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+
+            screen.getAllByRole("option")[0]?.focus();
+            await user.keyboard("{ArrowDown}{Enter}");
+            await user.click(await screen.findByRole("menuitem", { name: "Edit settings" }));
+
+            expect(screen.getByRole("textbox", { name: "Label" })).toHaveValue("Plan");
+        });
+
+        it("deletes the step in focus with Delete, not a different selected step", async () => {
+            const user = userEvent.setup();
+            await renderApp("/workflows");
+
+            await user.click(screen.getByRole("option", { name: "Run CI, CI check" }));
+            screen.getByRole("option", { name: "Plan" }).focus();
+            await user.keyboard("{Delete}");
+
+            expect(screen.queryByRole("option", { name: "Plan" })).not.toBeInTheDocument();
+            expect(screen.getByRole("option", { name: "Run CI, CI check" })).toBeInTheDocument();
+        });
     });
 });
