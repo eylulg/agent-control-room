@@ -1,7 +1,8 @@
-import { DropdownMenuItem, DropdownMenuSection, DropdownMenuSeparator } from "@eylulg/ui/dropdown-menu";
+import type { ComponentType, ReactNode } from "react";
+import { cx } from "@eylulg/ui/cx";
 import { Popover } from "@eylulg/ui/popover";
 import { ArrowLeft, Copy, Link2, Settings2, Trash2, Unlink } from "lucide-react";
-import { Menu } from "react-aria-components";
+import { Header, Menu, MenuItem, MenuSection, Separator } from "react-aria-components";
 import { validTargets } from "@/domain/workflow/ops";
 import { PORTS } from "@/domain/workflow/types";
 import { useEditor, useEditorStore } from "@/state/workflow-context";
@@ -62,80 +63,109 @@ export const NodeMenu = () => {
         <Popover isOpen onOpenChange={handleOpenChange} triggerRef={{ current: menu.anchor }} placement="bottom start" aria-label={`Actions for ${node.label}`}>
             {menu.view === "root" && (
                 <Menu aria-label={`Actions for ${node.label}`} {...OPEN_ON_FIRST} onAction={handleRootAction} className="flex flex-col outline-none">
-                    <DropdownMenuItem id="connect" icon={Link2} textValue="Connect to">
+                    <Item id="connect" icon={Link2} textValue="Connect to">
                         Connect to…
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
+                    </Item>
+                    <Item
                         id="disconnect"
                         icon={Unlink}
                         isDisabled={workflow.edges.every((edge) => edge.from.node !== node.id && edge.to !== node.id)}
                         textValue="Disconnect"
                     >
                         Disconnect…
-                    </DropdownMenuItem>
-                    <DropdownMenuItem id="settings" icon={Settings2} textValue="Edit settings">
+                    </Item>
+                    <Item id="settings" icon={Settings2} textValue="Edit settings">
                         Edit settings
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
+                    </Item>
+                    <Item
                         id="duplicate"
                         icon={Copy}
                         isDisabled={targets.every((id) => workflow.nodes.find((n) => n.id === id)?.type === "trigger")}
                         textValue="Duplicate"
                     >
                         {many ? `Duplicate ${targets.length} steps` : "Duplicate"}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem id="delete" icon={Trash2} isDanger textValue="Delete">
+                    </Item>
+                    <Divider />
+                    <Item id="delete" icon={Trash2} isDanger textValue="Delete">
                         {many ? `Delete ${targets.length} steps` : "Delete"}
-                    </DropdownMenuItem>
+                    </Item>
                 </Menu>
             )}
             {menu.view === "connect" && (
                 <Menu aria-label={`Connect ${node.label} to`} {...OPEN_ON_FIRST} onAction={handleConnectAction} className="flex max-h-72 flex-col outline-none">
-                    <DropdownMenuItem id="back" icon={ArrowLeft} textValue="Back">
+                    <Item id="back" icon={ArrowLeft} textValue="Back">
                         Back
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    </Item>
+                    <Divider />
                     {PORTS[node.type].length === 0 && (
-                        <DropdownMenuItem isDisabled textValue="No output ports">
+                        <Item isDisabled textValue="No output ports">
                             This step has no output to connect
-                        </DropdownMenuItem>
+                        </Item>
                     )}
                     {PORTS[node.type].map((port) => (
-                        <DropdownMenuSection key={port.id} title={PORTS[node.type].length > 1 ? `${port.label} port` : "Next step"}>
+                        <Section key={port.id} title={PORTS[node.type].length > 1 ? `${port.label} port` : "Next step"}>
                             {validTargets(workflow, node.id, port.id).map((target) => (
-                                <DropdownMenuItem key={target.id} id={`${port.id}|${target.id}`} textValue={`${port.label} to ${target.label}`}>
+                                <Item key={target.id} id={`${port.id}|${target.id}`} textValue={`${port.label} to ${target.label}`}>
                                     {target.label}
-                                </DropdownMenuItem>
+                                </Item>
                             ))}
-                        </DropdownMenuSection>
+                        </Section>
                     ))}
                 </Menu>
             )}
             {menu.view === "disconnect" && (
                 <Menu aria-label={`Disconnect ${node.label}`} {...OPEN_ON_FIRST} onAction={handleDisconnectAction} className="flex flex-col outline-none">
-                    <DropdownMenuItem id="back" icon={ArrowLeft} textValue="Back">
+                    <Item id="back" icon={ArrowLeft} textValue="Back">
                         Back
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    </Item>
+                    <Divider />
                     {workflow.edges
                         .filter((edge) => edge.from.node === node.id || edge.to === node.id)
                         .map((edge) => {
                             const port = PORTS[workflow.nodes.find((n) => n.id === edge.from.node)?.type ?? "end"].find((p) => p.id === edge.from.port);
                             const text = `${nameOf(edge.from.node)} ${port?.label ?? edge.from.port} to ${nameOf(edge.to)}`;
                             return (
-                                <DropdownMenuItem key={edge.id} id={edge.id} textValue={text}>
+                                <Item key={edge.id} id={edge.id} textValue={text}>
                                     {text}
-                                </DropdownMenuItem>
+                                </Item>
                             );
                         })}
                     {outgoing.length === 0 && workflow.edges.every((edge) => edge.to !== node.id) && (
-                        <DropdownMenuItem isDisabled textValue="Nothing connected">
+                        <Item isDisabled textValue="Nothing connected">
                             Nothing is connected
-                        </DropdownMenuItem>
+                        </Item>
                     )}
                 </Menu>
             )}
         </Popover>
     );
 };
+
+// The library's DropdownMenu parts load only inside its own MenuTrigger, so this menu, which opens from a node, uses the same tokens directly.
+const itemClass =
+    "flex cursor-pointer items-center gap-2 rounded-sm px-item-x py-item-y text-sm text-primary outline-none select-none data-focused:bg-hover data-focus-visible:outline-2 data-focus-visible:-outline-offset-2 data-focus-visible:outline-focus data-disabled:cursor-not-allowed data-disabled:text-disabled";
+
+interface ItemProps {
+    id?: string;
+    icon?: ComponentType<{ className?: string; "aria-hidden"?: "true" }>;
+    isDanger?: boolean;
+    isDisabled?: boolean;
+    textValue: string;
+    children: ReactNode;
+}
+
+const Item = ({ icon: Icon, isDanger, children, ...props }: ItemProps) => (
+    <MenuItem {...props} className={cx(itemClass, isDanger && "text-error")}>
+        {Icon && <Icon aria-hidden="true" className={cx("size-4 shrink-0", isDanger ? "text-fg-error" : "text-fg-tertiary")} />}
+        {children}
+    </MenuItem>
+);
+
+const Section = ({ title, children }: { title: string; children: ReactNode }) => (
+    <MenuSection className="flex flex-col">
+        <Header className="px-item-x py-1 text-xs font-semibold text-tertiary">{title}</Header>
+        {children}
+    </MenuSection>
+);
+
+const Divider = () => <Separator className="mx-1 my-1 h-px bg-(--ui-border-subtle)" />;
