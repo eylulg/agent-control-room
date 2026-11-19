@@ -101,6 +101,8 @@ interface AgentEvent {
 | `job.retried`        | yes   | `{ attempt, model }`                        | Job is `queued` again with the current routing model |
 | `job.done`           | yes   | `{ prNumber? }`                             | Job is `done`, counted for throughput                |
 | `job.failed`         | yes   | `{ reason, cancelled? }`                    | Job is `failed`                                      |
+| `job.node`           | yes   | `{ nodeId, edgeId, revision }`              | Appends a step to the job's run. Not in timelines    |
+| `workflow.published` | null  | `{ revision, workflow }`                    | Adds a workflow version. New jobs use the latest     |
 | `health.heartbeat`   | null  | `{ tick, activeJobs, queueDepth }`          | Updates health                                       |
 
 The exact TypeScript types live in `src/domain/types.ts` (`EventPayloads`).
@@ -112,18 +114,40 @@ The browser sends one JSON `OperatorCommand` per request. The server answers
 response body. That keeps one source of truth: if the command worked, an event
 shows up.
 
-| Command           | Body                                        | Resulting events                                 |
-| ----------------- | ------------------------------------------- | ------------------------------------------------ |
-| `approval.answer` | `{ approvalId, option: "A" \| "B", note? }` | `approval.answered`, `plan.posted`, `job.status` |
-| `job.hold`        | `{ jobId, reason }`                         | `job.held` with `by: "operator"`                 |
-| `job.resume`      | `{ jobId }`                                 | `job.resumed`                                    |
-| `job.cancel`      | `{ jobId }`                                 | `job.failed` with `cancelled: true`              |
-| `job.retry`       | `{ jobId }`                                 | `job.retried`                                    |
-| `routing.set`     | `{ routing }`                               | `routing.updated` (invalid tables are ignored)   |
-| `guard.toggle`    | `{ guardId, enabled }`                      | `guard.toggled`                                  |
+| Command            | Body                                        | Resulting events                                             |
+| ------------------ | ------------------------------------------- | ------------------------------------------------------------ |
+| `approval.answer`  | `{ approvalId, option: "A" \| "B", note? }` | `approval.answered`, `plan.posted`, `job.status`             |
+| `job.hold`         | `{ jobId, reason }`                         | `job.held` with `by: "operator"`                             |
+| `job.resume`       | `{ jobId }`                                 | `job.resumed`                                                |
+| `job.cancel`       | `{ jobId }`                                 | `job.failed` with `cancelled: true`                          |
+| `job.retry`        | `{ jobId }`                                 | `job.retried`                                                |
+| `routing.set`      | `{ routing }`                               | `routing.updated` (invalid tables are ignored)               |
+| `guard.toggle`     | `{ guardId, enabled }`                      | `guard.toggled`                                              |
+| `workflow.publish` | `{ workflow }`                              | `workflow.published` (invalid or unchanged ones are ignored) |
 
 A command that does not apply (answering an answered approval, resuming a job
 that is not on hold) is a no-op. The server should not emit anything for it.
+
+## Workflows
+
+What a job does is data, not code. A workflow is a graph of typed nodes (trigger, plan, approval gate,
+implement, CI check, review, condition, wait for dependency, guard check, mark ready, end) joined by
+edges that leave a named output port. The schema is `workflowSchema` in `src/domain/workflow/schema.ts`
+and carries a format `version` field, so exported files can be told apart if the shape changes.
+
+- **Snapshot.** `ControlState.workflows` holds every published version (the last 20), oldest first, and
+  `ControlState.runs` holds, per job, the version it started with and the nodes it has been on.
+- **Publishing.** `workflow.publish` carries a whole workflow. The agent validates it with the same rules
+  the editor uses, assigns the next version number and emits `workflow.published`. A workflow that is
+  invalid, or identical to the latest one, produces no event.
+- **Versions.** A job walks the version that was latest when it was created. A retry starts a new walk
+  and takes the latest version at that moment. Jobs already running are never moved to a newer version.
+- **Node moves.** The agent emits `job.node` each time a job enters a node. `edgeId` is the connection it
+  took, null for the trigger. These events are bookkeeping for the workflow view: the reducer records
+  them in `runs` and keeps them out of job timelines and the event feed, so they cannot crowd out
+  events an operator reads.
+- **Replay.** `workflow.publish` is a command like any other, so a stored command log still rebuilds the
+  same world.
 
 ## Guards
 

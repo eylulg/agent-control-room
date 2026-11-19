@@ -2,8 +2,12 @@ import { findBlockingGuard, guardFor } from "./guards";
 import { applyEvent, createInitialState } from "./reducer";
 import { type Rng, createRng } from "./rng";
 import { validateRouting } from "./routing";
-import { APPROVAL_TEMPLATES, CI_CHECKS, CI_FAILURES, COMMIT_MESSAGES, PLAN_STEPS, REVIEW_FINDINGS, TICKET_TEMPLATES, type TicketTemplate } from "./scenarios";
-import type { AgentEvent, ControlState, EventPayloads, EventType, GuardAction, Job, JobStatus, OperatorCommand } from "./types";
+import { COMMIT_MESSAGES, TICKET_TEMPLATES, type TicketTemplate } from "./scenarios";
+import type { AgentEvent, ControlState, EventPayloads, EventType, GuardAction, Job, JobKind, JobStatus, OperatorCommand } from "./types";
+import { DEFAULT_WORKFLOW } from "./workflow/default";
+import { type ExecContext, type SimJob, runNode } from "./workflow/executors";
+import type { Workflow } from "./workflow/types";
+import { validateWorkflow } from "./workflow/validate";
 
 export const SIM_EPOCH = Date.UTC(2026, 0, 5, 9, 0, 0);
 export const TICK_MS = 60_000;
@@ -12,31 +16,13 @@ const MAX_PARALLEL = 4;
 const MAX_ACTIVE = 8;
 /** Hard cap including parked jobs, so an unattended inbox cannot grow forever. */
 const MAX_OPEN = 16;
+/** Nodes that may run in one tick. A longer chain carries on in the next tick, so one tick stays bounded. */
+const MAX_HOPS = 40;
 export const HEARTBEAT_EVERY = 5;
 /** A simulated teammate answers an approval with the recommended option once it has waited this many ticks. */
 export const TEAMMATE_AFTER_TICKS = 30;
 const TEAMMATE_NOTE = "answered by teammate";
 export const DEFAULT_SEED = "control-room";
-
-type Phase = "plan" | "build" | "ci" | "review" | "ready" | "merge";
-
-/** Private per-job simulation state. Never leaves the simulator. */
-interface SimJob {
-    phase: Phase;
-    wait: number;
-    needsApproval: boolean;
-    commitsLeft: number;
-    ciFails: number;
-    willFail: boolean;
-    findingsLeft: number;
-    tryHooks: boolean;
-    tryOwner: boolean;
-    tryMerge: boolean;
-    designerHold: boolean;
-    holdUntil: number | null;
-    waitingOnDependency: boolean;
-    manualHold: boolean;
-}
 
 export type Listener = (event: AgentEvent) => void;
 
@@ -48,6 +34,10 @@ export interface SimulatorOptions {
     speed?: number;
     /** Ticks to run immediately after reset so the world is not empty. */
     warmup?: number;
+    /** The workflow version 1 runs. Defaults to the one the simulator always ran. */
+    workflow?: Workflow;
+    /** Run one job of this kind and nothing else, for a dry run. No tickets arrive and there is no scripted opening. */
+    only?: JobKind;
 }
 
 /**
@@ -62,18 +52,22 @@ export class Simulator {
     private tickCount = 0;
     private ticketCount = 0;
     private prCount = 0;
+    /** Counts events that are not node moves. CI run ids use it, so they read the same as before workflows existed. */
+    private domainSeq = 0;
     private listeners = new Set<Listener>();
     private handle: IntervalHandle | null = null;
     private currentSeed: string;
     private ticksPerSecond: number;
     private readonly warmup: number;
+    private readonly options: SimulatorOptions;
 
     constructor(options: SimulatorOptions = {}) {
         this.currentSeed = options.seed ?? DEFAULT_SEED;
         this.ticksPerSecond = options.speed ?? 1;
         this.warmup = options.warmup ?? 0;
+        this.options = options;
         this.rng = createRng(this.currentSeed);
-        this.world = createInitialState();
+        this.world = createInitialState(options.workflow);
         this.boot();
     }
 
@@ -145,9 +139,10 @@ export class Simulator {
         this.pause();
         this.currentSeed = seed;
         this.rng = createRng(seed);
-        this.world = createInitialState();
+        this.world = createInitialState(this.options.workflow);
         this.sim = {};
         this.seq = 0;
+        this.domainSeq = 0;
         this.tickCount = 0;
         this.ticketCount = 0;
         this.prCount = 0;
@@ -191,6 +186,8 @@ export class Simulator {
                 this.emit("routing.updated", null, { routing: command.routing });
                 return;
             }
+            case "workflow.publish":
+                return this.publish(command.workflow);
             case "guard.toggle":
                 if (!this.world.guards.some((guard) => guard.id === command.guardId)) return;
                 this.emit("guard.toggled", null, { guardId: command.guardId, enabled: command.enabled });
@@ -201,6 +198,12 @@ export class Simulator {
     // ---- internals ---------------------------------------------------------
 
     private boot(): void {
+        const only = this.options.only;
+        if (only) {
+            const template = TICKET_TEMPLATES.find((candidate) => candidate.kind === only) ?? TICKET_TEMPLATES[0];
+            if (template) this.createJob(template);
+            return;
+        }
         // A fixed opening so every seed shows each mechanic early.
         const first = this.createJob({ kind: "feature", title: "Saved filters on the search page", repo: "acme/web" }, { needsApproval: true, tryMerge: true });
         this.createJob({ kind: "feature", title: "Saved filters API and persistence", repo: "acme/api" }, { needsApproval: false, dependsOn: first.id });
@@ -222,6 +225,7 @@ export class Simulator {
 
     private emit<T extends EventType>(type: T, jobId: string | null, payload: EventPayloads[T]): void {
         this.seq += 1;
+        if (type !== "job.node" && type !== "workflow.published") this.domainSeq += 1;
         // TypeScript cannot correlate the generic T with one member of the AgentEvent union.
         const event = { seq: this.seq, ts: this.now, jobId, type, payload } as AgentEvent;
         this.world = applyEvent(this.world, event);
@@ -230,8 +234,14 @@ export class Simulator {
 
     private freshSim(job: Job, initial: boolean, overrides: Partial<SimJob> = {}): SimJob {
         const r = this.rng;
+        const published = this.world.workflows.at(-1);
+        const workflow = published?.workflow ?? DEFAULT_WORKFLOW;
         return {
-            phase: "plan",
+            node: workflow.nodes.find((node) => node.type === "trigger")?.id ?? "",
+            revision: published?.revision ?? 1,
+            workflow,
+            ciFailures: 0,
+            reviewRounds: 0,
             wait: 0,
             needsApproval: initial ? r.chance(job.kind === "feature" ? 0.5 : 0.15) : false,
             commitsLeft: COMMIT_MESSAGES[job.kind].length,
@@ -321,7 +331,7 @@ export class Simulator {
             plan: `${job.plan ?? ""}\n\nDecision: option ${option}, ${chosen.label}.${trimmed ? ` Note: ${trimmed}` : ""}`.trim(),
         });
         const s = this.simOf(job);
-        s.phase = "build";
+        if (s.workflow.nodes.find((node) => node.id === s.node)?.type === "approval") this.move(job, s, "next");
         s.wait = 1;
         if (job.status === "awaiting-approval") this.setStatus(job, "implementing");
     }
@@ -341,7 +351,7 @@ export class Simulator {
 
         const open = Object.values(this.world.jobs).filter((job) => job.status !== "done" && job.status !== "failed");
         const parked = open.filter((job) => job.status === "awaiting-approval").length;
-        if (open.length - parked < MAX_ACTIVE && open.length < MAX_OPEN && r.chance(0.16)) this.createJob(r.pick(TICKET_TEMPLATES));
+        if (!this.options.only && open.length - parked < MAX_ACTIVE && open.length < MAX_OPEN && r.chance(0.16)) this.createJob(r.pick(TICKET_TEMPLATES));
 
         let working = Object.values(this.world.jobs).filter((job) => ["planning", "implementing", "fixing-ci", "answering-review"].includes(job.status)).length;
 
@@ -354,6 +364,7 @@ export class Simulator {
                 working += 1;
                 s.wait = 1;
                 this.setStatus(job, "planning");
+                this.emit("job.node", job.id, { nodeId: s.node, edgeId: null, revision: s.revision });
                 continue;
             }
             this.advanceJob(job, s);
@@ -369,8 +380,60 @@ export class Simulator {
         }
     }
 
+    /** Takes the connection from a port of the job's current node and records the move. Returns false when there is none. */
+    private move(job: Job, s: SimJob, port: string): boolean {
+        const edge = s.workflow.edges.find((candidate) => candidate.from.node === s.node && candidate.from.port === port);
+        if (!edge) return false;
+        s.node = edge.to;
+        this.emit("job.node", job.id, { nodeId: edge.to, edgeId: edge.id, revision: s.revision });
+        return true;
+    }
+
+    /** Runs the job's node, and the nodes after it that finish in the same tick. */
+    private walk(job: Job, s: SimJob): void {
+        const context: ExecContext = {
+            rng: this.rng,
+            s,
+            tick: this.tickCount,
+            now: this.now,
+            world: () => this.world,
+            job: () => this.world.jobs[job.id] ?? job,
+            emit: (type, jobId, payload) => this.emit(type, jobId, payload),
+            setStatus: (target, status) => this.setStatus(target, status),
+            attempt: (target, action, detail) => this.attempt(target, action, detail),
+            sha: () => this.sha(),
+            openPullRequest: (target) => {
+                this.prCount += 1;
+                const number = 400 + this.prCount;
+                this.emit("pr.opened", target.id, { number, url: `https://github.com/${target.ticket.repo}/pull/${number}` });
+            },
+            ciRunId: () => `ci-${this.domainSeq}`,
+        };
+        for (let hops = 0; hops < MAX_HOPS; hops++) {
+            const node = s.workflow.nodes.find((candidate) => candidate.id === s.node);
+            if (!node) {
+                this.emit("job.failed", job.id, { reason: "The workflow has no step for this job to run. Publish a workflow with a trigger." });
+                return;
+            }
+            const outcome = runNode(node, context);
+            if (outcome.kind !== "go") return;
+            if (!this.move(job, s, outcome.port)) {
+                this.emit("job.failed", job.id, { reason: `The workflow has no connection from ${node.label}. Connect every port before publishing.` });
+                return;
+            }
+            if (!outcome.sameTick) return;
+        }
+        // A long chain of steps that finish at once is not an error. The job rests here and carries on next tick.
+    }
+
+    private publish(workflow: Workflow): void {
+        const latest = this.world.workflows.at(-1);
+        if (validateWorkflow(workflow).length > 0) return;
+        if (latest && JSON.stringify(latest.workflow) === JSON.stringify(workflow)) return;
+        this.emit("workflow.published", null, { revision: (latest?.revision ?? 0) + 1, workflow });
+    }
+
     private advanceJob(job: Job, s: SimJob): void {
-        const r = this.rng;
         switch (job.status) {
             case "done":
             case "failed":
@@ -396,139 +459,6 @@ export class Simulator {
             return;
         }
 
-        switch (s.phase) {
-            case "plan": {
-                const steps = PLAN_STEPS[job.kind].map((step, i) => `${i + 1}. ${step}`).join("\n");
-                this.emit("plan.posted", job.id, { plan: `Plan for ${job.ticket.id}: ${job.ticket.title}\n${steps}` });
-                if (s.needsApproval) {
-                    const template = APPROVAL_TEMPLATES[job.kind];
-                    this.emit("approval.requested", job.id, {
-                        approval: { id: `apr-${job.id}-${job.attempts}`, jobId: job.id, ...template, status: "pending", createdAt: this.now },
-                    });
-                    s.needsApproval = false;
-                    s.phase = "build";
-                    return;
-                }
-                s.phase = "build";
-                this.setStatus(job, "implementing");
-                return;
-            }
-            case "build": {
-                if (job.status !== "implementing") this.setStatus(job, "implementing");
-                const messages = COMMIT_MESSAGES[job.kind];
-                const index = messages.length - s.commitsLeft;
-                if (s.designerHold && index === 1) {
-                    s.designerHold = false;
-                    s.holdUntil = this.tickCount + r.int(6, 10);
-                    this.emit("job.held", job.id, { reason: "Waiting on a designer for the empty state spec", by: "agent" });
-                    return;
-                }
-                if (s.tryHooks && index === 0) {
-                    s.tryHooks = false;
-                    if (this.attempt(job, "skip-hooks", "Tried git push --no-verify because the pre-commit hook took over 90 seconds")) {
-                        s.wait = 1;
-                        return;
-                    }
-                }
-                const message = messages[index];
-                if (s.commitsLeft > 0 && message) {
-                    s.commitsLeft -= 1;
-                    this.emit("commit.pushed", job.id, { sha: this.sha(), message });
-                    if (s.commitsLeft === 0 && !job.pr) {
-                        this.prCount += 1;
-                        const number = 400 + this.prCount;
-                        this.emit("pr.opened", job.id, { number, url: `https://github.com/${job.ticket.repo}/pull/${number}` });
-                    }
-                    s.wait = r.int(0, 1);
-                    return;
-                }
-                s.phase = "ci";
-                return;
-            }
-            case "ci": {
-                const check = r.pick(CI_CHECKS);
-                if (job.status === "fixing-ci") {
-                    if (s.willFail) {
-                        this.emit("job.failed", job.id, { reason: `CI still red on ${check} after the fix attempt` });
-                        return;
-                    }
-                    const sha = this.sha();
-                    this.emit("commit.pushed", job.id, { sha, message: `fix: make ${check} pass` });
-                    this.emit("ci.fixed", job.id, { runId: `ci-${this.seq}`, check, sha });
-                    s.ciFails = Math.max(0, s.ciFails - 1);
-                    this.setStatus(job, "implementing");
-                    return;
-                }
-                if (s.ciFails > 0 || s.willFail) {
-                    this.emit("ci.failed", job.id, { runId: `ci-${this.seq}`, check, detail: r.pick(CI_FAILURES) });
-                    s.wait = 1;
-                    return;
-                }
-                this.emit("ci.passed", job.id, { runId: `ci-${this.seq}`, check: "all checks" });
-                s.phase = "review";
-                s.wait = r.int(1, 2);
-                return;
-            }
-            case "review": {
-                if (job.status === "answering-review") {
-                    const open = job.findings.find((finding) => !finding.reply);
-                    if (s.tryOwner) {
-                        s.tryOwner = false;
-                        if (this.attempt(job, "post-as-owner", "Drafted a review reply that would be posted from the owner account")) {
-                            s.wait = 1;
-                            return;
-                        }
-                    }
-                    const reply = open && REVIEW_FINDINGS.find((finding) => finding.body === open.body)?.reply;
-                    if (open && reply) {
-                        this.emit("commit.pushed", job.id, { sha: this.sha(), message: "fix: address review feedback" });
-                        this.emit("review.replied", job.id, { findingId: open.id, body: reply });
-                    }
-                    this.setStatus(job, "implementing");
-                    s.wait = 1;
-                    return;
-                }
-                if (s.findingsLeft > 0) {
-                    s.findingsLeft -= 1;
-                    const finding = r.pick(REVIEW_FINDINGS);
-                    this.emit("review.finding", job.id, {
-                        findingId: `rf-${job.id}-${job.findings.length + 1}`,
-                        author: r.pick(["review-bot", "code-owner"]),
-                        file: finding.file,
-                        body: finding.body,
-                    });
-                    s.wait = 1;
-                    return;
-                }
-                s.phase = "ready";
-                return;
-            }
-            case "ready": {
-                const dep = job.dependsOn ? this.world.jobs[job.dependsOn] : undefined;
-                if (dep && dep.status !== "done") {
-                    const blocked = this.attempt(job, "mark-ready", `Tried to mark the PR ready while ${dep.ticket.id} is still unmerged`);
-                    if (blocked) {
-                        s.waitingOnDependency = true;
-                        this.emit("job.held", job.id, { reason: `Waiting on ${dep.ticket.id} to merge first`, by: "agent" });
-                        return;
-                    }
-                }
-                this.setStatus(job, "ready-for-review");
-                s.phase = "merge";
-                s.wait = r.int(4, 9);
-                return;
-            }
-            case "merge": {
-                if (s.tryMerge) {
-                    s.tryMerge = false;
-                    if (this.attempt(job, "merge", "Tried to merge after approvals because the branch was green")) {
-                        s.wait = 2;
-                        return;
-                    }
-                }
-                this.emit("job.done", job.id, { prNumber: job.pr?.number });
-                return;
-            }
-        }
+        this.walk(job, s);
     }
 }

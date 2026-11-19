@@ -8,6 +8,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build && node scripts/spa-fallback.mjs",
+        "size": "node scripts/check-size.mjs",
         "preview": "vite preview",
         "typecheck": "tsc -b",
         "lint": "eslint . --max-warnings 0",

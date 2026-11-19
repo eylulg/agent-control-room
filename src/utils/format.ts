@@ -76,6 +76,10 @@ export const describe = (event: AgentEvent): { text: string; tone: Tone } => {
             return { text: event.payload.prNumber ? `PR #${event.payload.prNumber} merged by a human, job done` : "Job done", tone: "good" };
         case "job.failed":
             return { text: `Failed: ${event.payload.reason}`, tone: "critical" };
+        case "job.node":
+            return { text: "Moved to the next workflow step", tone: "neutral" };
+        case "workflow.published":
+            return { text: `Published workflow version ${event.payload.revision}`, tone: "good" };
         case "health.heartbeat":
             return { text: `Heartbeat: ${event.payload.activeJobs} active, ${event.payload.queueDepth} queued`, tone: "neutral" };
     }

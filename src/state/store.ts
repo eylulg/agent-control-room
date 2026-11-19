@@ -80,6 +80,8 @@ const describeEvent = (event: AgentEvent, state: ControlState): string | null =>
             return `${ticket} failed: ${event.payload.reason}`;
         case "job.done":
             return `${ticket} merged and done`;
+        case "workflow.published":
+            return `Workflow version ${event.payload.revision} published. New jobs use it.`;
         default:
             return null;
     }

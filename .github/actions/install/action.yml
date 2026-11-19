@@ -4,23 +4,24 @@ description: Checks out and builds @eylulg/ui next to the app, then installs. Re
 runs:
     using: composite
     steps:
-        - uses: actions/checkout@v4
+        # package.json depends on file:../ui. Checkout cannot write outside the workspace,
+        # so the library is checked out here and moved up a level.
+        - uses: actions/checkout@v7
           with:
               repository: eylulg/ui
               path: ui-src
-        - uses: actions/setup-node@v4
+        - uses: actions/setup-node@v7
           with:
               node-version: 24
               cache: npm
-              cache-dependency-path: |
-                  package-lock.json
-                  ui-src/package-lock.json
         - name: Build @eylulg/ui
-          working-directory: ui-src
-          shell: bash
-          run: npm ci && npm run build
-        - name: Install the app against the built library
           shell: bash
           run: |
-              npm pkg set dependencies.@eylulg/ui=file:./ui-src
-              npm install --no-audit --no-fund
+              mv ui-src ../ui
+              npm --prefix ../ui ci
+              npm --prefix ../ui run build
+        # install-links copies the library in, as the local relink does. A symlink would give
+        # TypeScript two copies of the React types. npm ci cannot be used: the lockfile records a link.
+        - name: Install the app against the built library
+          shell: bash
+          run: npm install --no-audit --no-fund --install-links

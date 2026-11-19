@@ -4,7 +4,7 @@ import { inlineLink } from "@/components/app/styles";
 
 export const NotFoundPage = () => (
     <div className="flex flex-col gap-4">
-        <PageHeader title="Page not found" description="That page does not exist in the control room." />
+        <PageHeader title="Page not found" description="That page does not exist in this app." />
         <Link to="/" className={inlineLink}>
             Go to the overview
         </Link>

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { chainOf, defaultWorkflow, without } from "@/test-utils/workflow";
 import { DEFAULT_ROUTING } from "../routing";
 import { pendingApprovals } from "../selectors";
 import { Simulator, TEAMMATE_AFTER_TICKS } from "../simulator";
 import type { AgentEvent, EventType } from "../types";
+import { updateNode } from "../workflow/ops";
 
 const serialise = (events: AgentEvent[]) => events.map((event) => JSON.stringify(event));
 
@@ -175,6 +177,60 @@ describe("Simulator", () => {
         expect(sim.state.approvals[approval.id]).toMatchObject({
             status: "answered",
             answer: { option: approval.recommended, note: "answered by teammate" },
+        });
+    });
+
+    describe("workflows", () => {
+        it("publishes a valid workflow as the next version and ignores an invalid one", () => {
+            const sim = new Simulator({ seed: "publish" });
+            const edited = updateNode(defaultWorkflow(), "ci", { config: { maxAttempts: 5 } });
+
+            sim.send({ type: "workflow.publish", workflow: without("plan") });
+            sim.send({ type: "workflow.publish", workflow: edited });
+            sim.send({ type: "workflow.publish", workflow: edited });
+
+            expect(sim.state.workflows.map((published) => published.revision)).toEqual([1, 2]);
+        });
+
+        it("lets a job finish on the version it started with", () => {
+            const sim = new Simulator({ seed: "versions" });
+            sim.step(3);
+            const started = Object.values(sim.state.runs).map((run) => run.revision);
+
+            sim.send({ type: "workflow.publish", workflow: updateNode(defaultWorkflow(), "ci", { config: { maxAttempts: 5 } }) });
+            sim.step(60);
+
+            expect(started.length).toBeGreaterThan(0);
+            for (const jobId of Object.keys(sim.state.runs).slice(0, started.length)) expect(sim.state.runs[jobId]?.revision).toBe(1);
+            expect(Object.values(sim.state.runs).some((run) => run.revision === 2)).toBe(true);
+        });
+
+        it("fails a job whose kind no trigger accepts", () => {
+            const base = defaultWorkflow();
+            const bugsOnly = updateNode(base, "trigger", { config: { kinds: ["bug"] } });
+            const sim = new Simulator({ seed: "kinds", workflow: bugsOnly, only: "feature" });
+
+            sim.step(6);
+
+            expect(Object.values(sim.state.jobs)[0]).toMatchObject({ status: "failed", failureReason: "No trigger accepts feature jobs" });
+        });
+
+        it("runs one job and nothing else for a dry run, ending at the end node", () => {
+            const sim = new Simulator({ seed: "dry", workflow: defaultWorkflow(), only: "chore" });
+
+            sim.step(200);
+
+            const jobs = Object.values(sim.state.jobs);
+            expect(jobs).toHaveLength(1);
+            expect(sim.state.runs["job-1"]?.steps.at(-1)?.nodeId).toBe("done");
+        });
+
+        it("lets a long chain of instant steps rest between ticks instead of failing the job", () => {
+            const sim = new Simulator({ seed: "chain", workflow: chainOf(60), only: "chore" });
+
+            sim.step(30);
+
+            expect(Object.values(sim.state.jobs)[0]?.status).toBe("done");
         });
     });
 });

@@ -1,5 +1,6 @@
 import { z } from "zod/mini";
 import { type AgentEvent, type ControlState, EVENT_TYPES, JOB_KINDS, JOB_STATUSES, type Job, type OperatorCommand } from "./types";
+import { workflowSchema } from "./workflow/schema";
 
 const jobStatus = z.enum(JOB_STATUSES);
 const jobKind = z.enum(JOB_KINDS);
@@ -66,6 +67,11 @@ const controlState: z.ZodMiniType<ControlState> = z.lazy(() =>
         events: z.array(agentEvent),
         completions: z.array(z.number()),
         health: z.object({ lastHeartbeat: z.nullable(z.number()), tick: z.number(), activeJobs: z.number() }),
+        workflows: z.array(z.object({ revision: z.int(), publishedAt: z.number(), workflow: workflowSchema })),
+        runs: z.record(
+            z.string(),
+            z.object({ revision: z.int(), steps: z.array(z.object({ nodeId: z.string(), edgeId: z.nullable(z.string()), ts: z.number() })) }),
+        ),
     }),
 );
 
@@ -96,6 +102,8 @@ const agentEvent: z.ZodMiniType<AgentEvent> = z.lazy(() =>
         event("job.retried", z.object({ attempt: z.int(), model: z.string() })),
         event("job.done", z.object({ prNumber: z.optional(z.int()) })),
         event("job.failed", z.object({ reason: z.string(), cancelled: z.optional(z.boolean()) })),
+        event("job.node", z.object({ nodeId: z.string(), edgeId: z.nullable(z.string()), revision: z.int() })),
+        event("workflow.published", z.object({ revision: z.int(), workflow: workflowSchema })),
         event("health.heartbeat", z.object({ tick: z.number(), activeJobs: z.number(), queueDepth: z.number() })),
     ]),
 );
@@ -120,4 +128,5 @@ export const operatorCommand: z.ZodMiniType<OperatorCommand> = z.discriminatedUn
     z.object({ type: z.literal("job.retry"), jobId: z.string() }),
     z.object({ type: z.literal("routing.set"), routing: routingTable }),
     z.object({ type: z.literal("guard.toggle"), guardId: z.string(), enabled: z.boolean() }),
+    z.object({ type: z.literal("workflow.publish"), workflow: workflowSchema }),
 ]);
