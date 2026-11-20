@@ -1,6 +1,6 @@
 # Performance
 
-Notes on the workflow canvas. Numbers come from the measurement below, not from a guess.
+Measurements of the workflow canvas.
 
 ## What keeps a drag cheap
 
@@ -34,7 +34,7 @@ Counted on the default workflow of 12 steps, in the same dev build, with the Rea
 | Node views, whole canvas             | 47           | 51          | 13               | 11              |
 | Edge views, whole canvas             | 63           | 66          | 12               | 10              |
 
-Before, the page subscribed to the whole simulator state and to the draft, so every drag frame and every simulator event rendered everything below it. After, only the overlay component follows the simulator, and node and edge views render when their own slice changes. The Settings panel of a step that is being dragged still renders each frame, because the step's object changes with its position. That is one small form. The node and edge counts include the live overlay updates that arrive during the gesture.
+Before, the page subscribed to the whole simulator state and to the draft, so every drag frame and every simulator event rendered everything below it. After, only the overlay component follows the simulator, and node and edge views render when their own slice changes. The Settings panel of a step that is being dragged still renders each frame, because the step's object changes with its position. The node and edge counts include the live overlay updates that arrive during the gesture.
 
 ## Results
 
