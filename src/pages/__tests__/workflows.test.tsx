@@ -182,7 +182,7 @@ describe('WorkflowsPage keyboard flows', () => {
     const step = screen.getByRole('button', { name: 'Step' });
     await user.click(step);
     expect(screen.getAllByRole('status').map((region) => region.textContent)).not.toContainEqual(
-      expect.stringMatching(/^ACME-\d+ is/),
+      expect.stringMatching(/^MDW-\d+ is/),
     );
     for (let i = 0; i < 80 && !step.hasAttribute('disabled'); i++) await user.click(step);
 

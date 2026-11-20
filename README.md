@@ -54,7 +54,7 @@ holds, failures, completions) are announced through an `aria-live` region.
 PRNG (mulberry32) whose state is one integer, so the same seed and the same
 operator answers always replay the same day. On each tick it:
 
-- picks up new tickets (fictional ids like `ACME-104`) with the model from the
+- picks up new tickets (fictional ids like `MDW-104`, from Meadow, a made-up booking app for riding stables) with the model from the
   routing table,
 - plans, and sometimes asks for approval, which blocks the job until answered
   (a simulated teammate answers with the recommended option after 30 ticks, so

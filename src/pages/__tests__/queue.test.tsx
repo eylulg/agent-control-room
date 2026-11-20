@@ -11,8 +11,8 @@ describe('QueuePage', () => {
   it.each<Case>([
     [
       'search',
-      (user) => user.type(screen.getByRole('textbox', { name: 'Search' }), 'ACME-103'),
-      (job) => job.ticket.id === 'ACME-103',
+      (user) => user.type(screen.getByRole('textbox', { name: 'Search' }), 'MDW-103'),
+      (job) => job.ticket.id === 'MDW-103',
     ],
     [
       'kind',
@@ -23,9 +23,9 @@ describe('QueuePage', () => {
       'repository',
       async (user) => {
         await user.click(screen.getByRole('button', { name: /Repository/ }));
-        await user.click(await screen.findByRole('option', { name: 'acme/mobile' }));
+        await user.click(await screen.findByRole('option', { name: 'meadow/mobile' }));
       },
-      (job) => job.ticket.repo === 'acme/mobile',
+      (job) => job.ticket.repo === 'meadow/mobile',
     ],
   ])('filters the list by %s', async (_name, act, matches) => {
     const user = userEvent.setup();
