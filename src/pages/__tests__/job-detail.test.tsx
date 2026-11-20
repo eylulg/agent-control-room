@@ -21,7 +21,7 @@ describe('JobDetailPage', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel job' }));
 
     expect(store.getState().control.jobs['job-3']?.status).not.toBe('failed');
-    expect(screen.getByText('Cancel ACME-103? It will be marked failed.')).toBeInTheDocument();
+    expect(screen.getByText('Cancel MDW-103? It will be marked failed.')).toBeInTheDocument();
   });
 
   it.each([

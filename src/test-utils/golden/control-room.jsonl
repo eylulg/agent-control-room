@@ -2,31 +2,31 @@
 {"seq":7,"ts":1767603660000,"jobId":"job-2","type":"job.status","payload":{"status":"planning"}}
 {"seq":8,"ts":1767603660000,"jobId":"job-3","type":"job.status","payload":{"status":"planning"}}
 {"seq":9,"ts":1767603660000,"jobId":"job-4","type":"job.status","payload":{"status":"planning"}}
-{"seq":10,"ts":1767603780000,"jobId":"job-1","type":"plan.posted","payload":{"plan":"Plan for ACME-101: Saved filters on the search page\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI"}}
+{"seq":10,"ts":1767603780000,"jobId":"job-1","type":"plan.posted","payload":{"plan":"Plan for MDW-101: Saved filters on the search page\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI"}}
 {"seq":11,"ts":1767603780000,"jobId":"job-1","type":"approval.requested","payload":{"approval":{"id":"apr-job-1-1","jobId":"job-1","question":"The ticket does not say where the new control lives. Which placement should I build?","options":{"A":{"label":"Toolbar action","description":"Add it to the existing toolbar next to the filters. Small diff, reuses current layout."},"B":{"label":"New side panel","description":"Introduce a dedicated panel with room for future settings. Larger diff, needs design input."}},"recommended":"A","reason":"Smaller change that matches the current pattern and ships without new design work.","status":"pending","createdAt":1767603780000}}}
-{"seq":12,"ts":1767603780000,"jobId":"job-2","type":"plan.posted","payload":{"plan":"Plan for ACME-102: Saved filters API and persistence\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI"}}
+{"seq":12,"ts":1767603780000,"jobId":"job-2","type":"plan.posted","payload":{"plan":"Plan for MDW-102: Saved filters API and persistence\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI"}}
 {"seq":13,"ts":1767603780000,"jobId":"job-2","type":"job.status","payload":{"status":"implementing"}}
-{"seq":14,"ts":1767603780000,"jobId":"job-3","type":"plan.posted","payload":{"plan":"Plan for ACME-103: Toast stack overlaps the footer on small screens\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
+{"seq":14,"ts":1767603780000,"jobId":"job-3","type":"plan.posted","payload":{"plan":"Plan for MDW-103: Toast stack overlaps the footer on small screens\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
 {"seq":15,"ts":1767603780000,"jobId":"job-3","type":"job.status","payload":{"status":"implementing"}}
-{"seq":16,"ts":1767603780000,"jobId":"job-4","type":"plan.posted","payload":{"plan":"Plan for ACME-104: Empty state for the activity feed\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI"}}
+{"seq":16,"ts":1767603780000,"jobId":"job-4","type":"plan.posted","payload":{"plan":"Plan for MDW-104: Empty state for the activity feed\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI"}}
 {"seq":17,"ts":1767603780000,"jobId":"job-4","type":"job.status","payload":{"status":"implementing"}}
 {"seq":18,"ts":1767603840000,"jobId":"job-2","type":"commit.pushed","payload":{"sha":"85d2225","message":"feat: add the new control behind a flag"}}
 {"seq":19,"ts":1767603840000,"jobId":"job-3","type":"commit.pushed","payload":{"sha":"b7a6d9c","message":"test: reproduce the bug"}}
 {"seq":20,"ts":1767603840000,"jobId":"job-4","type":"commit.pushed","payload":{"sha":"9f50fe9","message":"feat: add the new control behind a flag"}}
 {"seq":21,"ts":1767603840000,"jobId":"job-5","type":"job.status","payload":{"status":"planning"}}
-{"seq":22,"ts":1767603900000,"jobId":"job-6","type":"job.created","payload":{"job":{"id":"job-6","ticket":{"id":"ACME-106","title":"Follow up on accessibility review of tabs","repo":"acme/design-system"},"kind":"review-fix","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767603900000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":22,"ts":1767603900000,"jobId":"job-6","type":"job.created","payload":{"job":{"id":"job-6","ticket":{"id":"MDW-106","title":"Follow up on accessibility review of tabs","repo":"meadow/design-system"},"kind":"review-fix","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767603900000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":23,"ts":1767603900000,"jobId":"job-2","type":"commit.pushed","payload":{"sha":"471f60b","message":"feat: wire state and persistence"}}
 {"seq":24,"ts":1767603900000,"jobId":"job-3","type":"commit.pushed","payload":{"sha":"f4d1989","message":"fix: handle the edge case at the source"}}
-{"seq":25,"ts":1767603900000,"jobId":"job-3","type":"pr.opened","payload":{"number":401,"url":"https://github.com/acme/web/pull/401"}}
+{"seq":25,"ts":1767603900000,"jobId":"job-3","type":"pr.opened","payload":{"number":401,"url":"https://github.com/meadow/web/pull/401"}}
 {"seq":26,"ts":1767603900000,"jobId":null,"type":"health.heartbeat","payload":{"tick":5,"activeJobs":5,"queueDepth":1}}
-{"seq":27,"ts":1767603960000,"jobId":"job-7","type":"job.created","payload":{"job":{"id":"job-7","ticket":{"id":"ACME-107","title":"Cut release 2.14 and update the changelog","repo":"acme/web"},"kind":"release","status":"queued","model":"claude-haiku-5-5","attempts":1,"createdAt":1767603960000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":27,"ts":1767603960000,"jobId":"job-7","type":"job.created","payload":{"job":{"id":"job-7","ticket":{"id":"MDW-107","title":"Cut release 2.14 and update the changelog","repo":"meadow/web"},"kind":"release","status":"queued","model":"claude-haiku-5-5","attempts":1,"createdAt":1767603960000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":28,"ts":1767603960000,"jobId":"job-2","type":"commit.pushed","payload":{"sha":"c3aa1b8","message":"test: cover the main flow"}}
-{"seq":29,"ts":1767603960000,"jobId":"job-2","type":"pr.opened","payload":{"number":402,"url":"https://github.com/acme/api/pull/402"}}
+{"seq":29,"ts":1767603960000,"jobId":"job-2","type":"pr.opened","payload":{"number":402,"url":"https://github.com/meadow/api/pull/402"}}
 {"seq":30,"ts":1767603960000,"jobId":"job-4","type":"job.held","payload":{"reason":"Waiting on a designer for the empty state spec","by":"agent"}}
-{"seq":31,"ts":1767603960000,"jobId":"job-5","type":"plan.posted","payload":{"plan":"Plan for ACME-105: Speed up the pre-commit hook\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note"}}
+{"seq":31,"ts":1767603960000,"jobId":"job-5","type":"plan.posted","payload":{"plan":"Plan for MDW-105: Speed up the pre-commit hook\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note"}}
 {"seq":32,"ts":1767603960000,"jobId":"job-5","type":"job.status","payload":{"status":"implementing"}}
 {"seq":33,"ts":1767603960000,"jobId":"job-1","type":"approval.answered","payload":{"approvalId":"apr-job-1-1","option":"B","note":"Keep it small"}}
-{"seq":34,"ts":1767603960000,"jobId":"job-1","type":"plan.posted","payload":{"plan":"Plan for ACME-101: Saved filters on the search page\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI\n\nDecision: option B, New side panel. Note: Keep it small"}}
+{"seq":34,"ts":1767603960000,"jobId":"job-1","type":"plan.posted","payload":{"plan":"Plan for MDW-101: Saved filters on the search page\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI\n\nDecision: option B, New side panel. Note: Keep it small"}}
 {"seq":35,"ts":1767603960000,"jobId":"job-1","type":"job.status","payload":{"status":"implementing"}}
 {"seq":36,"ts":1767604020000,"jobId":"job-3","type":"ci.failed","payload":{"runId":"ci-35","check":"e2e smoke","detail":"Type error: property 'archivedAt' does not exist on type 'Message'"}}
 {"seq":37,"ts":1767604020000,"jobId":"job-5","type":"guard.blocked","payload":{"guardId":"keep-hooks","action":"skip-hooks","detail":"Tried git push --no-verify because the pre-commit hook took over 90 seconds"}}
@@ -38,15 +38,15 @@
 {"seq":43,"ts":1767604140000,"jobId":"job-3","type":"ci.fixed","payload":{"runId":"ci-42","check":"lint","sha":"d80daf0"}}
 {"seq":44,"ts":1767604140000,"jobId":"job-3","type":"job.status","payload":{"status":"implementing"}}
 {"seq":45,"ts":1767604140000,"jobId":"job-5","type":"commit.pushed","payload":{"sha":"42f59b2","message":"chore: apply the upgrade"}}
-{"seq":46,"ts":1767604200000,"jobId":"job-8","type":"job.created","payload":{"job":{"id":"job-8","ticket":{"id":"ACME-108","title":"Pagination resets when sorting a column","repo":"acme/web"},"kind":"bug","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767604200000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":46,"ts":1767604200000,"jobId":"job-8","type":"job.created","payload":{"job":{"id":"job-8","ticket":{"id":"MDW-108","title":"Pagination resets when sorting a column","repo":"meadow/web"},"kind":"bug","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767604200000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":47,"ts":1767604200000,"jobId":"job-3","type":"ci.passed","payload":{"runId":"ci-46","check":"all checks"}}
 {"seq":48,"ts":1767604200000,"jobId":"job-5","type":"commit.pushed","payload":{"sha":"7371290","message":"chore: migrate config"}}
-{"seq":49,"ts":1767604200000,"jobId":"job-5","type":"pr.opened","payload":{"number":403,"url":"https://github.com/acme/mobile/pull/403"}}
+{"seq":49,"ts":1767604200000,"jobId":"job-5","type":"pr.opened","payload":{"number":403,"url":"https://github.com/meadow/mobile/pull/403"}}
 {"seq":50,"ts":1767604200000,"jobId":null,"type":"health.heartbeat","payload":{"tick":10,"activeJobs":5,"queueDepth":3}}
 {"seq":51,"ts":1767604260000,"jobId":"job-1","type":"commit.pushed","payload":{"sha":"a6e3eea","message":"test: cover the main flow"}}
-{"seq":52,"ts":1767604260000,"jobId":"job-1","type":"pr.opened","payload":{"number":404,"url":"https://github.com/acme/web/pull/404"}}
-{"seq":53,"ts":1767604320000,"jobId":"job-2","type":"guard.blocked","payload":{"guardId":"dependency-first","action":"mark-ready","detail":"Tried to mark the PR ready while ACME-101 is still unmerged"}}
-{"seq":54,"ts":1767604320000,"jobId":"job-2","type":"job.held","payload":{"reason":"Waiting on ACME-101 to merge first","by":"agent"}}
+{"seq":52,"ts":1767604260000,"jobId":"job-1","type":"pr.opened","payload":{"number":404,"url":"https://github.com/meadow/web/pull/404"}}
+{"seq":53,"ts":1767604320000,"jobId":"job-2","type":"guard.blocked","payload":{"guardId":"dependency-first","action":"mark-ready","detail":"Tried to mark the PR ready while MDW-101 is still unmerged"}}
+{"seq":54,"ts":1767604320000,"jobId":"job-2","type":"job.held","payload":{"reason":"Waiting on MDW-101 to merge first","by":"agent"}}
 {"seq":55,"ts":1767604320000,"jobId":"job-3","type":"review.finding","payload":{"findingId":"rf-job-3-1","author":"code-owner","file":"src/features/list/use-selection.ts","body":"This effect re-subscribes on every render. Can the handler be stable?"}}
 {"seq":56,"ts":1767604320000,"jobId":"job-5","type":"ci.passed","payload":{"runId":"ci-55","check":"all checks"}}
 {"seq":57,"ts":1767604320000,"jobId":"job-3","type":"job.held","payload":{"reason":"Operator check","by":"operator"}}
@@ -55,9 +55,9 @@
 {"seq":60,"ts":1767604440000,"jobId":"job-1","type":"ci.failed","payload":{"runId":"ci-59","check":"unit tests","detail":"Type error: property 'archivedAt' does not exist on type 'Message'"}}
 {"seq":61,"ts":1767604500000,"jobId":"job-4","type":"job.resumed","payload":{"by":"agent"}}
 {"seq":62,"ts":1767604500000,"jobId":"job-5","type":"review.finding","payload":{"findingId":"rf-job-5-1","author":"review-bot","file":"src/components/panel.tsx","body":"The close button has no accessible name."}}
-{"seq":63,"ts":1767604500000,"jobId":"job-6","type":"plan.posted","payload":{"plan":"Plan for ACME-106: Follow up on accessibility review of tabs\n1. Read every open review thread\n2. Apply or answer each finding\n3. Push fixes and reply in the threads\n4. Request a fresh review"}}
+{"seq":63,"ts":1767604500000,"jobId":"job-6","type":"plan.posted","payload":{"plan":"Plan for MDW-106: Follow up on accessibility review of tabs\n1. Read every open review thread\n2. Apply or answer each finding\n3. Push fixes and reply in the threads\n4. Request a fresh review"}}
 {"seq":64,"ts":1767604500000,"jobId":"job-6","type":"job.status","payload":{"status":"implementing"}}
-{"seq":65,"ts":1767604500000,"jobId":"job-7","type":"plan.posted","payload":{"plan":"Plan for ACME-107: Cut release 2.14 and update the changelog\n1. Collect merged PRs since the last tag\n2. Write the changelog\n3. Bump versions\n4. Open the release PR"}}
+{"seq":65,"ts":1767604500000,"jobId":"job-7","type":"plan.posted","payload":{"plan":"Plan for MDW-107: Cut release 2.14 and update the changelog\n1. Collect merged PRs since the last tag\n2. Write the changelog\n3. Bump versions\n4. Open the release PR"}}
 {"seq":66,"ts":1767604500000,"jobId":"job-7","type":"job.status","payload":{"status":"implementing"}}
 {"seq":67,"ts":1767604500000,"jobId":null,"type":"health.heartbeat","payload":{"tick":15,"activeJobs":7,"queueDepth":1}}
 {"seq":68,"ts":1767604560000,"jobId":"job-1","type":"commit.pushed","payload":{"sha":"ed757a0","message":"fix: make e2e smoke pass"}}
@@ -68,12 +68,12 @@
 {"seq":73,"ts":1767604560000,"jobId":"job-7","type":"commit.pushed","payload":{"sha":"b330e2b","message":"chore(release): update changelog"}}
 {"seq":74,"ts":1767604620000,"jobId":"job-1","type":"ci.passed","payload":{"runId":"ci-73","check":"all checks"}}
 {"seq":75,"ts":1767604620000,"jobId":"job-4","type":"commit.pushed","payload":{"sha":"411e9fe","message":"test: cover the main flow"}}
-{"seq":76,"ts":1767604620000,"jobId":"job-4","type":"pr.opened","payload":{"number":405,"url":"https://github.com/acme/design-system/pull/405"}}
+{"seq":76,"ts":1767604620000,"jobId":"job-4","type":"pr.opened","payload":{"number":405,"url":"https://github.com/meadow/design-system/pull/405"}}
 {"seq":77,"ts":1767604620000,"jobId":"job-5","type":"guard.blocked","payload":{"guardId":"owner-voice","action":"post-as-owner","detail":"Drafted a review reply that would be posted from the owner account"}}
 {"seq":78,"ts":1767604620000,"jobId":"job-6","type":"commit.pushed","payload":{"sha":"5a7ee1c","message":"test: cover review cases"}}
-{"seq":79,"ts":1767604620000,"jobId":"job-6","type":"pr.opened","payload":{"number":406,"url":"https://github.com/acme/design-system/pull/406"}}
+{"seq":79,"ts":1767604620000,"jobId":"job-6","type":"pr.opened","payload":{"number":406,"url":"https://github.com/meadow/design-system/pull/406"}}
 {"seq":80,"ts":1767604620000,"jobId":"job-7","type":"commit.pushed","payload":{"sha":"0d02cd4","message":"chore(release): bump versions"}}
-{"seq":81,"ts":1767604620000,"jobId":"job-7","type":"pr.opened","payload":{"number":407,"url":"https://github.com/acme/web/pull/407"}}
+{"seq":81,"ts":1767604620000,"jobId":"job-7","type":"pr.opened","payload":{"number":407,"url":"https://github.com/meadow/web/pull/407"}}
 {"seq":82,"ts":1767604740000,"jobId":"job-5","type":"commit.pushed","payload":{"sha":"8609ab6","message":"fix: address review feedback"}}
 {"seq":83,"ts":1767604740000,"jobId":"job-5","type":"review.replied","payload":{"findingId":"rf-job-5-1","body":"Added an aria-label and a test that queries the button by its name."}}
 {"seq":84,"ts":1767604740000,"jobId":"job-5","type":"job.status","payload":{"status":"implementing"}}
@@ -118,7 +118,7 @@
 {"seq":123,"ts":1767605340000,"jobId":"job-1","type":"guard.blocked","payload":{"guardId":"never-merge","action":"merge","detail":"Tried to merge after approvals because the branch was green"}}
 {"seq":124,"ts":1767605340000,"jobId":"job-3","type":"job.status","payload":{"status":"ready-for-review"}}
 {"seq":125,"ts":1767605340000,"jobId":"job-6","type":"review.finding","payload":{"findingId":"rf-job-6-2","author":"review-bot","file":"src/features/list/use-selection.ts","body":"This effect re-subscribes on every render. Can the handler be stable?"}}
-{"seq":126,"ts":1767605400000,"jobId":"job-8","type":"plan.posted","payload":{"plan":"Plan for ACME-108: Pagination resets when sorting a column\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
+{"seq":126,"ts":1767605400000,"jobId":"job-8","type":"plan.posted","payload":{"plan":"Plan for MDW-108: Pagination resets when sorting a column\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
 {"seq":127,"ts":1767605400000,"jobId":"job-8","type":"job.status","payload":{"status":"implementing"}}
 {"seq":128,"ts":1767605400000,"jobId":null,"type":"health.heartbeat","payload":{"tick":30,"activeJobs":7,"queueDepth":0}}
 {"seq":129,"ts":1767605400000,"jobId":"job-5","type":"job.retried","payload":{"attempt":2,"model":"claude-haiku-5-5"}}
@@ -132,20 +132,20 @@
 {"seq":137,"ts":1767605520000,"jobId":"job-1","type":"job.done","payload":{"prNumber":404}}
 {"seq":138,"ts":1767605520000,"jobId":"job-2","type":"job.resumed","payload":{"by":"agent"}}
 {"seq":139,"ts":1767605520000,"jobId":"job-8","type":"commit.pushed","payload":{"sha":"2cc849b","message":"fix: handle the edge case at the source"}}
-{"seq":140,"ts":1767605520000,"jobId":"job-8","type":"pr.opened","payload":{"number":408,"url":"https://github.com/acme/web/pull/408"}}
+{"seq":140,"ts":1767605520000,"jobId":"job-8","type":"pr.opened","payload":{"number":408,"url":"https://github.com/meadow/web/pull/408"}}
 {"seq":141,"ts":1767605580000,"jobId":"job-2","type":"job.status","payload":{"status":"ready-for-review"}}
-{"seq":142,"ts":1767605580000,"jobId":"job-5","type":"plan.posted","payload":{"plan":"Plan for ACME-105: Speed up the pre-commit hook\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note"}}
+{"seq":142,"ts":1767605580000,"jobId":"job-5","type":"plan.posted","payload":{"plan":"Plan for MDW-105: Speed up the pre-commit hook\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note"}}
 {"seq":143,"ts":1767605580000,"jobId":"job-5","type":"job.status","payload":{"status":"implementing"}}
 {"seq":144,"ts":1767605640000,"jobId":"job-5","type":"commit.pushed","payload":{"sha":"9cde762","message":"chore: apply the upgrade"}}
 {"seq":145,"ts":1767605640000,"jobId":"job-6","type":"job.status","payload":{"status":"ready-for-review"}}
-{"seq":146,"ts":1767605700000,"jobId":"job-9","type":"job.created","payload":{"job":{"id":"job-9","ticket":{"id":"ACME-109","title":"Offline banner never clears on reconnect","repo":"acme/mobile"},"kind":"bug","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767605700000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":146,"ts":1767605700000,"jobId":"job-9","type":"job.created","payload":{"job":{"id":"job-9","ticket":{"id":"MDW-109","title":"Offline banner never clears on reconnect","repo":"meadow/mobile"},"kind":"bug","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767605700000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":147,"ts":1767605700000,"jobId":"job-5","type":"commit.pushed","payload":{"sha":"f0d4f7a","message":"chore: migrate config"}}
 {"seq":148,"ts":1767605700000,"jobId":"job-8","type":"ci.passed","payload":{"runId":"ci-147","check":"all checks"}}
 {"seq":149,"ts":1767605700000,"jobId":"job-9","type":"job.status","payload":{"status":"planning"}}
 {"seq":150,"ts":1767605700000,"jobId":null,"type":"health.heartbeat","payload":{"tick":35,"activeJobs":8,"queueDepth":0}}
 {"seq":151,"ts":1767605820000,"jobId":"job-3","type":"job.done","payload":{"prNumber":401}}
 {"seq":152,"ts":1767605820000,"jobId":"job-4","type":"job.done","payload":{"prNumber":405}}
-{"seq":153,"ts":1767605820000,"jobId":"job-9","type":"plan.posted","payload":{"plan":"Plan for ACME-109: Offline banner never clears on reconnect\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
+{"seq":153,"ts":1767605820000,"jobId":"job-9","type":"plan.posted","payload":{"plan":"Plan for MDW-109: Offline banner never clears on reconnect\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
 {"seq":154,"ts":1767605820000,"jobId":"job-9","type":"job.status","payload":{"status":"implementing"}}
 {"seq":155,"ts":1767605880000,"jobId":"job-2","type":"job.done","payload":{"prNumber":402}}
 {"seq":156,"ts":1767605880000,"jobId":"job-5","type":"ci.failed","payload":{"runId":"ci-155","check":"typecheck","detail":"2 failing tests in filters.test.ts: expected 3 items, received 2"}}
@@ -155,18 +155,18 @@
 {"seq":160,"ts":1767606000000,"jobId":"job-5","type":"ci.fixed","payload":{"runId":"ci-159","check":"e2e smoke","sha":"8dbc994"}}
 {"seq":161,"ts":1767606000000,"jobId":"job-5","type":"job.status","payload":{"status":"implementing"}}
 {"seq":162,"ts":1767606000000,"jobId":"job-9","type":"commit.pushed","payload":{"sha":"e106b76","message":"fix: handle the edge case at the source"}}
-{"seq":163,"ts":1767606000000,"jobId":"job-9","type":"pr.opened","payload":{"number":409,"url":"https://github.com/acme/mobile/pull/409"}}
+{"seq":163,"ts":1767606000000,"jobId":"job-9","type":"pr.opened","payload":{"number":409,"url":"https://github.com/meadow/mobile/pull/409"}}
 {"seq":164,"ts":1767606000000,"jobId":null,"type":"health.heartbeat","payload":{"tick":40,"activeJobs":5,"queueDepth":0}}
 {"seq":165,"ts":1767606000000,"jobId":null,"type":"guard.toggled","payload":{"guardId":"keep-hooks","enabled":true}}
-{"seq":166,"ts":1767606060000,"jobId":"job-10","type":"job.created","payload":{"job":{"id":"job-10","ticket":{"id":"ACME-110","title":"Pagination resets when sorting a column","repo":"acme/web"},"kind":"bug","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767606060000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":166,"ts":1767606060000,"jobId":"job-10","type":"job.created","payload":{"job":{"id":"job-10","ticket":{"id":"MDW-110","title":"Pagination resets when sorting a column","repo":"meadow/web"},"kind":"bug","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767606060000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":167,"ts":1767606060000,"jobId":"job-5","type":"ci.passed","payload":{"runId":"ci-166","check":"all checks"}}
 {"seq":168,"ts":1767606060000,"jobId":"job-7","type":"guard.blocked","payload":{"guardId":"never-merge","action":"merge","detail":"Tried to merge after approvals because the branch was green"}}
 {"seq":169,"ts":1767606060000,"jobId":"job-10","type":"job.status","payload":{"status":"planning"}}
-{"seq":170,"ts":1767606120000,"jobId":"job-11","type":"job.created","payload":{"job":{"id":"job-11","ticket":{"id":"ACME-111","title":"Split the settings bundle into lazy routes","repo":"acme/web"},"kind":"chore","status":"queued","model":"claude-haiku-5-5","attempts":1,"createdAt":1767606120000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":170,"ts":1767606120000,"jobId":"job-11","type":"job.created","payload":{"job":{"id":"job-11","ticket":{"id":"MDW-111","title":"Split the settings bundle into lazy routes","repo":"meadow/web"},"kind":"chore","status":"queued","model":"claude-haiku-5-5","attempts":1,"createdAt":1767606120000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":171,"ts":1767606120000,"jobId":"job-9","type":"ci.failed","payload":{"runId":"ci-170","check":"typecheck","detail":"2 failing tests in filters.test.ts: expected 3 items, received 2"}}
 {"seq":172,"ts":1767606120000,"jobId":"job-11","type":"job.status","payload":{"status":"planning"}}
 {"seq":173,"ts":1767606180000,"jobId":"job-6","type":"job.done","payload":{"prNumber":406}}
-{"seq":174,"ts":1767606180000,"jobId":"job-10","type":"plan.posted","payload":{"plan":"Plan for ACME-110: Pagination resets when sorting a column\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
+{"seq":174,"ts":1767606180000,"jobId":"job-10","type":"plan.posted","payload":{"plan":"Plan for MDW-110: Pagination resets when sorting a column\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
 {"seq":175,"ts":1767606180000,"jobId":"job-10","type":"job.status","payload":{"status":"implementing"}}
 {"seq":176,"ts":1767606240000,"jobId":"job-5","type":"job.status","payload":{"status":"ready-for-review"}}
 {"seq":177,"ts":1767606240000,"jobId":"job-7","type":"job.done","payload":{"prNumber":407}}
@@ -174,25 +174,25 @@
 {"seq":179,"ts":1767606240000,"jobId":"job-9","type":"ci.fixed","payload":{"runId":"ci-178","check":"unit tests","sha":"0827eaa"}}
 {"seq":180,"ts":1767606240000,"jobId":"job-9","type":"job.status","payload":{"status":"implementing"}}
 {"seq":181,"ts":1767606240000,"jobId":"job-10","type":"commit.pushed","payload":{"sha":"b404e74","message":"test: reproduce the bug"}}
-{"seq":182,"ts":1767606240000,"jobId":"job-11","type":"plan.posted","payload":{"plan":"Plan for ACME-111: Split the settings bundle into lazy routes\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note"}}
+{"seq":182,"ts":1767606240000,"jobId":"job-11","type":"plan.posted","payload":{"plan":"Plan for MDW-111: Split the settings bundle into lazy routes\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note"}}
 {"seq":183,"ts":1767606240000,"jobId":"job-11","type":"job.status","payload":{"status":"implementing"}}
-{"seq":184,"ts":1767606300000,"jobId":"job-12","type":"job.created","payload":{"job":{"id":"job-12","ticket":{"id":"ACME-112","title":"Remove unused feature flags","repo":"acme/mobile"},"kind":"chore","status":"queued","model":"claude-haiku-5-5","attempts":1,"createdAt":1767606300000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":184,"ts":1767606300000,"jobId":"job-12","type":"job.created","payload":{"job":{"id":"job-12","ticket":{"id":"MDW-112","title":"Remove unused feature flags","repo":"meadow/mobile"},"kind":"chore","status":"queued","model":"claude-haiku-5-5","attempts":1,"createdAt":1767606300000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":185,"ts":1767606300000,"jobId":"job-9","type":"ci.passed","payload":{"runId":"ci-184","check":"all checks"}}
 {"seq":186,"ts":1767606300000,"jobId":"job-10","type":"commit.pushed","payload":{"sha":"579e561","message":"fix: handle the edge case at the source"}}
-{"seq":187,"ts":1767606300000,"jobId":"job-10","type":"pr.opened","payload":{"number":410,"url":"https://github.com/acme/web/pull/410"}}
+{"seq":187,"ts":1767606300000,"jobId":"job-10","type":"pr.opened","payload":{"number":410,"url":"https://github.com/meadow/web/pull/410"}}
 {"seq":188,"ts":1767606300000,"jobId":"job-11","type":"commit.pushed","payload":{"sha":"431a64c","message":"chore: apply the upgrade"}}
 {"seq":189,"ts":1767606300000,"jobId":"job-12","type":"job.status","payload":{"status":"planning"}}
 {"seq":190,"ts":1767606300000,"jobId":null,"type":"health.heartbeat","payload":{"tick":45,"activeJobs":6,"queueDepth":0}}
 {"seq":191,"ts":1767606300000,"jobId":null,"type":"routing.updated","payload":{"routing":{"feature":"claude-opus-5-5","bug":"claude-fable-5-1","chore":"claude-haiku-5-5","review-fix":"claude-sonnet-5-5","release":"claude-haiku-5-5"}}}
 {"seq":192,"ts":1767606360000,"jobId":"job-11","type":"commit.pushed","payload":{"sha":"751bd31","message":"chore: migrate config"}}
-{"seq":193,"ts":1767606360000,"jobId":"job-11","type":"pr.opened","payload":{"number":411,"url":"https://github.com/acme/web/pull/411"}}
-{"seq":194,"ts":1767606420000,"jobId":"job-12","type":"plan.posted","payload":{"plan":"Plan for ACME-112: Remove unused feature flags\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note"}}
+{"seq":193,"ts":1767606360000,"jobId":"job-11","type":"pr.opened","payload":{"number":411,"url":"https://github.com/meadow/web/pull/411"}}
+{"seq":194,"ts":1767606420000,"jobId":"job-12","type":"plan.posted","payload":{"plan":"Plan for MDW-112: Remove unused feature flags\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note"}}
 {"seq":195,"ts":1767606420000,"jobId":"job-12","type":"approval.requested","payload":{"approval":{"id":"apr-job-12-1","jobId":"job-12","question":"The upgrade has a breaking config change. Migrate in this PR or split it?","options":{"A":{"label":"One PR","description":"Upgrade and migrate together so main never sees a half state."},"B":{"label":"Two PRs","description":"Land the config migration first, then the upgrade. Easier to review."}},"recommended":"B","reason":"Two small PRs are faster to review and each one can be reverted on its own.","status":"pending","createdAt":1767606420000}}}
 {"seq":196,"ts":1767606480000,"jobId":"job-8","type":"job.done","payload":{"prNumber":408}}
 {"seq":197,"ts":1767606480000,"jobId":"job-9","type":"review.finding","payload":{"findingId":"rf-job-9-1","author":"review-bot","file":"src/lib/format.ts","body":"This duplicates formatDate from the shared utils."}}
 {"seq":198,"ts":1767606480000,"jobId":"job-10","type":"ci.failed","payload":{"runId":"ci-197","check":"typecheck","detail":"Lint: react-hooks/exhaustive-deps in use-toolbar.ts"}}
 {"seq":199,"ts":1767606480000,"jobId":"job-11","type":"ci.failed","payload":{"runId":"ci-198","check":"typecheck","detail":"2 failing tests in filters.test.ts: expected 3 items, received 2"}}
-{"seq":200,"ts":1767606540000,"jobId":"job-13","type":"job.created","payload":{"job":{"id":"job-13","ticket":{"id":"ACME-113","title":"Follow up on accessibility review of tabs","repo":"acme/design-system"},"kind":"review-fix","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767606540000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":200,"ts":1767606540000,"jobId":"job-13","type":"job.created","payload":{"job":{"id":"job-13","ticket":{"id":"MDW-113","title":"Follow up on accessibility review of tabs","repo":"meadow/design-system"},"kind":"review-fix","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767606540000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":201,"ts":1767606540000,"jobId":"job-13","type":"job.status","payload":{"status":"planning"}}
 {"seq":202,"ts":1767606600000,"jobId":"job-9","type":"commit.pushed","payload":{"sha":"04a172a","message":"fix: address review feedback"}}
 {"seq":203,"ts":1767606600000,"jobId":"job-9","type":"review.replied","payload":{"findingId":"rf-job-9-1","body":"Replaced it with the shared helper and removed the local copy."}}
@@ -206,12 +206,12 @@
 {"seq":211,"ts":1767606600000,"jobId":null,"type":"health.heartbeat","payload":{"tick":50,"activeJobs":6,"queueDepth":0}}
 {"seq":212,"ts":1767606660000,"jobId":"job-10","type":"ci.passed","payload":{"runId":"ci-211","check":"all checks"}}
 {"seq":213,"ts":1767606660000,"jobId":"job-11","type":"ci.passed","payload":{"runId":"ci-212","check":"all checks"}}
-{"seq":214,"ts":1767606660000,"jobId":"job-13","type":"plan.posted","payload":{"plan":"Plan for ACME-113: Follow up on accessibility review of tabs\n1. Read every open review thread\n2. Apply or answer each finding\n3. Push fixes and reply in the threads\n4. Request a fresh review"}}
+{"seq":214,"ts":1767606660000,"jobId":"job-13","type":"plan.posted","payload":{"plan":"Plan for MDW-113: Follow up on accessibility review of tabs\n1. Read every open review thread\n2. Apply or answer each finding\n3. Push fixes and reply in the threads\n4. Request a fresh review"}}
 {"seq":215,"ts":1767606660000,"jobId":"job-13","type":"job.status","payload":{"status":"implementing"}}
 {"seq":216,"ts":1767606720000,"jobId":"job-13","type":"commit.pushed","payload":{"sha":"6fff2ba","message":"refactor: apply review suggestions"}}
 {"seq":217,"ts":1767606780000,"jobId":"job-9","type":"job.status","payload":{"status":"ready-for-review"}}
 {"seq":218,"ts":1767606780000,"jobId":"job-13","type":"commit.pushed","payload":{"sha":"b840803","message":"test: cover review cases"}}
-{"seq":219,"ts":1767606780000,"jobId":"job-13","type":"pr.opened","payload":{"number":412,"url":"https://github.com/acme/design-system/pull/412"}}
+{"seq":219,"ts":1767606780000,"jobId":"job-13","type":"pr.opened","payload":{"number":412,"url":"https://github.com/meadow/design-system/pull/412"}}
 {"seq":220,"ts":1767606840000,"jobId":"job-5","type":"job.done","payload":{"prNumber":403}}
 {"seq":221,"ts":1767606840000,"jobId":"job-10","type":"review.finding","payload":{"findingId":"rf-job-10-1","author":"review-bot","file":"src/features/list/use-selection.ts","body":"This effect re-subscribes on every render. Can the handler be stable?"}}
 {"seq":222,"ts":1767606900000,"jobId":"job-11","type":"job.status","payload":{"status":"ready-for-review"}}
@@ -245,22 +245,22 @@
 {"seq":250,"ts":1767608100000,"jobId":"job-13","type":"job.done","payload":{"prNumber":412}}
 {"seq":251,"ts":1767608100000,"jobId":null,"type":"health.heartbeat","payload":{"tick":75,"activeJobs":1,"queueDepth":0}}
 {"seq":252,"ts":1767608280000,"jobId":"job-12","type":"approval.answered","payload":{"approvalId":"apr-job-12-1","option":"B","note":"answered by teammate"}}
-{"seq":253,"ts":1767608280000,"jobId":"job-12","type":"plan.posted","payload":{"plan":"Plan for ACME-112: Remove unused feature flags\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note\n\nDecision: option B, Two PRs. Note: answered by teammate"}}
+{"seq":253,"ts":1767608280000,"jobId":"job-12","type":"plan.posted","payload":{"plan":"Plan for MDW-112: Remove unused feature flags\n1. Check what the change touches\n2. Apply the change in small commits\n3. Run the full test suite\n4. Open a PR with a short migration note\n\nDecision: option B, Two PRs. Note: answered by teammate"}}
 {"seq":254,"ts":1767608280000,"jobId":"job-12","type":"job.status","payload":{"status":"implementing"}}
 {"seq":255,"ts":1767608340000,"jobId":"job-12","type":"commit.pushed","payload":{"sha":"41ee269","message":"chore: apply the upgrade"}}
 {"seq":256,"ts":1767608400000,"jobId":null,"type":"health.heartbeat","payload":{"tick":80,"activeJobs":1,"queueDepth":0}}
 {"seq":257,"ts":1767608460000,"jobId":"job-12","type":"commit.pushed","payload":{"sha":"2e0ab71","message":"chore: migrate config"}}
-{"seq":258,"ts":1767608460000,"jobId":"job-12","type":"pr.opened","payload":{"number":413,"url":"https://github.com/acme/mobile/pull/413"}}
-{"seq":259,"ts":1767608580000,"jobId":"job-14","type":"job.created","payload":{"job":{"id":"job-14","ticket":{"id":"ACME-114","title":"Date picker loses focus after month change","repo":"acme/design-system"},"kind":"bug","status":"queued","model":"claude-fable-5-1","attempts":1,"createdAt":1767608580000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":258,"ts":1767608460000,"jobId":"job-12","type":"pr.opened","payload":{"number":413,"url":"https://github.com/meadow/mobile/pull/413"}}
+{"seq":259,"ts":1767608580000,"jobId":"job-14","type":"job.created","payload":{"job":{"id":"job-14","ticket":{"id":"MDW-114","title":"Date picker loses focus after month change","repo":"meadow/design-system"},"kind":"bug","status":"queued","model":"claude-fable-5-1","attempts":1,"createdAt":1767608580000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":260,"ts":1767608580000,"jobId":"job-12","type":"ci.passed","payload":{"runId":"ci-259","check":"all checks"}}
 {"seq":261,"ts":1767608580000,"jobId":"job-14","type":"job.status","payload":{"status":"planning"}}
-{"seq":262,"ts":1767608700000,"jobId":"job-14","type":"plan.posted","payload":{"plan":"Plan for ACME-114: Date picker loses focus after month change\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
+{"seq":262,"ts":1767608700000,"jobId":"job-14","type":"plan.posted","payload":{"plan":"Plan for MDW-114: Date picker loses focus after month change\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
 {"seq":263,"ts":1767608700000,"jobId":"job-14","type":"job.status","payload":{"status":"implementing"}}
 {"seq":264,"ts":1767608700000,"jobId":null,"type":"health.heartbeat","payload":{"tick":85,"activeJobs":2,"queueDepth":0}}
 {"seq":265,"ts":1767608760000,"jobId":"job-14","type":"commit.pushed","payload":{"sha":"3bae013","message":"test: reproduce the bug"}}
 {"seq":266,"ts":1767608820000,"jobId":"job-12","type":"job.status","payload":{"status":"ready-for-review"}}
 {"seq":267,"ts":1767608820000,"jobId":"job-14","type":"commit.pushed","payload":{"sha":"7f10ec0","message":"fix: handle the edge case at the source"}}
-{"seq":268,"ts":1767608820000,"jobId":"job-14","type":"pr.opened","payload":{"number":414,"url":"https://github.com/acme/design-system/pull/414"}}
+{"seq":268,"ts":1767608820000,"jobId":"job-14","type":"pr.opened","payload":{"number":414,"url":"https://github.com/meadow/design-system/pull/414"}}
 {"seq":269,"ts":1767609000000,"jobId":"job-14","type":"ci.passed","payload":{"runId":"ci-268","check":"all checks"}}
 {"seq":270,"ts":1767609000000,"jobId":null,"type":"health.heartbeat","payload":{"tick":90,"activeJobs":2,"queueDepth":0}}
 {"seq":271,"ts":1767609120000,"jobId":"job-12","type":"job.done","payload":{"prNumber":413}}
@@ -269,45 +269,45 @@
 {"seq":274,"ts":1767609600000,"jobId":"job-14","type":"guard.allowed","payload":{"guardId":"never-merge","action":"merge","detail":"Tried to merge after approvals because the branch was green"}}
 {"seq":275,"ts":1767609600000,"jobId":"job-14","type":"job.done","payload":{"prNumber":414}}
 {"seq":276,"ts":1767609600000,"jobId":null,"type":"health.heartbeat","payload":{"tick":100,"activeJobs":0,"queueDepth":0}}
-{"seq":277,"ts":1767609840000,"jobId":"job-15","type":"job.created","payload":{"job":{"id":"job-15","ticket":{"id":"ACME-115","title":"Offline banner never clears on reconnect","repo":"acme/mobile"},"kind":"bug","status":"queued","model":"claude-fable-5-1","attempts":1,"createdAt":1767609840000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":277,"ts":1767609840000,"jobId":"job-15","type":"job.created","payload":{"job":{"id":"job-15","ticket":{"id":"MDW-115","title":"Offline banner never clears on reconnect","repo":"meadow/mobile"},"kind":"bug","status":"queued","model":"claude-fable-5-1","attempts":1,"createdAt":1767609840000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":278,"ts":1767609840000,"jobId":"job-15","type":"job.status","payload":{"status":"planning"}}
-{"seq":279,"ts":1767609900000,"jobId":"job-16","type":"job.created","payload":{"job":{"id":"job-16","ticket":{"id":"ACME-116","title":"Offline banner never clears on reconnect","repo":"acme/mobile"},"kind":"bug","status":"queued","model":"claude-fable-5-1","attempts":1,"createdAt":1767609900000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":279,"ts":1767609900000,"jobId":"job-16","type":"job.created","payload":{"job":{"id":"job-16","ticket":{"id":"MDW-116","title":"Offline banner never clears on reconnect","repo":"meadow/mobile"},"kind":"bug","status":"queued","model":"claude-fable-5-1","attempts":1,"createdAt":1767609900000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":280,"ts":1767609900000,"jobId":"job-16","type":"job.status","payload":{"status":"planning"}}
 {"seq":281,"ts":1767609900000,"jobId":null,"type":"health.heartbeat","payload":{"tick":105,"activeJobs":2,"queueDepth":0}}
-{"seq":282,"ts":1767609960000,"jobId":"job-17","type":"job.created","payload":{"job":{"id":"job-17","ticket":{"id":"ACME-117","title":"Keyboard shortcuts help dialog","repo":"acme/web"},"kind":"feature","status":"queued","model":"claude-opus-5-5","attempts":1,"createdAt":1767609960000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
-{"seq":283,"ts":1767609960000,"jobId":"job-15","type":"plan.posted","payload":{"plan":"Plan for ACME-115: Offline banner never clears on reconnect\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
+{"seq":282,"ts":1767609960000,"jobId":"job-17","type":"job.created","payload":{"job":{"id":"job-17","ticket":{"id":"MDW-117","title":"Keyboard shortcuts help dialog","repo":"meadow/web"},"kind":"feature","status":"queued","model":"claude-opus-5-5","attempts":1,"createdAt":1767609960000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":283,"ts":1767609960000,"jobId":"job-15","type":"plan.posted","payload":{"plan":"Plan for MDW-115: Offline banner never clears on reconnect\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
 {"seq":284,"ts":1767609960000,"jobId":"job-15","type":"job.status","payload":{"status":"implementing"}}
 {"seq":285,"ts":1767609960000,"jobId":"job-17","type":"job.status","payload":{"status":"planning"}}
 {"seq":286,"ts":1767610020000,"jobId":"job-15","type":"commit.pushed","payload":{"sha":"8a2ac54","message":"test: reproduce the bug"}}
-{"seq":287,"ts":1767610020000,"jobId":"job-16","type":"plan.posted","payload":{"plan":"Plan for ACME-116: Offline banner never clears on reconnect\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
+{"seq":287,"ts":1767610020000,"jobId":"job-16","type":"plan.posted","payload":{"plan":"Plan for MDW-116: Offline banner never clears on reconnect\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
 {"seq":288,"ts":1767610020000,"jobId":"job-16","type":"job.status","payload":{"status":"implementing"}}
-{"seq":289,"ts":1767610080000,"jobId":"job-18","type":"job.created","payload":{"job":{"id":"job-18","ticket":{"id":"ACME-118","title":"Date picker loses focus after month change","repo":"acme/design-system"},"kind":"bug","status":"queued","model":"claude-fable-5-1","attempts":1,"createdAt":1767610080000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":289,"ts":1767610080000,"jobId":"job-18","type":"job.created","payload":{"job":{"id":"job-18","ticket":{"id":"MDW-118","title":"Date picker loses focus after month change","repo":"meadow/design-system"},"kind":"bug","status":"queued","model":"claude-fable-5-1","attempts":1,"createdAt":1767610080000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":290,"ts":1767610080000,"jobId":"job-16","type":"commit.pushed","payload":{"sha":"c700cf1","message":"test: reproduce the bug"}}
-{"seq":291,"ts":1767610080000,"jobId":"job-17","type":"plan.posted","payload":{"plan":"Plan for ACME-117: Keyboard shortcuts help dialog\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI"}}
+{"seq":291,"ts":1767610080000,"jobId":"job-17","type":"plan.posted","payload":{"plan":"Plan for MDW-117: Keyboard shortcuts help dialog\n1. Read the ticket and linked designs\n2. Add the component and wire it to the store\n3. Cover the new flow with tests\n4. Open a draft PR and run CI"}}
 {"seq":292,"ts":1767610080000,"jobId":"job-17","type":"approval.requested","payload":{"approval":{"id":"apr-job-17-1","jobId":"job-17","question":"The ticket does not say where the new control lives. Which placement should I build?","options":{"A":{"label":"Toolbar action","description":"Add it to the existing toolbar next to the filters. Small diff, reuses current layout."},"B":{"label":"New side panel","description":"Introduce a dedicated panel with room for future settings. Larger diff, needs design input."}},"recommended":"A","reason":"Smaller change that matches the current pattern and ships without new design work.","status":"pending","createdAt":1767610080000}}}
 {"seq":293,"ts":1767610080000,"jobId":"job-18","type":"job.status","payload":{"status":"planning"}}
-{"seq":294,"ts":1767610140000,"jobId":"job-19","type":"job.created","payload":{"job":{"id":"job-19","ticket":{"id":"ACME-119","title":"Publish design tokens 4.2.0","repo":"acme/design-system"},"kind":"release","status":"queued","model":"claude-haiku-5-5","attempts":1,"createdAt":1767610140000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":294,"ts":1767610140000,"jobId":"job-19","type":"job.created","payload":{"job":{"id":"job-19","ticket":{"id":"MDW-119","title":"Publish design tokens 4.2.0","repo":"meadow/design-system"},"kind":"release","status":"queued","model":"claude-haiku-5-5","attempts":1,"createdAt":1767610140000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":295,"ts":1767610140000,"jobId":"job-15","type":"commit.pushed","payload":{"sha":"3c360b9","message":"fix: handle the edge case at the source"}}
-{"seq":296,"ts":1767610140000,"jobId":"job-15","type":"pr.opened","payload":{"number":415,"url":"https://github.com/acme/mobile/pull/415"}}
+{"seq":296,"ts":1767610140000,"jobId":"job-15","type":"pr.opened","payload":{"number":415,"url":"https://github.com/meadow/mobile/pull/415"}}
 {"seq":297,"ts":1767610140000,"jobId":"job-16","type":"commit.pushed","payload":{"sha":"01a62fb","message":"fix: handle the edge case at the source"}}
-{"seq":298,"ts":1767610140000,"jobId":"job-16","type":"pr.opened","payload":{"number":416,"url":"https://github.com/acme/mobile/pull/416"}}
+{"seq":298,"ts":1767610140000,"jobId":"job-16","type":"pr.opened","payload":{"number":416,"url":"https://github.com/meadow/mobile/pull/416"}}
 {"seq":299,"ts":1767610140000,"jobId":"job-19","type":"job.status","payload":{"status":"planning"}}
-{"seq":300,"ts":1767610200000,"jobId":"job-18","type":"plan.posted","payload":{"plan":"Plan for ACME-118: Date picker loses focus after month change\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
+{"seq":300,"ts":1767610200000,"jobId":"job-18","type":"plan.posted","payload":{"plan":"Plan for MDW-118: Date picker loses focus after month change\n1. Reproduce with a failing test\n2. Fix the root cause\n3. Confirm the test passes and nothing else regresses\n4. Open a PR with the reproduction steps"}}
 {"seq":301,"ts":1767610200000,"jobId":"job-18","type":"job.status","payload":{"status":"implementing"}}
 {"seq":302,"ts":1767610200000,"jobId":null,"type":"health.heartbeat","payload":{"tick":110,"activeJobs":5,"queueDepth":0}}
 {"seq":303,"ts":1767610260000,"jobId":"job-15","type":"ci.failed","payload":{"runId":"ci-302","check":"unit tests","detail":"Type error: property 'archivedAt' does not exist on type 'Message'"}}
 {"seq":304,"ts":1767610260000,"jobId":"job-18","type":"commit.pushed","payload":{"sha":"c0c3947","message":"test: reproduce the bug"}}
-{"seq":305,"ts":1767610260000,"jobId":"job-19","type":"plan.posted","payload":{"plan":"Plan for ACME-119: Publish design tokens 4.2.0\n1. Collect merged PRs since the last tag\n2. Write the changelog\n3. Bump versions\n4. Open the release PR"}}
+{"seq":305,"ts":1767610260000,"jobId":"job-19","type":"plan.posted","payload":{"plan":"Plan for MDW-119: Publish design tokens 4.2.0\n1. Collect merged PRs since the last tag\n2. Write the changelog\n3. Bump versions\n4. Open the release PR"}}
 {"seq":306,"ts":1767610260000,"jobId":"job-19","type":"job.status","payload":{"status":"implementing"}}
 {"seq":307,"ts":1767610320000,"jobId":"job-16","type":"ci.passed","payload":{"runId":"ci-306","check":"all checks"}}
 {"seq":308,"ts":1767610320000,"jobId":"job-18","type":"commit.pushed","payload":{"sha":"3f35a72","message":"fix: handle the edge case at the source"}}
-{"seq":309,"ts":1767610320000,"jobId":"job-18","type":"pr.opened","payload":{"number":417,"url":"https://github.com/acme/design-system/pull/417"}}
+{"seq":309,"ts":1767610320000,"jobId":"job-18","type":"pr.opened","payload":{"number":417,"url":"https://github.com/meadow/design-system/pull/417"}}
 {"seq":310,"ts":1767610320000,"jobId":"job-19","type":"commit.pushed","payload":{"sha":"794be0f","message":"chore(release): update changelog"}}
 {"seq":311,"ts":1767610380000,"jobId":"job-15","type":"commit.pushed","payload":{"sha":"c496ecd","message":"fix: make lint pass"}}
 {"seq":312,"ts":1767610380000,"jobId":"job-15","type":"ci.fixed","payload":{"runId":"ci-311","check":"lint","sha":"c496ecd"}}
 {"seq":313,"ts":1767610380000,"jobId":"job-15","type":"job.status","payload":{"status":"implementing"}}
 {"seq":314,"ts":1767610380000,"jobId":"job-19","type":"commit.pushed","payload":{"sha":"2d7dea2","message":"chore(release): bump versions"}}
-{"seq":315,"ts":1767610380000,"jobId":"job-19","type":"pr.opened","payload":{"number":418,"url":"https://github.com/acme/design-system/pull/418"}}
+{"seq":315,"ts":1767610380000,"jobId":"job-19","type":"pr.opened","payload":{"number":418,"url":"https://github.com/meadow/design-system/pull/418"}}
 {"seq":316,"ts":1767610440000,"jobId":"job-15","type":"ci.passed","payload":{"runId":"ci-315","check":"all checks"}}
 {"seq":317,"ts":1767610440000,"jobId":"job-16","type":"review.finding","payload":{"findingId":"rf-job-16-1","author":"code-owner","file":"src/components/panel.tsx","body":"The close button has no accessible name."}}
 {"seq":318,"ts":1767610440000,"jobId":"job-18","type":"ci.passed","payload":{"runId":"ci-317","check":"all checks"}}
@@ -317,7 +317,7 @@
 {"seq":322,"ts":1767610560000,"jobId":"job-16","type":"review.replied","payload":{"findingId":"rf-job-16-1","body":"Added an aria-label and a test that queries the button by its name."}}
 {"seq":323,"ts":1767610560000,"jobId":"job-16","type":"job.status","payload":{"status":"implementing"}}
 {"seq":324,"ts":1767610620000,"jobId":"job-18","type":"job.status","payload":{"status":"ready-for-review"}}
-{"seq":325,"ts":1767610680000,"jobId":"job-20","type":"job.created","payload":{"job":{"id":"job-20","ticket":{"id":"ACME-120","title":"Follow up on accessibility review of tabs","repo":"acme/design-system"},"kind":"review-fix","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767610680000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
+{"seq":325,"ts":1767610680000,"jobId":"job-20","type":"job.created","payload":{"job":{"id":"job-20","ticket":{"id":"MDW-120","title":"Follow up on accessibility review of tabs","repo":"meadow/design-system"},"kind":"review-fix","status":"queued","model":"claude-sonnet-5-5","attempts":1,"createdAt":1767610680000,"timeline":[],"commits":[],"ciRuns":[],"findings":[]}}}
 {"seq":326,"ts":1767610680000,"jobId":"job-15","type":"job.status","payload":{"status":"ready-for-review"}}
 {"seq":327,"ts":1767610680000,"jobId":"job-16","type":"review.finding","payload":{"findingId":"rf-job-16-2","author":"code-owner","file":"src/features/list/use-selection.ts","body":"This effect re-subscribes on every render. Can the handler be stable?"}}
 {"seq":328,"ts":1767610680000,"jobId":"job-20","type":"job.status","payload":{"status":"planning"}}
@@ -325,6 +325,6 @@
 {"seq":330,"ts":1767610800000,"jobId":"job-16","type":"commit.pushed","payload":{"sha":"ed376c8","message":"fix: address review feedback"}}
 {"seq":331,"ts":1767610800000,"jobId":"job-16","type":"review.replied","payload":{"findingId":"rf-job-16-2","body":"Good catch. Moved the handler into a ref so the subscription is stable. Fixed in the latest commit."}}
 {"seq":332,"ts":1767610800000,"jobId":"job-16","type":"job.status","payload":{"status":"implementing"}}
-{"seq":333,"ts":1767610800000,"jobId":"job-20","type":"plan.posted","payload":{"plan":"Plan for ACME-120: Follow up on accessibility review of tabs\n1. Read every open review thread\n2. Apply or answer each finding\n3. Push fixes and reply in the threads\n4. Request a fresh review"}}
+{"seq":333,"ts":1767610800000,"jobId":"job-20","type":"plan.posted","payload":{"plan":"Plan for MDW-120: Follow up on accessibility review of tabs\n1. Read every open review thread\n2. Apply or answer each finding\n3. Push fixes and reply in the threads\n4. Request a fresh review"}}
 {"seq":334,"ts":1767610800000,"jobId":"job-20","type":"approval.requested","payload":{"approval":{"id":"apr-job-20-1","jobId":"job-20","question":"A reviewer asked for a rename that touches the public API. How should I handle it?","options":{"A":{"label":"Rename now","description":"Apply the rename and update every caller in this PR."},"B":{"label":"Deprecate first","description":"Keep the old name as a deprecated alias and rename callers later."}},"recommended":"B","reason":"Other packages import the old name, so a deprecation window avoids breaking them.","status":"pending","createdAt":1767610800000}}}
 {"seq":335,"ts":1767610800000,"jobId":null,"type":"health.heartbeat","payload":{"tick":120,"activeJobs":6,"queueDepth":0}}

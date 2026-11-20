@@ -325,7 +325,7 @@ const ConditionFields = ({
     patch({
       field,
       operator: field === 'attempt' ? 'at-least' : 'equals',
-      value: field === 'kind' ? 'feature' : field === 'repo' ? 'acme/web' : '2',
+      value: field === 'kind' ? 'feature' : field === 'repo' ? 'meadow/web' : '2',
     });
   }
   function handleOperator(key: Key | null) {
@@ -379,7 +379,9 @@ const ConditionFields = ({
           onBlur={value.onBlur}
           errorMessage={errors.value}
           hint={
-            config.field === 'repo' ? 'For example acme/web.' : "The job's attempt, starting at 1."
+            config.field === 'repo'
+              ? 'For example meadow/web.'
+              : "The job's attempt, starting at 1."
           }
         />
       )}

@@ -7,7 +7,6 @@ import {
   type AgentMessageEvent,
   type ConnectionStatus,
   SimulatedAgentSource,
-  parseAgentEvent,
 } from '@/domain/source';
 import type { AgentEvent, ControlState, OperatorCommand } from '@/domain/types';
 import { type LoggedCommand, type PersistedWorld, saveWorld } from './persist';
@@ -173,8 +172,8 @@ export const createAppStore = (options: CreateAppStoreOptions = {}): AppStore =>
   }));
 
   const onMessage = (message: AgentMessageEvent) => {
-    const event = parseAgentEvent(message);
-    if (!event) return;
+    // Sources hand over only events that are already valid. The network one checks them first.
+    const event = JSON.parse(message.data) as AgentEvent;
     const current = store.getState();
     const control = applyEvent(current.control, event);
     const now = Date.now();

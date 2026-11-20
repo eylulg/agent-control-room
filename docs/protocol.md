@@ -59,7 +59,7 @@ Rules:
    "Reconnecting" once it has delivered data, and as "Cannot reach the agent"
    when it never did.
 5. **Validation.** The client validates every message against a zod schema
-   (`src/domain/schema.ts`). Malformed JSON, unknown types and payloads of the
+   (`src/domain/event-schema.ts`). Malformed JSON, unknown types and payloads of the
    wrong shape are dropped before they reach the state, so the server can add
    new event types without breaking older clients.
 

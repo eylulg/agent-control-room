@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { applyEvent, createInitialState } from '../reducer';
 import { Simulator } from '../simulator';
-import { AGENT_EVENT, SimulatedAgentSource, SseAgentSource, parseAgentEvent } from '../source';
+import { AGENT_EVENT, SimulatedAgentSource } from '../source';
+import { SseAgentSource, parseAgentEvent } from '../sse-source';
 
 describe('SimulatedAgentSource', () => {
   it('streams events that rebuild the simulator state on the client', () => {
@@ -9,8 +10,7 @@ describe('SimulatedAgentSource', () => {
     const source = new SimulatedAgentSource(sim);
     let client = createInitialState();
     source.addEventListener(AGENT_EVENT, (message) => {
-      const event = parseAgentEvent(message);
-      if (event) client = applyEvent(client, event);
+      client = applyEvent(client, JSON.parse(message.data));
     });
 
     sim.step(50);

@@ -54,7 +54,7 @@ export const configErrors = (node: WorkflowNode): ConfigErrors => {
       } else if (field === 'kind' && !JOB_KINDS.some((kind) => kind === value)) {
         errors.value = 'Choose a job kind.';
       } else if (field === 'repo' && !value.trim()) {
-        errors.value = 'Enter a repository, such as acme/web.';
+        errors.value = 'Enter a repository, such as meadow/web.';
       }
       break;
     }

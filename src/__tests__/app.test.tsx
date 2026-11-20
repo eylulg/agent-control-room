@@ -35,10 +35,10 @@ describe('App', () => {
 
     expect(
       await within(screen.getByRole('region', { name: 'Notifications' })).findByText(
-        'Approval needed on ACME-101',
+        'Approval needed on MDW-101',
       ),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('live-region')).toHaveTextContent('Approval requested on ACME-101');
+    expect(screen.getByTestId('live-region')).toHaveTextContent('Approval requested on MDW-101');
   });
 
   it('moves focus to the content after navigating', async () => {

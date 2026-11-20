@@ -99,7 +99,7 @@ export const QueuePage = () => {
         <Input
           className='lg:max-w-xs'
           label='Search'
-          placeholder='ACME-104'
+          placeholder='MDW-104'
           hint='Ticket, title, repository or model'
           iconLeading={Search}
           value={filter.search}

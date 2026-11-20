@@ -7,26 +7,30 @@ export interface TicketTemplate {
 }
 
 export const TICKET_TEMPLATES: TicketTemplate[] = [
-  { kind: 'bug', title: 'Date picker loses focus after month change', repo: 'acme/design-system' },
-  { kind: 'feature', title: 'Bulk archive from the inbox list', repo: 'acme/web' },
-  { kind: 'chore', title: 'Upgrade test runner and drop legacy config', repo: 'acme/api' },
-  { kind: 'review-fix', title: 'Address review notes on the export endpoint', repo: 'acme/api' },
-  { kind: 'bug', title: 'Offline banner never clears on reconnect', repo: 'acme/mobile' },
-  { kind: 'release', title: 'Cut release 2.14 and update the changelog', repo: 'acme/web' },
-  { kind: 'feature', title: 'Keyboard shortcuts help dialog', repo: 'acme/web' },
-  { kind: 'chore', title: 'Remove unused feature flags', repo: 'acme/mobile' },
-  { kind: 'bug', title: 'Pagination resets when sorting a column', repo: 'acme/web' },
-  { kind: 'feature', title: 'Token based spacing scale for cards', repo: 'acme/design-system' },
+  {
+    kind: 'bug',
+    title: 'Date picker loses focus after month change',
+    repo: 'meadow/design-system',
+  },
+  { kind: 'feature', title: 'Bulk archive from the inbox list', repo: 'meadow/web' },
+  { kind: 'chore', title: 'Upgrade test runner and drop legacy config', repo: 'meadow/api' },
+  { kind: 'review-fix', title: 'Address review notes on the export endpoint', repo: 'meadow/api' },
+  { kind: 'bug', title: 'Offline banner never clears on reconnect', repo: 'meadow/mobile' },
+  { kind: 'release', title: 'Cut release 2.14 and update the changelog', repo: 'meadow/web' },
+  { kind: 'feature', title: 'Keyboard shortcuts help dialog', repo: 'meadow/web' },
+  { kind: 'chore', title: 'Remove unused feature flags', repo: 'meadow/mobile' },
+  { kind: 'bug', title: 'Pagination resets when sorting a column', repo: 'meadow/web' },
+  { kind: 'feature', title: 'Token based spacing scale for cards', repo: 'meadow/design-system' },
   {
     kind: 'review-fix',
     title: 'Follow up on accessibility review of tabs',
-    repo: 'acme/design-system',
+    repo: 'meadow/design-system',
   },
-  { kind: 'bug', title: 'Rate limiter counts retries twice', repo: 'acme/api' },
-  { kind: 'chore', title: 'Split the settings bundle into lazy routes', repo: 'acme/web' },
-  { kind: 'feature', title: 'Push notification preferences screen', repo: 'acme/mobile' },
-  { kind: 'release', title: 'Publish design tokens 4.2.0', repo: 'acme/design-system' },
-  { kind: 'bug', title: 'CSV export drops the last row', repo: 'acme/api' },
+  { kind: 'bug', title: 'Rate limiter counts retries twice', repo: 'meadow/api' },
+  { kind: 'chore', title: 'Split the settings bundle into lazy routes', repo: 'meadow/web' },
+  { kind: 'feature', title: 'Push notification preferences screen', repo: 'meadow/mobile' },
+  { kind: 'release', title: 'Publish design tokens 4.2.0', repo: 'meadow/design-system' },
+  { kind: 'bug', title: 'CSV export drops the last row', repo: 'meadow/api' },
 ];
 
 export interface ApprovalTemplate {

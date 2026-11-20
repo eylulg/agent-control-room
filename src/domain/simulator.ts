@@ -230,23 +230,27 @@ export class Simulator {
     }
     // A fixed opening so every seed shows each mechanic early.
     const first = this.createJob(
-      { kind: 'feature', title: 'Saved filters on the search page', repo: 'acme/web' },
+      { kind: 'feature', title: 'Saved filters on the search page', repo: 'meadow/web' },
       { needsApproval: true, tryMerge: true },
     );
     this.createJob(
-      { kind: 'feature', title: 'Saved filters API and persistence', repo: 'acme/api' },
+      { kind: 'feature', title: 'Saved filters API and persistence', repo: 'meadow/api' },
       { needsApproval: false, dependsOn: first.id },
     );
     this.createJob(
-      { kind: 'bug', title: 'Toast stack overlaps the footer on small screens', repo: 'acme/web' },
+      {
+        kind: 'bug',
+        title: 'Toast stack overlaps the footer on small screens',
+        repo: 'meadow/web',
+      },
       { needsApproval: false, ciFails: 1 },
     );
     this.createJob(
-      { kind: 'feature', title: 'Empty state for the activity feed', repo: 'acme/design-system' },
+      { kind: 'feature', title: 'Empty state for the activity feed', repo: 'meadow/design-system' },
       { needsApproval: false, designerHold: true },
     );
     this.createJob(
-      { kind: 'chore', title: 'Speed up the pre-commit hook', repo: 'acme/mobile' },
+      { kind: 'chore', title: 'Speed up the pre-commit hook', repo: 'meadow/mobile' },
       { needsApproval: false, tryHooks: true, findingsLeft: 1, tryOwner: true },
     );
     for (let i = 0; i < this.warmup; i++) this.advance();
@@ -289,7 +293,7 @@ export class Simulator {
       tryOwner: r.chance(0.1),
       tryMerge: r.chance(0.08),
       designerHold:
-        job.ticket.repo === 'acme/design-system' && job.kind === 'feature' && r.chance(0.5),
+        job.ticket.repo === 'meadow/design-system' && job.kind === 'feature' && r.chance(0.5),
       holdUntil: null,
       waitingOnDependency: false,
       manualHold: false,
@@ -305,7 +309,7 @@ export class Simulator {
     const { dependsOn, ...simOverrides } = overrides;
     const job: Job = {
       id: `job-${this.ticketCount}`,
-      ticket: { id: `ACME-${100 + this.ticketCount}`, title: template.title, repo: template.repo },
+      ticket: { id: `MDW-${100 + this.ticketCount}`, title: template.title, repo: template.repo },
       kind: template.kind,
       status: 'queued',
       model: this.world.routing[template.kind],
