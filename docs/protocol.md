@@ -1,9 +1,6 @@
 # Agent event protocol
 
-The control room never talks to the simulator directly. It reads a stream of
-events and sends operator commands. The in browser simulator and a real agent
-backend implement the same contract, so swapping one for the other is a
-configuration change, not a rewrite.
+The control room reads a stream of events and sends operator commands. The in browser simulator and a real agent backend implement the same contract, so switching between them is a query parameter.
 
 ```
  agent backend                                   control room (browser)
@@ -45,8 +42,7 @@ Rules:
 
 1. **Snapshot first.** On every new connection the server sends one
    `world.snapshot` event whose payload is the full `ControlState`. The client
-   replaces its state with it. This makes reconnects simple and keeps the
-   client stateless.
+   replaces its state with it. Reconnects stay simple.
 2. **Resume.** Browsers resend the last seen `id` in the `Last-Event-ID`
    header. A server may replay missed events after that id instead of sending a
    snapshot, as long as order is preserved.
@@ -60,8 +56,7 @@ Rules:
    when it never did.
 5. **Validation.** The client validates every message against a zod schema
    (`src/domain/event-schema.ts`). Malformed JSON, unknown types and payloads of the
-   wrong shape are dropped before they reach the state, so the server can add
-   new event types without breaking older clients.
+   wrong shape are dropped before they reach the state, so a server can add event types without breaking older clients.
 
 ### Event envelope
 
