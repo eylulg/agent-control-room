@@ -1,12 +1,5 @@
 import { type ReactNode, Suspense, lazy, useEffect } from 'react';
-import {
-  BrandMark,
-  ProjectSwitcher,
-  AppShell as Shell,
-  SiteFooter,
-  ThemeToggle,
-  TopNav,
-} from '@eylulg/ui/chrome';
+import { AppShell as Shell, SiteFooter, ThemeToggle, TopNav } from '@eylulg/ui/chrome';
 import { ToastProvider } from '@eylulg/ui/toast';
 import { useLocation } from 'react-router';
 import { ApprovalToasts } from './approval-toasts';
@@ -54,7 +47,6 @@ export const AppShell = ({ children }: AppShellProps) => {
 const Header = () => (
   <TopNav
     productName='Agent workflows'
-    logo={<BrandMark />}
     LinkComponent={RouterLink}
     mobileMenu={
       <Suspense fallback={null}>
@@ -65,7 +57,6 @@ const Header = () => (
     actions={
       <>
         <HealthIndicator />
-        <ProjectSwitcher currentId={PROJECT_ID} />
         <ThemeToggle />
       </>
     }
